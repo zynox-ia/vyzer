@@ -1,0 +1,12 @@
+# Roteia vyzer.localhost para o Vite rodando nativo no host (pnpm dev, porta 3000).
+http:
+  routers:
+    web:
+      rule: Host(`vyzer.localhost`)
+      entryPoints: [web]
+      service: web
+  services:
+    web:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:3000

@@ -8,5 +8,14 @@ export default defineConfig({
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
-  server: { port: 3000 },
+  server: {
+    port: 3000,
+    strictPort: true,
+    // IPv4 explícito: o Traefik alcança o host via host.docker.internal (IPv4), e no Windows
+    // "localhost" resolve só para ::1.
+    host: "127.0.0.1",
+    // Atrás do Traefik, o host chega como vyzer.localhost e o HMR usa a porta 80.
+    allowedHosts: ["vyzer.localhost"],
+    hmr: { clientPort: 80 },
+  },
 });
