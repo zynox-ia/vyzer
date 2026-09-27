@@ -1,0 +1,28 @@
+/* Estilos de base: só elementos nativos, nada específico de componente. */
+@layer base {
+  body {
+    @apply bg-app font-sans text-body-md text-primary antialiased;
+  }
+
+  /* Foco padrão para qualquer elemento focável (mesma regra do utilitário focus-ring) */
+  :focus-visible {
+    outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+    outline-offset: -1px;
+    --tw-ring-shadow: 0 0 0 var(--focus-halo-size)
+      color-mix(in srgb, var(--accent) 25%, transparent);
+    box-shadow:
+      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+
+  a {
+    @apply text-primary underline decoration-primary underline-offset-2;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    @apply font-mono;
+  }
+}

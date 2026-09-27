@@ -1,0 +1,223 @@
+/*
+ * Camada 2: semânticos por tema e por modo. Mesmos nomes nos dois temas; os utilitários
+ * do Tailwind (theme.css) apontam para estas variáveis.
+ *
+ * Atributos no <html> (ou em qualquer contêiner):
+ *   data-theme     = dark (padrão) | light
+ *   data-focus     = b (padrão) | a          indicador de foco (ADR-0013)
+ *   data-selection = beige (padrão) | neutral  tom de seleção do tema claro (decisão pendente)
+ *   data-density   = comfortable (padrão) | compact
+ */
+
+/* ---------- Tema escuro (padrão) ---------- */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Superfícies opacas: elevação = superfície mais clara (skill §3) */
+  --bg-app: var(--vz-warm-990);
+  --bg-sidebar: var(--vz-warm-950);
+  --bg-panel: var(--vz-warm-950);
+  --bg-surface: var(--vz-warm-925);
+  --bg-subtle: var(--vz-warm-925);
+  --bg-popover: var(--vz-warm-900);
+  --bg-control: var(--vz-warm-925);
+  --bg-input: var(--vz-warm-925);
+  --bg-control-strong: var(--vz-warm-900);
+  --bg-inverse: var(--vz-warm-50);
+  --bg-inverse-hover: var(--vz-warm-150);
+  --bg-inverse-pressed: var(--vz-warm-250);
+  --bg-scrim: rgb(var(--vz-shadow-ink) / 0.7);
+
+  /* Estados como camadas translúcidas: funcionam sobre qualquer superfície (skill §12) */
+  --bg-hover: rgb(var(--vz-overlay-light) / 0.04);
+  --bg-selected: rgb(var(--vz-overlay-light) / 0.07);
+  --bg-pressed: rgb(var(--vz-overlay-light) / 0.1);
+
+  /* Texto e ícones */
+  --fg-primary: var(--vz-warm-50);
+  --fg-secondary: var(--vz-warm-400);
+  --fg-tertiary: var(--vz-warm-500);
+  /* Placeholder: ≥ 4,5:1 nas superfícies onde há campos (WCAG 1.4.3 vale para placeholder) */
+  --fg-placeholder: var(--vz-warm-500);
+  --fg-inverse: var(--vz-warm-975);
+
+  /* Bordas (hairline de 1 px) */
+  --line-subtle: var(--vz-warm-900);
+  --line-default: var(--vz-warm-850);
+  --line-strong: var(--vz-warm-800);
+  /* Borda de controles de formulário (input, checkbox, radio, switch): ≥ 3:1 também sobre a
+   * seleção (checkbox numa linha selecionada); warm-575 dava 2,8:1 ali */
+  --line-control: var(--vz-warm-550);
+
+  /* Acento terracota: foco, indicador ativo da sidebar, contadores de destaque */
+  --accent: var(--vz-terracotta-dark);
+  --accent-text: var(--vz-terracotta-dark);
+
+  /* Status: ícone e texto de badge */
+  --st-success: var(--vz-green-dark);
+  --st-success-text: var(--vz-green-dark);
+  --st-info: var(--vz-blue-dark);
+  --st-info-text: var(--vz-blue-dark);
+  --st-warning: var(--vz-amber-dark);
+  --st-warning-text: var(--vz-amber-dark);
+  --st-danger: var(--vz-red-dark);
+  --st-danger-text: var(--vz-red-dark);
+
+  /* Labels e paleta categórica de data viz */
+  --hue-green: var(--vz-green-dark);
+  --hue-blue: var(--vz-blue-dark);
+  --hue-amber: var(--vz-amber-dark);
+  --hue-red: var(--vz-red-dark);
+  --hue-purple: var(--vz-purple-dark);
+  --hue-pink: var(--vz-pink-dark);
+  --hue-cyan: var(--vz-cyan-dark);
+  --hue-orange: var(--vz-orange-dark);
+  --hue-lime: var(--vz-lime-dark);
+  --hue-indigo: var(--vz-indigo-dark);
+
+  /* Sombras (skill §9): no escuro a borda separa; a sombra só reforça overlays */
+  --shadow-base: var(--vz-shadow-black);
+  --shadow-alpha: 0.5;
+}
+
+/* ---------- Tema claro: conteúdo sobre o creme ---------- */
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Nenhuma superfície mais clara que #faf9f5; cards são creme mais escuro (#f0eee6) */
+  --bg-app: var(--vz-warm-50);
+  --bg-sidebar: var(--vz-warm-100);
+  --bg-panel: var(--vz-warm-50);
+  --bg-surface: var(--vz-warm-100);
+  --bg-subtle: var(--vz-warm-100);
+  --bg-popover: var(--vz-warm-50);
+  --bg-control: var(--vz-warm-100);
+  --bg-input: var(--vz-warm-50);
+  --bg-control-strong: var(--vz-warm-150);
+  --bg-inverse: var(--vz-warm-950);
+  --bg-inverse-hover: var(--vz-warm-750);
+  --bg-inverse-pressed: var(--vz-warm-600);
+  --bg-scrim: rgb(var(--vz-shadow-ink) / 0.25);
+
+  --bg-hover: rgb(var(--vz-overlay-ink) / 0.04);
+  --bg-pressed: rgb(var(--vz-overlay-ink) / 0.1);
+
+  --fg-primary: var(--vz-warm-950);
+  --fg-secondary: var(--vz-warm-600);
+  --fg-tertiary: var(--vz-warm-500);
+  --fg-placeholder: var(--vz-warm-580);
+  --fg-inverse: var(--vz-warm-50);
+
+  --line-subtle: var(--vz-warm-150);
+  /* Hairline de cards no claro (#d1cfc5): o card não some sobre o fundo */
+  --line-default: var(--vz-warm-250);
+  --line-strong: var(--vz-warm-300);
+  --line-control: var(--vz-warm-550);
+
+  --accent: var(--vz-terracotta-light);
+  --accent-text: var(--vz-terracotta-light-text);
+
+  --st-success: var(--vz-green-light);
+  --st-success-text: var(--vz-green-light-text);
+  --st-info: var(--vz-blue-light);
+  --st-info-text: var(--vz-blue-light-text);
+  --st-warning: var(--vz-amber-light);
+  --st-warning-text: var(--vz-amber-light-text);
+  --st-danger: var(--vz-red-light);
+  --st-danger-text: var(--vz-red-light-text);
+
+  --hue-green: var(--vz-green-light);
+  --hue-blue: var(--vz-blue-light);
+  --hue-amber: var(--vz-amber-light);
+  --hue-red: var(--vz-red-light);
+  --hue-purple: var(--vz-purple-light);
+  --hue-pink: var(--vz-pink-light);
+  --hue-cyan: var(--vz-cyan-light);
+  --hue-orange: var(--vz-orange-light);
+  --hue-lime: var(--vz-lime-light);
+  --hue-indigo: var(--vz-indigo-light);
+
+  --shadow-base: var(--vz-shadow-ink);
+  --shadow-alpha: 0.1;
+}
+
+/* Seleção no claro: bege (atual, padrão até a decisão na página QA) ou neutro quente */
+[data-theme="light"],
+[data-theme="light"] [data-selection="beige"],
+[data-selection="beige"] [data-theme="light"] {
+  --bg-selected: rgb(var(--vz-overlay-beige) / 0.2);
+}
+
+[data-selection="neutral"] [data-theme="light"],
+[data-theme="light"] [data-selection="neutral"],
+[data-theme="light"][data-selection="neutral"] {
+  --bg-selected: rgb(var(--vz-overlay-ink) / 0.08);
+}
+
+/* ---------- Foco (ADR-0013): B é o padrão; A só para comparação ----------
+ * Só parâmetros aqui; a cor é calculada no próprio elemento (base.css, focus-ring), para
+ * seguir o --accent do tema mais próximo (temas aninhados). */
+
+:root,
+[data-focus="b"] {
+  /* Borda de 1 px no terracota cheio + halo externo de 2 px a 25% */
+  --focus-alpha: 100%;
+  --focus-halo-size: 2px;
+}
+
+[data-focus="a"] {
+  /* Só a borda de 1 px, no terracota a 25% (medido em Foundations → Colors: não atinge 3:1) */
+  --focus-alpha: 25%;
+  --focus-halo-size: 0px;
+}
+
+/* ---------- Densidade (skill §13: muda espaço, não fonte) ---------- */
+
+:root,
+[data-density="comfortable"] {
+  --density-row: 44px;
+  --density-menu-item: 32px;
+  --density-nav-item: 28px;
+  --density-field: 32px;
+  --density-command-item: 36px;
+  --density-cell-x: 12px;
+}
+
+[data-density="compact"] {
+  --density-row: 36px;
+  --density-menu-item: 28px;
+  --density-nav-item: 24px;
+  --density-field: 28px;
+  --density-command-item: 32px;
+  --density-cell-x: 8px;
+}
+
+/* ---------- Movimento (skill §8) ---------- */
+
+:root {
+  /* Micro-interações 100–150 ms; overlays 150–200 ms; modais 200–300 ms; saída ≈ 75% */
+  --motion-fast: 120ms;
+  --motion-normal: 180ms;
+  --motion-normal-exit: 140ms;
+  --motion-slow: 240ms;
+  --motion-slow-exit: 180ms;
+  --motion-shift: 4px;
+  --motion-scale: 0.97;
+  --tooltip-delay: 500ms;
+}
+
+/* Movimento reduzido: sem deslocamento nem escala; só opacidade rápida */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 100ms;
+    --motion-normal: 100ms;
+    --motion-normal-exit: 100ms;
+    --motion-slow: 100ms;
+    --motion-slow-exit: 100ms;
+    --motion-shift: 0px;
+    --motion-scale: 1;
+  }
+}

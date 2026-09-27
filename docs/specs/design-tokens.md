@@ -1,6 +1,6 @@
 # Spec: Design tokens
 
-Issue: [VYZ-12](https://linear.app/zynox-dev/issue/VYZ-12/design-tokens). Status: **V2 em `/_design`, aguardando aprovação do responsável**.
+Issue: [VYZ-12](https://linear.app/zynox-dev/issue/VYZ-12/design-system). Status: **substituída**. Os tokens agora vivem em `packages/design-system` e são documentados em `/design-system`; as decisões vigentes estão na [ADR-0013](../adr/0013-design-system-package-and-rules.md). Esta spec fica como histórico da V2.
 
 Direção visual: [ADR-0011](../adr/0011-warm-monochrome-visual-direction.md), alterada pela [ADR-0012](../adr/0012-terracotta-accent-and-type-pairing.md). Referência de paleta e contenção: [`docs/design/reference-anthropic.md`](../design/reference-anthropic.md). Implementação: `apps/web/src/styles/tokens.css`. Valores e contrastes recalculáveis com `node docs/design/palette-contrast.mjs`.
 

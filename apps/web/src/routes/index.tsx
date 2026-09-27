@@ -7,8 +7,8 @@ import { ProjectsPage } from "@/features/projects";
 const devRoutes: RouteObject[] = import.meta.env.DEV
   ? [
       {
-        path: "/_design",
-        lazy: async () => ({ Component: (await import("@/features/design-preview")).DesignPage }),
+        path: "/design-system/*",
+        lazy: () => import("@/features/design-system"),
       },
     ]
   : [];

@@ -1,0 +1,70 @@
+/*
+ * Camada 1: primitivos. Paleta crua, fora do @theme (não gera utilitários; componentes não usam).
+ * Valores e contrastes: node docs/design/palette-contrast.mjs. Direção: ADR-0013.
+ */
+:root {
+  /* Neutros quentes (sem tom azulado), do mais escuro ao mais claro */
+  --vz-warm-990: #0a0a09;
+  --vz-warm-975: #0e0e0d;
+  --vz-warm-950: #141413;
+  --vz-warm-925: #1a1a18;
+  --vz-warm-900: #1f1e1d;
+  --vz-warm-850: #262624;
+  --vz-warm-800: #30302e;
+  --vz-warm-750: #3d3d3a;
+  --vz-warm-600: #5e5d59;
+  --vz-warm-580: #686761;
+  --vz-warm-550: #7d7c75;
+  --vz-warm-500: #87867f;
+  --vz-warm-400: #b0aea5;
+  --vz-warm-300: #bdbbb1;
+  --vz-warm-250: #d1cfc5;
+  --vz-warm-200: #e3dacc;
+  --vz-warm-150: #e8e6dc;
+  --vz-warm-100: #f0eee6;
+  --vz-warm-50: #faf9f5;
+
+  /* Terracota (#d97757). L ajustado por tema: indicador ≥ 3:1; como texto ≥ 4,5:1 */
+  --vz-terracotta-dark: oklch(0.672 0.131 38.8);
+  --vz-terracotta-light: oklch(0.597 0.131 38.8);
+  --vz-terracotta-light-text: oklch(0.502 0.131 38.8);
+
+  /* Matizes: mesmo L e C por tema, só o matiz varia (C limitado à gama sRGB) */
+  --vz-green-dark: oklch(0.72 0.15 150);
+  --vz-blue-dark: oklch(0.72 0.15 245);
+  --vz-amber-dark: oklch(0.72 0.15 75);
+  --vz-red-dark: oklch(0.72 0.15 25);
+  --vz-purple-dark: oklch(0.72 0.15 305);
+  --vz-pink-dark: oklch(0.72 0.15 350);
+  --vz-cyan-dark: oklch(0.72 0.12 205);
+  --vz-orange-dark: oklch(0.72 0.15 50);
+  --vz-lime-dark: oklch(0.72 0.15 125);
+  --vz-indigo-dark: oklch(0.72 0.145 275);
+
+  --vz-green-light: oklch(0.55 0.15 150);
+  --vz-blue-light: oklch(0.55 0.135 245);
+  --vz-amber-light: oklch(0.55 0.115 75);
+  --vz-red-light: oklch(0.55 0.15 25);
+  --vz-purple-light: oklch(0.55 0.15 305);
+  --vz-pink-light: oklch(0.55 0.15 350);
+  --vz-cyan-light: oklch(0.55 0.09 205);
+  --vz-orange-light: oklch(0.55 0.145 50);
+  --vz-lime-light: oklch(0.55 0.135 125);
+  --vz-indigo-light: oklch(0.55 0.15 275);
+
+  /* Texto de badge no claro: mesmo matiz, L menor até 4,5:1 sobre o fundo a 15% */
+  --vz-green-light-text: oklch(0.435 0.12 150);
+  --vz-blue-light-text: oklch(0.445 0.11 245);
+  --vz-amber-light-text: oklch(0.455 0.095 75);
+  --vz-red-light-text: oklch(0.465 0.15 25);
+
+  /* Base de sombra (RGB): preto no escuro, grafite no claro */
+  --vz-shadow-black: 0 0 0;
+  --vz-shadow-ink: 20 20 19;
+
+  /* Tintas das camadas de hover e seleção (RGB, usadas com alpha em themes.css) */
+  --vz-overlay-light: 250 249 245;
+  --vz-overlay-ink: 20 20 19;
+  /* Bege da seleção no claro: a 20% sobre #faf9f5 resulta em #e3dacc (seleção atual) */
+  --vz-overlay-beige: 135 94 40;
+}

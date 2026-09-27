@@ -15,13 +15,21 @@ Monorepo pnpm (ADR-0003). Front (`apps/web`): Vite + React 19 + TypeScript (stri
 7. **Services assíncronos em `apps/web/src/services/` chamando a API real, consumidos via TanStack Query.** Componentes não conhecem a origem dos dados.
 8. **Estado de filtros na URL.** Filtros, ordenação, busca e aba ativa ficam em search params (React Router), não em estado local.
 
+## Design system
+
+- O Vyzer Design System (`packages/design-system`, documentado em `/design-system`) é a fonte da verdade visual. Telas do produto usam **somente** seus tokens e componentes.
+- A skill `vyzer-ui-design` (`.claude/skills/vyzer-ui-design/SKILL.md`) é usada **apenas** para criar, alterar ou revisar o próprio design system. Não é consultada para construir telas.
+- Se uma tela precisar de algo que o design system não tem, não improvise na tela: proponha a adição ao design system, aguarde aprovação e só então use.
+- As ADRs têm precedência sobre a skill.
+
 ## Organização
 
 - `apps/web`: o front. Caminhos abaixo relativos a `apps/web/`:
   - `src/components/ui`: primitivos reutilizáveis. Reaproveite antes de criar.
   - `src/layouts`, `src/features`: só apresentação e composição.
   - `src/services`: acesso a dados, chamando a API.
-  - `src/styles`: tokens e estilos globais.
+  - `src/features/design-system`: documentação do design system (rota `/design-system`, só em desenvolvimento).
+- `packages/design-system`: tokens, estilos globais, ícones e componentes (`@vyzer/design-system`).
 - `apps/api`: servidor da API.
 - `packages/contract`: contrato da API, compartilhado entre `apps/api` e `apps/web`.
 - `packages/db`: schema do banco e migrations.
@@ -57,4 +65,5 @@ Todos rodam na raiz e cobrem os pacotes do monorepo.
 - `pnpm build`: checagem de tipos + build de produção de cada pacote.
 - `pnpm check`: formatação (oxfmt), lint (oxlint) e tipos (tsc) de todos os pacotes.
 - `pnpm fix`: corrige formatação e lint automaticamente.
+- `pnpm test`: Vitest (unitários em Node; design system e páginas de `/design-system` num Chromium real, com axe-core).
 - `docker compose up -d`: Traefik, Postgres e Redis. Veja `infra/README.md`.
