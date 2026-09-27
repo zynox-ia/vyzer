@@ -12,6 +12,7 @@ import "../styles/index.css";
 import {
   Button,
   Checkbox,
+  Combobox,
   Field,
   IconButton,
   Menu,
@@ -20,10 +21,12 @@ import {
   MenuSeparator,
   MenuTrigger,
   PasswordInput,
+  PropertyButton,
   Radio,
   RadioGroup,
   SearchInput,
   SegmentedControl,
+  Select,
   Switch,
   TextArea,
   TextInput,
@@ -303,5 +306,83 @@ describe("SegmentedControl", () => {
     await comment.click();
     await expect.element(comment).toHaveAttribute("aria-checked", "true");
     expect(await violations(screen.container)).toEqual([]);
+  });
+});
+
+const priorities = [
+  { value: "none", label: "No priority" },
+  { value: "urgent", label: "Urgent" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+];
+
+describe("Combobox", () => {
+  function Priority({ onChange }: { onChange?: (v: string) => void }) {
+    const [value, setValue] = useState("none");
+    return (
+      <Combobox
+        label="Priority"
+        value={value}
+        onValueChange={(v) => {
+          setValue(v);
+          onChange?.(v);
+        }}
+        options={priorities}
+        searchPlaceholder="Change priority…"
+        shortcut={["P", "P"]}
+        numberFrom={0}
+      >
+        <PropertyButton>{priorities.find((p) => p.value === value)?.label}</PropertyButton>
+      </Combobox>
+    );
+  }
+
+  it("abre com foco na busca, filtra e escolhe com Enter", async () => {
+    const onChange = vi.fn();
+    const screen = await render(<Priority onChange={onChange} />);
+    await screen.getByRole("button", { name: "No priority" }).click();
+    const search = screen.getByPlaceholder("Change priority…");
+    await expect.element(search).toHaveFocus();
+    await userEvent.keyboard("hig");
+    await expect.element(screen.getByRole("option", { name: /Urgent/ })).not.toBeInTheDocument();
+    await userEvent.keyboard("{Enter}");
+    expect(onChange).toHaveBeenCalledWith("high");
+    await expect.element(screen.getByRole("button", { name: "High" })).toHaveFocus();
+  });
+
+  it("número escolhe direto com a busca vazia; Esc fecha", async () => {
+    const onChange = vi.fn();
+    const screen = await render(<Priority onChange={onChange} />);
+    await screen.getByRole("button", { name: "No priority" }).click();
+    await expect.element(screen.getByRole("listbox")).toBeVisible();
+    const dialog = document.querySelector("[data-radix-popper-content-wrapper]");
+    if (!dialog) throw new Error("popover não abriu");
+    expect(await violations(dialog)).toEqual([]);
+    // Começa em 0 (No priority): 3 = Medium, como no Figma.
+    await userEvent.keyboard("3");
+    expect(onChange).toHaveBeenCalledWith("medium");
+    await screen.getByRole("button", { name: "Medium" }).click();
+    await expect.element(screen.getByRole("listbox")).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+    await expect.element(screen.getByRole("listbox")).not.toBeInTheDocument();
+  });
+});
+
+describe("Select", () => {
+  it("abre pelo teclado e escolhe com setas e Enter", async () => {
+    const onChange = vi.fn();
+    const screen = await render(
+      <Field label="Priority">
+        <Select options={priorities} defaultValue="none" onValueChange={onChange} />
+      </Field>,
+    );
+    const trigger = screen.getByRole("combobox", { name: "Priority" });
+    await trigger.click();
+    await expect.element(screen.getByRole("listbox")).toBeVisible();
+    await userEvent.keyboard("{ArrowDown}");
+    await userEvent.keyboard("{Enter}");
+    expect(onChange).toHaveBeenCalledWith("urgent");
+    await expect.element(trigger).toHaveTextContent("Urgent");
   });
 });

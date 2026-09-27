@@ -60,3 +60,18 @@ export {
   type SegmentedOption,
   type SegmentedSize,
 } from "./segmented";
+export {
+  Badge,
+  Counter,
+  HealthBadge,
+  type BadgeProps,
+  type BadgeTone,
+  type CounterProps,
+  type Health,
+  type HealthBadgeProps,
+} from "./badge";
+export { Combobox, type ComboboxProps } from "./combobox";
+export { Kbd, KbdSequence, type KbdSequenceProps } from "./kbd";
+export type { ListOption } from "./listbox";
+export { PropertyButton, type PropertyButtonProps } from "./property-button";
+export { Select, type SelectProps } from "./select";

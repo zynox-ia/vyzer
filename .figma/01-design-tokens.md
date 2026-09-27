@@ -7,25 +7,28 @@
 
 ## Divergências intencionais
 
-| Figma                                                     | Implementação                                                             | Motivo                                                                         |
-| --------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Cores do Linear (cinzas frios, accent `#5e6ad2`)          | Paleta quente, acento terracota mínimo                                    | ADR-0013                                                                       |
-| Títulos de página em Inter 13 px medium                   | Figtree em tudo: `type-title` 27 px / 300, headings 22 / 19 / 16 px / 500 | ADR-0013 (escala modular 1,2; pesos 300–500)                                   |
-| Modal com raio 21 px                                      | `rounded-surface` (12 px)                                                 | Decisão do responsável; 21 px fica registrado aqui                             |
-| Trilho de tabs/segmented com raio 5                       | `rounded-xs` (4 px)                                                       | Quase-duplicado consolidado na escala                                          |
-| Anéis brancos translúcidos em pills e cards               | Bordas hairline (`border-*`)                                              | Contenção: profundidade por superfície e hairline                              |
-| Sombra "raised" em painel, cards e botões                 | Sem sombra                                                                | Sombra só em overlays                                                          |
-| Sombra de dropdown em 3 camadas a 0,125 (`1:904`)         | 2 camadas (contato + ambiente), blur = 2 × y                              | Skill §9                                                                       |
-| Ícones de linha próprios do Figma (navegação, ações)      | lucide-react com traço 1,5 (dependência já aprovada no Foundation)        | Biblioteca única; status e prioridade mantêm os SVG exatos (6:1543, 1:935)     |
-| Ícones de 14 px (o tamanho mais usado)                    | Escala 12 · 16 · 20 · 24 · 32                                             | Pendente de decisão do responsável (ver relatório da fundação)                 |
-| Controle de 44 px no login (`1:12621`)                    | `h-control-xl` (40 px)                                                    | Skill §6 (escala de alturas termina em 40); pendente de confirmação            |
-| Linha do command menu de 34 px                            | 36 px (`h-command-item`)                                                  | Grid de 4 px (skill §1)                                                        |
-| Kbd em 12 px Regular (`1:942`)                            | `text-kbd` 12 / 16, 400, JetBrains Mono                                   | Mono para teclas (ADR-0013)                                                    |
-| Fonte Inter em todo o arquivo                             | Figtree (corpo, interface e títulos)                                      | Decisão do responsável (ADR-0013)                                              |
-| Inputs sem borda nem fundo, padding 6 px (1:7563, 1:7571) | Campo com borda de controle e fundo, padding horizontal 8 px              | Skill §1 e §3: controle de formulário precisa de borda ≥ 3:1 e padding 8–12 px |
-| Accent do Linear no toggle ligado e no checkbox marcado   | `bg-checked` (cor do texto primário)                                      | ADR-0013: controles ativos sem acento                                          |
-| Padding de botão 0/8 (24 px) e 0/10 (28 px)               | 10 · 12 · 16 · 20 px por tamanho                                          | Decisão do responsável: mais respiro interno (≥ +2 px)                         |
-| Quase-duplicados de tipografia, raio e espaçamento        | Um valor canônico (o mais usado)                                          | Ruído de captura                                                               |
+| Figma                                                                   | Implementação                                                             | Motivo                                                                         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Cores do Linear (cinzas frios, accent `#5e6ad2`)                        | Paleta quente, acento terracota mínimo                                    | ADR-0013                                                                       |
+| Títulos de página em Inter 13 px medium                                 | Figtree em tudo: `type-title` 27 px / 300, headings 22 / 19 / 16 px / 500 | ADR-0013 (escala modular 1,2; pesos 300–500)                                   |
+| Modal com raio 21 px                                                    | `rounded-surface` (12 px)                                                 | Decisão do responsável; 21 px fica registrado aqui                             |
+| Trilho de tabs/segmented com raio 5                                     | `rounded-xs` (4 px)                                                       | Quase-duplicado consolidado na escala                                          |
+| Anéis brancos translúcidos em pills e cards                             | Bordas hairline (`border-*`)                                              | Contenção: profundidade por superfície e hairline                              |
+| Sombra "raised" em painel, cards e botões                               | Sem sombra                                                                | Sombra só em overlays                                                          |
+| Sombra de dropdown em 3 camadas a 0,125 (`1:904`)                       | 2 camadas (contato + ambiente), blur = 2 × y                              | Skill §9                                                                       |
+| Ícones de linha próprios do Figma (navegação, ações)                    | lucide-react com traço 1,5 (dependência já aprovada no Foundation)        | Biblioteca única; status e prioridade mantêm os SVG exatos (6:1543, 1:935)     |
+| Ícones de 14 px (o tamanho mais usado)                                  | Escala 12 · 16 · 20 · 24 · 32                                             | Pendente de decisão do responsável (ver relatório da fundação)                 |
+| Controle de 44 px no login (`1:12621`)                                  | `h-control-xl` (40 px)                                                    | Skill §6 (escala de alturas termina em 40); pendente de confirmação            |
+| Linha do command menu de 34 px                                          | 36 px (`h-command-item`)                                                  | Grid de 4 px (skill §1)                                                        |
+| Kbd em 12 px Regular (`1:942`)                                          | `text-kbd` 12 / 16, 400, JetBrains Mono                                   | Mono para teclas (ADR-0013)                                                    |
+| Fonte Inter em todo o arquivo                                           | Figtree (corpo, interface e títulos)                                      | Decisão do responsável (ADR-0013)                                              |
+| Inputs sem borda nem fundo, padding 6 px (1:7563, 1:7571)               | Campo com borda de controle e fundo, padding horizontal 8 px              | Skill §1 e §3: controle de formulário precisa de borda ≥ 3:1 e padding 8–12 px |
+| Accent do Linear no toggle ligado e no checkbox marcado                 | `bg-checked` (cor do texto primário)                                      | ADR-0013: controles ativos sem acento                                          |
+| Padding de botão 0/8 (24 px) e 0/10 (28 px)                             | 10 · 12 · 16 · 20 px por tamanho                                          | Decisão do responsável: mais respiro interno (≥ +2 px)                         |
+| Kbd de 18 px (1:941) e "then" em 10 px                                  | Kbd de 20 px (h-control-xs); "then" em 11 px                              | Grid de 4 (§1); 11 px é o mínimo da escala (§2)                                |
+| Linhas do menu "/" com 34 px (1:4653)                                   | 36 px (`h-command-item`)                                                  | Grid de 4 (§1)                                                                 |
+| Dropdowns de propriedade com sombra de 3 camadas (1:904, 1:935, 6:1543) | `shadow-md` (2 camadas)                                                   | Skill §9                                                                       |
+| Quase-duplicados de tipografia, raio e espaçamento                      | Um valor canônico (o mais usado)                                          | Ruído de captura                                                               |
 
 ## Sem design
 

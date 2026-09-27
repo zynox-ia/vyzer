@@ -81,6 +81,13 @@ export const sections: DocSection[] = [
         title: "Icon Button",
         Page: page(() => import("./pages/components/icon-button")),
       },
+      {
+        slug: "property-button",
+        title: "Property Button",
+        Page: page(() => import("./pages/components/property-button")),
+      },
+      { slug: "badge", title: "Badge", Page: page(() => import("./pages/components/badge")) },
+      { slug: "kbd", title: "Kbd", Page: page(() => import("./pages/components/kbd")) },
     ],
   },
   {
@@ -98,6 +105,8 @@ export const sections: DocSection[] = [
         title: "Text Area",
         Page: page(() => import("./pages/forms/text-area")),
       },
+      { slug: "select", title: "Select", Page: page(() => import("./pages/forms/select")) },
+      { slug: "combobox", title: "Combobox", Page: page(() => import("./pages/forms/combobox")) },
       {
         slug: "search-input",
         title: "Search Input",
