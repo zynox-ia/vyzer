@@ -14,7 +14,7 @@ A spec (`docs/specs/...`) com o link do nó do Figma e os arquivos implementados
 
 1. Leia `AGENTS.md` e a spec.
 2. Consulte o nó via Figma MCP: `get_design_context`, `get_variable_defs` e `get_screenshot`.
-3. Leia os arquivos implementados e os tokens em `src/styles/`.
+3. Leia os arquivos implementados e os tokens em `apps/web/src/styles/`.
 4. Compare: layout, espaçamentos, tipografia, cores, raios, sombras, ícones, todos os estados da spec e os critérios de aceite.
 5. Verifique as regras inegociáveis: nada hardcoded, só tokens semânticos, Radix para primitivos interativos, dados via services, filtros na URL, escopo estrito.
 

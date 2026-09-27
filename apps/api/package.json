@@ -1,0 +1,23 @@
+{
+  "name": "@vyzer/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=../../.env src/index.ts",
+    "build": "tsc -b --noEmit",
+    "check:types": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "@orpc/server": "^1.15.4",
+    "@vyzer/contract": "workspace:*",
+    "@vyzer/db": "workspace:*",
+    "hono": "^4.13.9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

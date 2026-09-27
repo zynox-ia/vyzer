@@ -2,17 +2,21 @@
 
 ## Link do Figma
 
-<URL do nó, com node-id>
+<URL do nó, com node-id. Se a tela não tiver nó, anote "sem design" e registre em `.figma/`.>
 
 ## Escopo
 
 O que esta entrega inclui.
 
-## Funciona agora vs. depois
+## Fatia vertical
 
-| Agora (mock) | Depois (backend real) |
-| ------------ | --------------------- |
-|              |                       |
+Cada camada que esta entrega toca, funcionando de verdade (sem mocks).
+
+| Camada | O que entra |
+| ------ | ----------- |
+| Banco  |             |
+| API    |             |
+| Tela   |             |
 
 ## Comportamento
 

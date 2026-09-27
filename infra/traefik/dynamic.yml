@@ -1,11 +1,21 @@
-# Roteia vyzer.localhost para o Vite rodando nativo no host (pnpm dev, porta 3000).
+# Roteia vyzer.localhost para os processos nativos no host (pnpm dev):
+# /api e /api/* vão para a API (porta 3001); o resto vai para o Vite (porta 3000).
 http:
   routers:
+    api:
+      rule: Host(`vyzer.localhost`) && (Path(`/api`) || PathPrefix(`/api/`))
+      priority: 100
+      entryPoints: [web]
+      service: api
     web:
       rule: Host(`vyzer.localhost`)
       entryPoints: [web]
       service: web
   services:
+    api:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:3001
     web:
       loadBalancer:
         servers:

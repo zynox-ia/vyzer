@@ -1,0 +1,2 @@
+-- Migration inicial, sem tabelas: valida o pipeline de migrations (geração, registro e aplicação).
+-- As primeiras tabelas chegam com a autenticação (passo 4 da Foundation).

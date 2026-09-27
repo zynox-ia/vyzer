@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vyzer</title>
+    <script>
+      // Aplica o tema salvo antes da primeira pintura (mesma regra de src/lib/theme.ts).
+      (function () {
+        var theme = "dark";
+        try {
+          var pref = localStorage.getItem("vyzer-theme");
+          var systemLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+          if (pref === "light" || (pref === "system" && systemLight)) theme = "light";
+        } catch (e) {}
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

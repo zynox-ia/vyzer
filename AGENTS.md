@@ -2,7 +2,7 @@
 
 Fonte única das regras para qualquer agente ou pessoa trabalhando aqui.
 
-Stack: Vite + React 19 + TypeScript (strict) + Tailwind v4 + React Router + TanStack Query + Radix (`radix-ui`) + cmdk. Gerenciador: pnpm. Alias `@/` aponta para `src/`.
+Monorepo pnpm (ADR-0003). Front (`apps/web`): Vite + React 19 + TypeScript (strict) + Tailwind v4 + React Router + TanStack Query + Radix (`radix-ui`) + cmdk. Back-end (`apps/api`): Node + Hono + oRPC, Drizzle, Better Auth (ADRs 0004 a 0006). Gerenciador: pnpm. No front, o alias `@/` aponta para `apps/web/src/`.
 
 ## Regras inegociáveis
 
@@ -12,15 +12,19 @@ Stack: Vite + React 19 + TypeScript (strict) + Tailwind v4 + React Router + TanS
 4. **Escopo estrito.** Implemente só o que a tarefa pede. Nada de refatorar, renomear ou "melhorar" o que está fora dela; anote e pergunte.
 5. **Sem dependências novas sem consulta.** Qualquer `pnpm add` precisa de aprovação prévia.
 6. **Radix para primitivos interativos.** Dialog, popover, menu, tooltip, select, tabs etc. vêm de `radix-ui`; paleta de comandos usa `cmdk`. Não recrie comportamento de acessibilidade à mão.
-7. **Services assíncronos em `src/services/` chamando a API real, consumidos via TanStack Query.** Componentes não conhecem a origem dos dados.
+7. **Services assíncronos em `apps/web/src/services/` chamando a API real, consumidos via TanStack Query.** Componentes não conhecem a origem dos dados.
 8. **Estado de filtros na URL.** Filtros, ordenação, busca e aba ativa ficam em search params (React Router), não em estado local.
 
 ## Organização
 
-- `src/components/ui`: primitivos reutilizáveis. Reaproveite antes de criar.
-- `src/layouts`, `src/features`: só apresentação e composição.
-- `src/services`: acesso a dados (mocks por enquanto).
-- `src/styles`: tokens e estilos globais.
+- `apps/web`: o front. Caminhos abaixo relativos a `apps/web/`:
+  - `src/components/ui`: primitivos reutilizáveis. Reaproveite antes de criar.
+  - `src/layouts`, `src/features`: só apresentação e composição.
+  - `src/services`: acesso a dados, chamando a API.
+  - `src/styles`: tokens e estilos globais.
+- `apps/api`: servidor da API.
+- `packages/contract`: contrato da API, compartilhado entre `apps/api` e `apps/web`.
+- `packages/db`: schema do banco e migrations.
 - `docs/specs`: uma spec por feature, a partir de `docs/specs/TEMPLATE.md`.
 - `.figma/`: notas de implementação por parte validada (node-id, tokens, divergências).
 
@@ -45,8 +49,12 @@ Mudança pequena (ajuste pontual, correção de bug, config) dispensa spec, mas 
 
 ## Comandos
 
-- `pnpm dev`: Vite em http://localhost:3000 (ou http://vyzer.localhost via Traefik).
-- `pnpm build`: checagem de tipos + build de produção.
-- `pnpm check`: formatação (oxfmt), lint (oxlint) e tipos (tsc).
+Todos rodam na raiz e cobrem os pacotes do monorepo.
+
+- `pnpm dev`: Vite (porta 3000) e API (porta 3001) juntos; use http://vyzer.localhost via Traefik.
+- `pnpm db:generate`: gera a migration SQL a partir do schema (`packages/db`).
+- `pnpm db:migrate`: aplica as migrations pendentes.
+- `pnpm build`: checagem de tipos + build de produção de cada pacote.
+- `pnpm check`: formatação (oxfmt), lint (oxlint) e tipos (tsc) de todos os pacotes.
 - `pnpm fix`: corrige formatação e lint automaticamente.
 - `docker compose up -d`: Traefik, Postgres e Redis. Veja `infra/README.md`.

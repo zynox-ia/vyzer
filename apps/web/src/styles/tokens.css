@@ -1,0 +1,331 @@
+/*
+ * Design tokens do Vyzer. Spec: docs/specs/design-tokens.md. Direção visual: ADR-0011 e ADR-0012.
+ *
+ * Duas camadas (regra 3 do AGENTS.md):
+ * 1. Primitivos (--vz-*): paleta crua, declarada fora do @theme, então não gera utilitários.
+ * 2. Semânticos (@theme): os únicos utilitários que componentes usam (bg-panel, text-secondary...).
+ *
+ * Tema: [data-theme="dark" | "light"] no <html>; sem atributo vale o escuro (padrão).
+ * Valores e contrastes: node docs/design/palette-contrast.mjs
+ */
+
+/* ---------- Primitivos ---------- */
+
+:root {
+  /* Neutros quentes, escuros */
+  --vz-warm-975: #0e0e0d;
+  --vz-warm-950: #141413;
+  --vz-warm-925: #1a1a18;
+  --vz-warm-900: #1f1e1d;
+  --vz-warm-850: #262624;
+  --vz-warm-800: #30302e;
+  --vz-warm-750: #3d3d3a;
+
+  /* Neutros quentes, médios (texto) */
+  --vz-warm-600: #5e5d59;
+  --vz-warm-500: #87867f;
+  --vz-warm-400: #b0aea5;
+
+  /* Neutros quentes, claros (creme) */
+  --vz-warm-300: #bdbbb1;
+  --vz-warm-250: #d1cfc5;
+  --vz-warm-200: #e3dacc;
+  --vz-warm-150: #e8e6dc;
+  --vz-warm-100: #f0eee6;
+  --vz-warm-50: #faf9f5;
+
+  /* Acento terracota (ADR-0012): L ajustado por tema para ≥ 3:1 em todas as superfícies */
+  --vz-terracotta-dark: oklch(0.672 0.131 38.8);
+  --vz-terracotta-light: oklch(0.597 0.131 38.8);
+  /* Acento como texto no claro (contadores): degrau mais escuro até 4,5:1 */
+  --vz-terracotta-light-text: oklch(0.502 0.131 38.8);
+
+  /* Cores de status e labels: mesmo L e C, só o matiz varia (C limitado à gama sRGB) */
+  --vz-green-dark: oklch(0.72 0.15 150);
+  --vz-blue-dark: oklch(0.72 0.15 245);
+  --vz-amber-dark: oklch(0.72 0.15 75);
+  --vz-red-dark: oklch(0.72 0.15 25);
+  --vz-purple-dark: oklch(0.72 0.15 305);
+  --vz-pink-dark: oklch(0.72 0.15 350);
+  --vz-cyan-dark: oklch(0.72 0.12 205);
+  --vz-orange-dark: oklch(0.72 0.15 50);
+  --vz-lime-dark: oklch(0.72 0.15 125);
+  --vz-indigo-dark: oklch(0.72 0.145 275);
+
+  --vz-green-light: oklch(0.52 0.14 150);
+  --vz-blue-light: oklch(0.52 0.13 245);
+  --vz-amber-light: oklch(0.52 0.11 75);
+  --vz-red-light: oklch(0.52 0.15 25);
+  --vz-purple-light: oklch(0.52 0.15 305);
+  --vz-pink-light: oklch(0.52 0.15 350);
+  --vz-cyan-light: oklch(0.52 0.085 205);
+  --vz-orange-light: oklch(0.52 0.135 50);
+  --vz-lime-light: oklch(0.52 0.13 125);
+  --vz-indigo-light: oklch(0.52 0.15 275);
+
+  /* Texto de badge no claro: mesmo matiz, L menor até 4,5:1 sobre o fundo a 15% */
+  --vz-green-light-text: oklch(0.435 0.12 150);
+  --vz-blue-light-text: oklch(0.445 0.11 245);
+  --vz-amber-light-text: oklch(0.45 0.095 75);
+  --vz-red-light-text: oklch(0.46 0.15 25);
+
+  /* Sombra: base grafite */
+  --vz-shadow-ink: 20 20 19;
+}
+
+/* ---------- Tema escuro (padrão) ---------- */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-app: var(--vz-warm-975);
+  --bg-sidebar: var(--vz-warm-950);
+  --bg-panel: var(--vz-warm-950);
+  --bg-surface: var(--vz-warm-925);
+  --bg-subtle: var(--vz-warm-925);
+  --bg-popover: var(--vz-warm-900);
+  --bg-control: var(--vz-warm-925);
+  --bg-input: var(--vz-warm-925);
+  --bg-control-strong: var(--vz-warm-900);
+  --bg-hover: var(--vz-warm-925);
+  --bg-selected: var(--vz-warm-900);
+  --bg-inverse: var(--vz-warm-50);
+  --bg-inverse-hover: var(--vz-warm-150);
+  --bg-scrim: rgb(var(--vz-shadow-ink) / 0.7);
+
+  --fg-primary: var(--vz-warm-50);
+  --fg-secondary: var(--vz-warm-400);
+  --fg-tertiary: var(--vz-warm-500);
+  --fg-inverse: var(--vz-warm-975);
+
+  --line-subtle: var(--vz-warm-900);
+  --line-default: var(--vz-warm-850);
+  --line-strong: var(--vz-warm-800);
+
+  --accent: var(--vz-terracotta-dark);
+  --accent-text: var(--vz-terracotta-dark);
+
+  --st-success: var(--vz-green-dark);
+  --st-success-text: var(--vz-green-dark);
+  --st-info: var(--vz-blue-dark);
+  --st-info-text: var(--vz-blue-dark);
+  --st-warning: var(--vz-amber-dark);
+  --st-warning-text: var(--vz-amber-dark);
+  --st-danger: var(--vz-red-dark);
+  --st-danger-text: var(--vz-red-dark);
+
+  --lb-green: var(--vz-green-dark);
+  --lb-blue: var(--vz-blue-dark);
+  --lb-amber: var(--vz-amber-dark);
+  --lb-red: var(--vz-red-dark);
+  --lb-purple: var(--vz-purple-dark);
+  --lb-pink: var(--vz-pink-dark);
+  --lb-cyan: var(--vz-cyan-dark);
+  --lb-orange: var(--vz-orange-dark);
+  --lb-lime: var(--vz-lime-dark);
+  --lb-indigo: var(--vz-indigo-dark);
+
+  --sh-popover:
+    0 1px 1px rgb(0 0 0 / 0.13), 0 2px 5px rgb(0 0 0 / 0.13), 0 3px 8px rgb(0 0 0 / 0.13);
+  --sh-modal:
+    0 1px 1px rgb(0 0 0 / 0.125), 0 2px 8px rgb(0 0 0 / 0.125), 0 3px 12px rgb(0 0 0 / 0.125),
+    0 3px 20px rgb(0 0 0 / 0.125), 0 4px 40px rgb(0 0 0 / 0.1);
+}
+
+/* ---------- Tema claro: conteúdo sobre o creme ---------- */
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-app: var(--vz-warm-100);
+  --bg-sidebar: var(--vz-warm-100);
+  --bg-panel: var(--vz-warm-50);
+  --bg-surface: var(--vz-warm-50);
+  --bg-subtle: var(--vz-warm-100);
+  --bg-popover: var(--vz-warm-50);
+  --bg-control: var(--vz-warm-100);
+  --bg-input: var(--vz-warm-50);
+  --bg-control-strong: var(--vz-warm-150);
+  --bg-hover: var(--vz-warm-150);
+  --bg-selected: var(--vz-warm-200);
+  --bg-inverse: var(--vz-warm-950);
+  --bg-inverse-hover: var(--vz-warm-750);
+  --bg-scrim: rgb(var(--vz-shadow-ink) / 0.25);
+
+  --fg-primary: var(--vz-warm-950);
+  --fg-secondary: var(--vz-warm-600);
+  --fg-tertiary: var(--vz-warm-500);
+  --fg-inverse: var(--vz-warm-50);
+
+  --line-subtle: var(--vz-warm-150);
+  --line-default: var(--vz-warm-250);
+  --line-strong: var(--vz-warm-300);
+
+  --accent: var(--vz-terracotta-light);
+  --accent-text: var(--vz-terracotta-light-text);
+
+  --st-success: var(--vz-green-light);
+  --st-success-text: var(--vz-green-light-text);
+  --st-info: var(--vz-blue-light);
+  --st-info-text: var(--vz-blue-light-text);
+  --st-warning: var(--vz-amber-light);
+  --st-warning-text: var(--vz-amber-light-text);
+  --st-danger: var(--vz-red-light);
+  --st-danger-text: var(--vz-red-light-text);
+
+  --lb-green: var(--vz-green-light);
+  --lb-blue: var(--vz-blue-light);
+  --lb-amber: var(--vz-amber-light);
+  --lb-red: var(--vz-red-light);
+  --lb-purple: var(--vz-purple-light);
+  --lb-pink: var(--vz-pink-light);
+  --lb-cyan: var(--vz-cyan-light);
+  --lb-orange: var(--vz-orange-light);
+  --lb-lime: var(--vz-lime-light);
+  --lb-indigo: var(--vz-indigo-light);
+
+  --sh-popover:
+    0 1px 1px rgb(var(--vz-shadow-ink) / 0.06), 0 2px 5px rgb(var(--vz-shadow-ink) / 0.06),
+    0 3px 8px rgb(var(--vz-shadow-ink) / 0.06);
+  --sh-modal:
+    0 1px 1px rgb(var(--vz-shadow-ink) / 0.06), 0 2px 8px rgb(var(--vz-shadow-ink) / 0.06),
+    0 3px 12px rgb(var(--vz-shadow-ink) / 0.06), 0 3px 20px rgb(var(--vz-shadow-ink) / 0.06),
+    0 4px 40px rgb(var(--vz-shadow-ink) / 0.05);
+}
+
+/* ---------- Semânticos (utilitários do Tailwind) ---------- */
+
+@theme inline {
+  /* Remove as escalas padrão do Tailwind: só existe o que está aqui. */
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --blur-*: initial;
+  --font-weight-*: initial;
+  --tracking-*: initial;
+  --leading-*: initial;
+  --text-shadow-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+  --container-*: initial;
+  --perspective-*: initial;
+  --font-*: initial;
+
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Fundos: bg-* */
+  --background-color-app: var(--bg-app);
+  --background-color-sidebar: var(--bg-sidebar);
+  --background-color-panel: var(--bg-panel);
+  --background-color-surface: var(--bg-surface);
+  --background-color-subtle: var(--bg-subtle);
+  --background-color-popover: var(--bg-popover);
+  --background-color-control: var(--bg-control);
+  --background-color-input: var(--bg-input);
+  --background-color-control-strong: var(--bg-control-strong);
+  --background-color-hover: var(--bg-hover);
+  --background-color-selected: var(--bg-selected);
+  --background-color-inverse: var(--bg-inverse);
+  --background-color-inverse-hover: var(--bg-inverse-hover);
+  --background-color-scrim: var(--bg-scrim);
+  --background-color-accent: var(--accent);
+  --background-color-success-subtle: color-mix(in srgb, var(--st-success) 15%, transparent);
+  --background-color-info-subtle: color-mix(in srgb, var(--st-info) 15%, transparent);
+  --background-color-warning-subtle: color-mix(in srgb, var(--st-warning) 15%, transparent);
+  --background-color-danger-subtle: color-mix(in srgb, var(--st-danger) 15%, transparent);
+  --background-color-label-green: var(--lb-green);
+  --background-color-label-blue: var(--lb-blue);
+  --background-color-label-amber: var(--lb-amber);
+  --background-color-label-red: var(--lb-red);
+  --background-color-label-purple: var(--lb-purple);
+  --background-color-label-pink: var(--lb-pink);
+  --background-color-label-cyan: var(--lb-cyan);
+  --background-color-label-orange: var(--lb-orange);
+  --background-color-label-lime: var(--lb-lime);
+  --background-color-label-indigo: var(--lb-indigo);
+
+  /* Texto e ícones (currentColor): text-* */
+  --text-color-primary: var(--fg-primary);
+  --text-color-secondary: var(--fg-secondary);
+  --text-color-tertiary: var(--fg-tertiary);
+  --text-color-inverse: var(--fg-inverse);
+  --text-color-accent: var(--accent-text);
+  --text-color-success: var(--st-success);
+  --text-color-info: var(--st-info);
+  --text-color-warning: var(--st-warning);
+  --text-color-danger: var(--st-danger);
+  --text-color-success-strong: var(--st-success-text);
+  --text-color-info-strong: var(--st-info-text);
+  --text-color-warning-strong: var(--st-warning-text);
+  --text-color-danger-strong: var(--st-danger-text);
+
+  /* Bordas: border-* (hairline) */
+  --border-color-subtle: var(--line-subtle);
+  --border-color-default: var(--line-default);
+  --border-color-strong: var(--line-strong);
+  --border-color-danger: var(--st-danger);
+
+  /* Foco: anel de 2 px no acento terracota, com 2 px de afastamento (ADR-0012) */
+  --outline-color-focus: var(--accent);
+
+  /* Controles nativos marcados (checkbox, radio): acento */
+  --accent-color-accent: var(--accent);
+
+  /* Tipografia: corpo em Inter, títulos em Inter Tight (ADR-0012) */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Tight Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --text-2xs: 10px;
+  --text-2xs--line-height: normal;
+  --text-micro: 11px;
+  --text-micro--line-height: normal;
+  --text-mini: 12px;
+  --text-mini--line-height: normal;
+  --text-small: 13px;
+  --text-small--line-height: normal;
+  --text-regular: 15px;
+  --text-regular--line-height: normal;
+  --text-large: 18px;
+  --text-large--line-height: normal;
+  --text-heading: 20px;
+  --text-heading--line-height: 28px;
+  --text-heading--letter-spacing: -0.01em;
+  --text-title: 24px;
+  --text-title--line-height: 32px;
+  --text-title--letter-spacing: -0.16px;
+  --leading-tight: 16px;
+  --tracking-id: -0.02em;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Raios */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Sombras: só popover e modal (contenção) */
+  --shadow-popover: var(--sh-popover);
+  --shadow-modal: var(--sh-modal);
+
+  /* Movimento */
+  --default-transition-duration: 120ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
