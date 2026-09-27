@@ -12,7 +12,7 @@ Stack: Vite + React 19 + TypeScript (strict) + Tailwind v4 + React Router + TanS
 4. **Escopo estrito.** Implemente só o que a tarefa pede. Nada de refatorar, renomear ou "melhorar" o que está fora dela; anote e pergunte.
 5. **Sem dependências novas sem consulta.** Qualquer `pnpm add` precisa de aprovação prévia.
 6. **Radix para primitivos interativos.** Dialog, popover, menu, tooltip, select, tabs etc. vêm de `radix-ui`; paleta de comandos usa `cmdk`. Não recrie comportamento de acessibilidade à mão.
-7. **Services mockados e assíncronos.** Componentes não têm dados. Dados vêm de `src/services/`, com funções `async` que retornam mocks tipados, consumidas via TanStack Query. Trocar o mock pela API real não pode exigir mudança em componentes.
+7. **Services assíncronos em `src/services/` chamando a API real, consumidos via TanStack Query.** Componentes não conhecem a origem dos dados.
 8. **Estado de filtros na URL.** Filtros, ordenação, busca e aba ativa ficam em search params (React Router), não em estado local.
 
 ## Organização
