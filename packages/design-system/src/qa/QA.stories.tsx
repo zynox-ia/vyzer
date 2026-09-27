@@ -54,13 +54,16 @@ export const Foundations: Story = {
             <div className="flex flex-wrap gap-2">
               {surfaces.map(([name, cls]) => (
                 <span key={name} className="flex flex-col items-center gap-1">
-                  <span aria-hidden className={`${cls} size-control-xl border border-default`} />
+                  <span
+                    aria-hidden
+                    className={`${cls} size-control-xl rounded-inline border border-default`}
+                  />
                   <span className="text-caption text-secondary">{name}</span>
                 </span>
               ))}
             </div>
 
-            <div className="flex flex-col gap-1 bg-panel p-4">
+            <div className="flex flex-col gap-1 rounded-container bg-panel p-4">
               <h2 className="type-heading-2 text-primary">Executar automação</h2>
               <p className="text-body-md text-secondary">
                 O agente lê o CRM, pesquisa na web e envia a mensagem quando a automação rodar.
@@ -73,7 +76,7 @@ export const Foundations: Story = {
               </a>
             </div>
 
-            <ul className="flex flex-col bg-panel">
+            <ul className="flex flex-col overflow-hidden rounded-container bg-panel">
               <li className="flex h-row items-center gap-2 px-4 text-body-md">
                 <PriorityIcon priority="urgent" />
                 <span className="font-mono text-code text-secondary">VYZ-21</span>
@@ -98,7 +101,7 @@ export const Foundations: Story = {
               {badges.map(([text, cls, type]) => (
                 <span
                   key={text}
-                  className={`${cls} inline-flex h-control-sm items-center gap-1 px-2 text-label-sm`}
+                  className={`${cls} inline-flex h-control-sm items-center gap-1 rounded-control px-2 text-label-sm`}
                 >
                   <StatusIcon type={type} tone={undefined} className="text-current" size="xs" />
                   {text}

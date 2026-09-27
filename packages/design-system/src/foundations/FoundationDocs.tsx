@@ -162,7 +162,10 @@ export function SizeScale() {
     <div className="flex flex-wrap items-end gap-4">
       {sizeTokens.map(([name, cls, px]) => (
         <div key={name} className="flex flex-col items-center gap-1">
-          <span aria-hidden className={cn(cls, "w-16 border border-default bg-control")} />
+          <span
+            aria-hidden
+            className={cn(cls, "w-16 rounded-control border border-default bg-control")}
+          />
           <code className="text-code text-primary">{name}</code>
           <span className="text-caption text-secondary">{px}</span>
         </div>
@@ -187,7 +190,7 @@ function DensityColumn({ density }: { density: "comfortable" | "compact" }) {
       <p className="type-label-caps text-secondary">
         {density === "comfortable" ? "Confortável" : "Compacta"}
       </p>
-      <ul className="border border-default bg-panel">
+      <ul className="rounded-container border border-default bg-panel">
         {densityRows.map((r, i) => (
           <li
             key={r}
@@ -200,12 +203,12 @@ function DensityColumn({ density }: { density: "comfortable" | "compact" }) {
           </li>
         ))}
       </ul>
-      <div className="flex flex-col border border-strong bg-popover p-1 shadow-md">
+      <div className="flex flex-col rounded-overlay border border-strong bg-popover p-1 shadow-md">
         {["Renomear", "Duplicar", "Arquivar"].map((m, i) => (
           <span
             key={m}
             className={cn(
-              "flex h-menu-item items-center px-2 text-body-md text-primary",
+              "flex h-menu-item items-center rounded-control px-2 text-body-md text-primary",
               i === 0 && "bg-hover",
             )}
           >
@@ -213,7 +216,7 @@ function DensityColumn({ density }: { density: "comfortable" | "compact" }) {
           </span>
         ))}
       </div>
-      <span className="flex h-field items-center border border-control bg-input px-3 text-body-md text-placeholder">
+      <span className="flex h-field items-center rounded-control border border-control bg-input px-3 text-body-md text-placeholder">
         Pesquisar conversas
       </span>
     </div>
@@ -369,18 +372,21 @@ const shadowClass: Record<(typeof shadows)[number], string> = {
 export function ShadowScale() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap gap-8 bg-panel p-8">
+      <div className="flex flex-wrap gap-8 rounded-container bg-panel p-8">
         {shadows.map((s) => (
           <div key={s} className="flex flex-col items-center gap-3">
             <span
               aria-hidden
-              className={cn(shadowClass[s], "size-20 border border-strong bg-popover")}
+              className={cn(
+                shadowClass[s],
+                "size-20 rounded-overlay border border-strong bg-popover",
+              )}
             />
             <code className="text-code text-primary">shadow-{s}</code>
           </div>
         ))}
       </div>
-      <div className="relative h-56 border border-default bg-panel p-6">
+      <div className="relative h-56 rounded-container border border-default bg-panel p-6">
         <p className="text-body-md text-secondary">Uso real: menu e modal sobre o painel</p>
         <div className="absolute top-14 left-6 flex w-56 flex-col rounded-overlay border border-strong bg-popover p-1 shadow-md">
           {["Renomear", "Duplicar", "Arquivar"].map((m, i) => (
@@ -430,7 +436,7 @@ export function MotionDemo() {
           <button
             key={name}
             type="button"
-            className="group flex h-control-lg items-center gap-3 border border-default bg-control px-3 text-left focus-ring"
+            className="group flex h-control-lg items-center gap-3 rounded-control border border-default bg-control px-3 text-left focus-ring"
           >
             <code className="w-20 text-code text-primary">{name}</code>
             <span className="text-caption text-secondary">{ms}</span>
@@ -452,7 +458,7 @@ export function MotionDemo() {
           <button
             key={name}
             type="button"
-            className="group flex h-control-lg items-center gap-3 border border-default bg-control px-3 text-left focus-ring"
+            className="group flex h-control-lg items-center gap-3 rounded-control border border-default bg-control px-3 text-left focus-ring"
           >
             <code className="w-20 text-code text-primary">{name}</code>
             <span className="relative ml-auto h-1 w-24 bg-subtle">
@@ -513,7 +519,7 @@ export function FocusDemo() {
           <div
             key={v}
             data-focus={v}
-            className="flex flex-col gap-3 border border-default bg-panel p-4"
+            className="flex flex-col gap-3 rounded-container border border-default bg-panel p-4"
           >
             <p className="type-label-caps text-secondary">
               {v === "a" ? "Estático: variante A (comparação)" : "Estático: variante B (padrão)"}

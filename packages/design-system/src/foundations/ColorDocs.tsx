@@ -35,7 +35,7 @@ function SwatchList({ swatches }: { swatches: Swatch[] }) {
         <li key={s.token} className="flex items-center gap-3">
           <span
             aria-hidden
-            className="size-control-lg shrink-0 border border-default"
+            className="size-control-lg shrink-0 rounded-inline border border-default"
             style={{ background: `var(${s.cssVar})` }}
           />
           <span className="flex min-w-0 flex-col">

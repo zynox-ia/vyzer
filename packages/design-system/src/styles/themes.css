@@ -155,7 +155,9 @@
   --radius-scale-2xl: 0px;
 }
 
-[data-radius="soft"] {
+/* "2" e "4" são os valores antigos do toolbar; continuam válidos como apelidos. */
+[data-radius="soft"],
+[data-radius="2"] {
   --radius-scale-xs: 2px;
   --radius-scale-sm: 4px;
   --radius-scale-md: 6px;
@@ -164,7 +166,8 @@
   --radius-scale-2xl: 12px;
 }
 
-[data-radius="rounded"] {
+[data-radius="rounded"],
+[data-radius="4"] {
   --radius-scale-xs: 4px;
   --radius-scale-sm: 6px;
   --radius-scale-md: 8px;

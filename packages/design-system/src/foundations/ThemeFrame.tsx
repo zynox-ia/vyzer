@@ -20,7 +20,10 @@ export function ThemeFrame({
     <section
       data-theme={theme}
       aria-label={theme === "dark" ? "Tema escuro" : "Tema claro"}
-      className={cn("flex flex-col gap-4 border border-default bg-app p-5 text-primary", className)}
+      className={cn(
+        "flex flex-col gap-4 rounded-container border border-default bg-app p-5 text-primary",
+        className,
+      )}
     >
       <p className="text-overline text-secondary uppercase">
         {theme === "dark" ? "Escuro" : "Claro"}

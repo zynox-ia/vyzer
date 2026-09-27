@@ -19,6 +19,8 @@ const config: StorybookConfig = {
         onwarn(warning, defaultHandler) {
           // "use client" do lucide-react: diretiva de RSC, sem efeito num app Vite.
           if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
+          // Relatório de tempo dos plugins do Vite: informativo, não é problema do código.
+          if (warning.code === "PLUGIN_TIMINGS") return;
           defaultHandler(warning);
         },
       },
