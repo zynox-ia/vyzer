@@ -40,6 +40,8 @@ const colors = [
   ...["success", "info", "warning", "danger", "accent", "neutral"].map((s) => `${s}-subtle`),
   ...["success", "info", "warning", "danger"].flatMap((s) => [s, `${s}-strong`]),
   ...["green", "blue", "amber", "red", "purple", "pink", "cyan", "orange", "lime", "indigo"],
+  "grey",
+  "slate",
   ...Array.from({ length: 10 }, (_, i) => `chart-${i + 1}`),
 ];
 

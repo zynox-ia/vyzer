@@ -63,6 +63,9 @@
   --background-color-orange: var(--hue-orange);
   --background-color-lime: var(--hue-lime);
   --background-color-indigo: var(--hue-indigo);
+  /* Cinzas da paleta de labels (Figma: Grey, Dark Grey) */
+  --background-color-grey: var(--fg-secondary);
+  --background-color-slate: var(--fg-tertiary);
 
   /* ---------- Texto e ícones (text-*, via currentColor) ---------- */
   --text-color-primary: var(--fg-primary);
@@ -90,6 +93,8 @@
   --text-color-orange: var(--hue-orange);
   --text-color-lime: var(--hue-lime);
   --text-color-indigo: var(--hue-indigo);
+  --text-color-grey: var(--fg-secondary);
+  --text-color-slate: var(--fg-tertiary);
 
   /* ---------- Bordas (border-*) ---------- */
   --border-color-subtle: var(--line-subtle);

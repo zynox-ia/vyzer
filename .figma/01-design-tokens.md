@@ -28,6 +28,12 @@
 | Kbd de 18 px (1:941) e "then" em 10 px                                  | Kbd de 20 px (h-control-xs); "then" em 11 px                              | Grid de 4 (§1); 11 px é o mínimo da escala (§2)                                |
 | Linhas do menu "/" com 34 px (1:4653)                                   | 36 px (`h-command-item`)                                                  | Grid de 4 (§1)                                                                 |
 | Dropdowns de propriedade com sombra de 3 camadas (1:904, 1:935, 6:1543) | `shadow-md` (2 camadas)                                                   | Skill §9                                                                       |
+| Sublinhado da aba ativa no acento do Linear (1:1404)                    | Sublinhado neutro em `fg-primary`                                         | ADR-0013: acento só em foco e indicador da sidebar                             |
+| Ícones e emojis próprios do Linear no Icon Picker (1:1401)              | lucide-react e emojis Unicode nativos                                     | ADR-0013: biblioteca única de ícones                                           |
+| Botão de cor personalizada no Icon Picker (1:1401)                      | Não implementado; nove cores fixas                                        | Fora do escopo desta fase                                                      |
+| Dias de fora do mês em cinza terciário (Date Picker, 1:3)               | `text-secondary`                                                          | Terciário dá 3,46:1 no tema claro (mínimo 4,5:1)                               |
+| Popover do Date Picker com 300 px de largura (1:3)                      | 304 px (`w-76`)                                                           | Grid de 4 (§1)                                                                 |
+| Milestones (1:3176)                                                     | Não implementado                                                          | Padrão de edição, não menu; proposto para a Fase 10 (Patterns)                 |
 | Quase-duplicados de tipografia, raio e espaçamento                      | Um valor canônico (o mais usado)                                          | Ruído de captura                                                               |
 
 ## Sem design

@@ -136,7 +136,35 @@ export const sections: DocSection[] = [
   {
     slug: "navigation",
     title: "Navigation",
-    items: [{ slug: "menu", title: "Menu", Page: page(() => import("./pages/navigation/menu")) }],
+    items: [
+      {
+        slug: "new-project",
+        title: "New Project",
+        Page: page(() => import("./pages/navigation/new-project")),
+      },
+      { slug: "menu", title: "Menu", Page: page(() => import("./pages/navigation/menu")) },
+      {
+        slug: "submenu",
+        title: "Submenu",
+        Page: page(() => import("./pages/navigation/submenu")),
+      },
+      {
+        slug: "date-picker",
+        title: "Date Picker",
+        Page: page(() => import("./pages/navigation/date-picker")),
+      },
+      {
+        slug: "label-picker",
+        title: "Label Picker",
+        Page: page(() => import("./pages/navigation/label-picker")),
+      },
+      {
+        slug: "icon-picker",
+        title: "Icon Picker",
+        Page: page(() => import("./pages/navigation/icon-picker")),
+      },
+      { slug: "tabs", title: "Tabs", Page: page(() => import("./pages/navigation/tabs")) },
+    ],
   },
   { slug: "feedback", title: "Feedback", plannedIn: "Fase 4 (Feedback)", items: [] },
   {

@@ -13,7 +13,8 @@
     "./contrast": "./src/lib/contrast.ts",
     "./icons": "./src/icons/index.ts",
     "./font-coverage": "./src/lib/font-coverage.ts",
-    "./components": "./src/components/index.ts"
+    "./components": "./src/components/index.ts",
+    "./date": "./src/lib/date-value.ts"
   },
   "scripts": {
     "build": "tsc -b --noEmit",

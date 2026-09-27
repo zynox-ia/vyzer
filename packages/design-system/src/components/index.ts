@@ -75,3 +75,45 @@ export { Kbd, KbdSequence, type KbdSequenceProps } from "./kbd";
 export type { ListOption } from "./listbox";
 export { PropertyButton, type PropertyButtonProps } from "./property-button";
 export { Select, type SelectProps } from "./select";
+export {
+  ColorDot,
+  LABEL_COLORS,
+  labelTextClass,
+  type ColorDotProps,
+  type LabelColor,
+} from "./color-dot";
+export { ComboboxPanel, PopoverSurface, type ComboboxPanelProps } from "./combobox";
+export {
+  MenuItemContent,
+  MenuPanel,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
+  dropdownMenuStyles,
+  menuStyles,
+  type MenuSubContentProps,
+  type MenuSubTriggerProps,
+  type MenuVariant,
+} from "./menu";
+export {
+  DatePicker,
+  DatePickerPanel,
+  type DatePickerPanelProps,
+  type DatePickerProps,
+} from "./date-picker";
+export {
+  IconPicker,
+  IconPickerPanel,
+  ProjectIcon,
+  type IconPickerPanelProps,
+  type IconPickerProps,
+  type ProjectIconValue,
+} from "./icon-picker";
+export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
+export {
+  LabelPicker,
+  LabelPickerPanel,
+  type LabelItem,
+  type LabelPickerPanelProps,
+  type LabelPickerProps,
+} from "./label-picker";

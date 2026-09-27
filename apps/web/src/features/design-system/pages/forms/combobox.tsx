@@ -1,4 +1,10 @@
-import { Combobox, PropertyButton, type ListOption } from "@vyzer/design-system/components";
+import {
+  Combobox,
+  ComboboxPanel,
+  PopoverSurface,
+  PropertyButton,
+  type ListOption,
+} from "@vyzer/design-system/components";
 import { PriorityIcon, StatusIcon } from "@vyzer/design-system/icons";
 import { UserRound } from "lucide-react";
 import { useState } from "react";
@@ -39,7 +45,7 @@ const leads: ListOption[] = [
   { value: "marina", label: "Marina Costa", group: "Users from the project team" },
 ];
 
-function PriorityPicker({ portal = true, open }: { portal?: boolean; open?: boolean }) {
+function PriorityPicker() {
   const [value, setValue] = useState<Priority>("none");
   const current = priorities.find((p) => p.value === value);
   return (
@@ -51,9 +57,6 @@ function PriorityPicker({ portal = true, open }: { portal?: boolean; open?: bool
       searchPlaceholder="Change priority…"
       shortcut={["P", "P"]}
       numberFrom={0}
-      portal={portal}
-      open={open}
-      focusOnOpen={!open}
     >
       <PropertyButton leading={current?.icon} empty={value === "none"}>
         {value === "none" ? "Priority" : current?.label}
@@ -62,7 +65,7 @@ function PriorityPicker({ portal = true, open }: { portal?: boolean; open?: bool
   );
 }
 
-function StatusPicker({ portal = true, open }: { portal?: boolean; open?: boolean }) {
+function StatusPicker() {
   const [value, setValue] = useState<Status>("in-progress");
   const current = statuses.find((s) => s.value === value);
   return (
@@ -73,12 +76,43 @@ function StatusPicker({ portal = true, open }: { portal?: boolean; open?: boolea
       options={statuses}
       searchPlaceholder="Change status…"
       shortcut={["S"]}
-      portal={portal}
-      open={open}
-      focusOnOpen={!open}
     >
       <PropertyButton leading={current?.icon}>{current?.label}</PropertyButton>
     </Combobox>
+  );
+}
+
+/** Painel aberto e fixo na página (sem popover): interativo, mas não flutua nem rouba foco. */
+function PriorityPanel() {
+  const [value, setValue] = useState<Priority>("none");
+  return (
+    <PopoverSurface className="w-72">
+      <ComboboxPanel
+        label="Priority"
+        value={value}
+        onValueChange={setValue}
+        options={priorities}
+        searchPlaceholder="Change priority…"
+        shortcut={["P", "P"]}
+        numberFrom={0}
+      />
+    </PopoverSurface>
+  );
+}
+
+function StatusPanel() {
+  const [value, setValue] = useState<Status>("in-progress");
+  return (
+    <PopoverSurface className="w-60">
+      <ComboboxPanel
+        label="Status"
+        value={value}
+        onValueChange={setValue}
+        options={statuses}
+        searchPlaceholder="Change status…"
+        shortcut={["S"]}
+      />
+    </PopoverSurface>
   );
 }
 
@@ -131,20 +165,15 @@ export function Page() {
           ),
         },
         showcase: (
-          <div className="flex h-96 flex-wrap items-start gap-8">
-            <PriorityPicker portal={false} open />
-            <div className="w-64" />
-            <StatusPicker portal={false} open />
+          <div className="flex flex-wrap items-start gap-8">
+            <PriorityPanel />
+            <StatusPanel />
           </div>
         ),
         states: null,
         statesNote:
           'Linha destacada (↑ ↓ ou mouse): bg-selected em raio 8. Valor atual: marca à direita. Sem resultados: "No results". Com busca preenchida, os números somem e as teclas numéricas voltam a digitar.',
-        themes: () => (
-          <div className="h-80">
-            <PriorityPicker portal={false} open />
-          </div>
-        ),
+        themes: () => <PriorityPanel />,
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
             Popover de raio 12. Cabeçalho de 36 px com a busca (placeholder 13 px) e o atalho em Kbd

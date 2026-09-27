@@ -1,44 +1,88 @@
 /**
- * Menu (Figma 1:4653, menu "/" do editor): popover de raio 10 com linhas de ícone, rótulo e
- * atalho, separadores e destaque de raio 6 (10 − 4 de folga, regra de aninhamento §5).
- * Radix DropdownMenu: teclado, foco, typeahead e fechamento com Esc.
+ * Menu (Figma 1:4653, menu "/" do editor; 1:1256, "Add dependency"): popover com linhas de
+ * ícone, rótulo e atalho, separadores, rótulos de seção e submenus. Radix DropdownMenu:
+ * teclado, foco, typeahead e fechamento com Esc.
  */
-import type { LucideIcon } from "lucide-react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
-import type { ComponentProps, ReactNode } from "react";
+import {
+  createContext,
+  use,
+  useEffect,
+  useRef,
+  type ComponentProps,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { Icon } from "../icons/Icon";
 import { cn } from "../lib/cn";
+
+/**
+ * Classes do menu, exportadas para montar a mesma aparência fora do Radix (painéis estáticos
+ * em documentação). Raio 10 com destaque de raio 6 a 4 px da borda (§5: 10 − 4 = 6).
+ */
+export const menuStyles = {
+  content:
+    "z-dropdown min-w-56 overflow-hidden rounded-container border border-strong bg-popover p-1 text-primary shadow-md outline-none",
+  motion:
+    "origin-(--radix-dropdown-menu-content-transform-origin) data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
+  item: "flex h-command-item cursor-default items-center gap-2 rounded-sm px-2.5 text-body-md text-primary outline-none select-none data-highlighted:bg-selected data-disabled:cursor-not-allowed data-disabled:opacity-disabled",
+  iconSlot: "flex w-5 shrink-0 justify-center text-secondary",
+  shortcut: "ml-3 flex shrink-0 gap-1.5 text-label-sm text-secondary",
+  separator: "-mx-1 my-1 border-t border-strong",
+  label: "px-2.5 pt-2 pb-1 text-label-sm text-secondary",
+};
+
+/**
+ * Família "dropdown" (Figma 1:1256, 1:904: menus de propriedade): raio 12, 6 px de folga,
+ * linhas de 32 px com destaque de raio 8 e rótulo de seção a 14 px.
+ */
+export const dropdownMenuStyles = {
+  content:
+    "z-dropdown min-w-44 overflow-hidden rounded-xl border border-strong bg-popover p-1.5 text-primary shadow-md outline-none",
+  item: "flex h-menu-item cursor-default items-center gap-2 rounded-control px-2 text-body-md text-primary outline-none select-none data-highlighted:bg-selected data-disabled:cursor-not-allowed data-disabled:opacity-disabled",
+  iconSlot: "flex w-4 shrink-0 justify-center text-secondary",
+  separator: "-mx-1.5 my-1.5 border-t border-strong",
+  label: "px-2 pt-1 pb-1.5 text-label-sm text-secondary",
+};
+
+export type MenuVariant = "command" | "dropdown";
+
+const VariantContext = createContext<MenuVariant>("command");
+
+function styles(variant: MenuVariant) {
+  return variant === "dropdown" ? { ...menuStyles, ...dropdownMenuStyles } : menuStyles;
+}
 
 export const Menu = DropdownMenu.Root;
 export const MenuTrigger = DropdownMenu.Trigger;
 export const MenuGroup = DropdownMenu.Group;
+export const MenuSub = DropdownMenu.Sub;
 
 export type MenuContentProps = ComponentProps<typeof DropdownMenu.Content> & {
-  /**
-   * Renderiza num portal no body (padrão). Sem portal, o menu herda o tema do contêiner
-   * (útil para mostrar claro e escuro lado a lado).
-   */
+  /** Renderiza num portal no body (padrão). Sem portal, herda o tema do contêiner. */
   portal?: boolean;
+  /** command: menu "/" (raio 10, linhas de 36). dropdown: menus de propriedade (raio 12, 32). */
+  variant?: MenuVariant;
 };
 
 export function MenuContent({
   portal = true,
+  variant = "command",
   sideOffset = 4,
   align = "start",
   className,
   ...rest
 }: MenuContentProps) {
   const content = (
-    <DropdownMenu.Content
-      sideOffset={sideOffset}
-      align={align}
-      className={cn(
-        "z-dropdown min-w-56 overflow-hidden rounded-container border border-strong bg-popover p-1 text-primary shadow-md outline-none",
-        "origin-(--radix-dropdown-menu-content-transform-origin) data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
-        className,
-      )}
-      {...rest}
-    />
+    <VariantContext value={variant}>
+      <DropdownMenu.Content
+        sideOffset={sideOffset}
+        align={align}
+        className={cn(styles(variant).content, menuStyles.motion, className)}
+        {...rest}
+      />
+    </VariantContext>
   );
   return portal ? <DropdownMenu.Portal>{content}</DropdownMenu.Portal> : content;
 }
@@ -52,21 +96,35 @@ export type MenuItemProps = ComponentProps<typeof DropdownMenu.Item> & {
 
 /** Linha do menu: slot de ícone de 20 px, rótulo de 13 px e atalho à direita. */
 export function MenuItem({ icon, shortcut, className, children, ...rest }: MenuItemProps) {
+  const s = styles(use(VariantContext));
   return (
-    <DropdownMenu.Item
-      className={cn(
-        "flex h-command-item cursor-default items-center gap-2 rounded-sm px-2.5 text-body-md text-primary outline-none select-none",
-        "data-highlighted:bg-selected data-disabled:cursor-not-allowed data-disabled:opacity-disabled",
-        className,
-      )}
-      {...rest}
-    >
-      <span className="flex w-5 shrink-0 justify-center text-secondary">
-        {icon && <Icon icon={icon} />}
-      </span>
+    <DropdownMenu.Item className={cn(s.item, className)} {...rest}>
+      <MenuItemContent icon={icon} shortcut={shortcut}>
+        {children}
+      </MenuItemContent>
+    </DropdownMenu.Item>
+  );
+}
+
+/** Conteúdo de uma linha (ícone, rótulo, atalho); reaproveitado nos painéis estáticos. */
+export function MenuItemContent({
+  icon,
+  shortcut,
+  trailing,
+  children,
+}: {
+  icon?: LucideIcon;
+  shortcut?: string[];
+  trailing?: ReactNode;
+  children: ReactNode;
+}) {
+  const s = styles(use(VariantContext));
+  return (
+    <>
+      <span className={s.iconSlot}>{icon && <Icon icon={icon} />}</span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
       {shortcut && (
-        <span className="ml-3 flex shrink-0 gap-1.5 text-label-sm text-secondary">
+        <span className={menuStyles.shortcut}>
           {shortcut.map((k) => (
             <kbd key={k} className="font-sans">
               {k}
@@ -74,7 +132,90 @@ export function MenuItem({ icon, shortcut, className, children, ...rest }: MenuI
           ))}
         </span>
       )}
-    </DropdownMenu.Item>
+      {trailing}
+    </>
+  );
+}
+
+export type MenuSubTriggerProps = ComponentProps<typeof DropdownMenu.SubTrigger> & {
+  icon?: LucideIcon;
+  children: ReactNode;
+};
+
+/** Item que abre um submenu (Figma: "Blocked by… ▸"). → ou Enter abre; ← fecha. */
+export function MenuSubTrigger({ icon, className, children, ...rest }: MenuSubTriggerProps) {
+  const s = styles(use(VariantContext));
+  return (
+    <DropdownMenu.SubTrigger
+      className={cn(s.item, "data-[state=open]:bg-selected", className)}
+      {...rest}
+    >
+      <MenuItemContent
+        icon={icon}
+        trailing={<Icon icon={ChevronRight} size="xs" className="text-secondary" />}
+      >
+        {children}
+      </MenuItemContent>
+    </DropdownMenu.SubTrigger>
+  );
+}
+
+export type MenuSubContentProps = ComponentProps<typeof DropdownMenu.SubContent> & {
+  portal?: boolean;
+  /**
+   * Quando o submenu hospeda um painel com busca (MenuPanel), o nome dele. O submenu deixa de
+   * ser role="menu" (que só pode conter itens) e vira um diálogo com esse nome.
+   */
+  panelLabel?: string;
+};
+
+export function MenuSubContent({
+  portal = true,
+  sideOffset = 4,
+  panelLabel,
+  className,
+  ...rest
+}: MenuSubContentProps) {
+  const s = styles(use(VariantContext));
+  const content = (
+    <DropdownMenu.SubContent
+      sideOffset={sideOffset}
+      {...(panelLabel && {
+        role: "dialog",
+        "aria-label": panelLabel,
+        "aria-orientation": undefined,
+      })}
+      className={cn(
+        s.content,
+        "origin-(--radix-dropdown-menu-content-transform-origin) data-[state=open]:animate-scale-in",
+        className,
+      )}
+      {...rest}
+    />
+  );
+  return portal ? <DropdownMenu.Portal>{content}</DropdownMenu.Portal> : content;
+}
+
+/**
+ * Hospeda um painel com busca (ComboboxPanel) dentro de um submenu. Foca a busca ao abrir (o
+ * Radix foca o submenu depois dos efeitos dos filhos, por isso no quadro seguinte) e isola as
+ * teclas de busca e navegação do menu (typeahead e setas do Radix): só Esc e Tab chegam a ele.
+ */
+export function MenuPanel({ children, className }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => ref.current?.querySelector("input")?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  const isolate = (e: KeyboardEvent) => {
+    if (e.key !== "Escape" && e.key !== "Tab") e.stopPropagation();
+  };
+  return (
+    // Só intercepta teclas que sobem dos controles de dentro; não é um alvo interativo.
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions
+    <div ref={ref} className={cn("-m-1.5", className)} onKeyDown={isolate}>
+      {children}
+    </div>
   );
 }
 
@@ -83,20 +224,12 @@ export function MenuSeparator({
   className,
   ...rest
 }: ComponentProps<typeof DropdownMenu.Separator>) {
-  return (
-    <DropdownMenu.Separator
-      className={cn("-mx-1 my-1 border-t border-strong", className)}
-      {...rest}
-    />
-  );
+  const s = styles(use(VariantContext));
+  return <DropdownMenu.Separator className={cn(s.separator, className)} {...rest} />;
 }
 
 /** Rótulo de seção dentro do menu. */
 export function MenuLabel({ className, ...rest }: ComponentProps<typeof DropdownMenu.Label>) {
-  return (
-    <DropdownMenu.Label
-      className={cn("px-2.5 pt-2 pb-1 text-label-sm text-secondary", className)}
-      {...rest}
-    />
-  );
+  const s = styles(use(VariantContext));
+  return <DropdownMenu.Label className={cn(s.label, className)} {...rest} />;
 }

@@ -24,6 +24,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { ComponentPage } from "../../kit/component-page";
+import { StaticMenu, type StaticMenuRow } from "../../kit/static-menu";
 
 /** Conteúdo do menu "/" do editor (Figma 1:4653). */
 function SlashItems() {
@@ -69,23 +70,29 @@ function SlashItems() {
   );
 }
 
-/** Menu aberto e sem portal: fica dentro da moldura e herda o tema dela. */
-function OpenMenu({ label }: { label: string }) {
-  return (
-    <div className="h-144">
-      <Menu open modal={false}>
-        <MenuTrigger asChild>
-          <Button size="sm" trailingIcon={ChevronDown}>
-            {label}
-          </Button>
-        </MenuTrigger>
-        <MenuContent portal={false} onCloseAutoFocus={(e) => e.preventDefault()}>
-          <SlashItems />
-        </MenuContent>
-      </Menu>
-    </div>
-  );
-}
+const SLASH_ROWS: StaticMenuRow[] = [
+  { kind: "item", icon: Heading1, label: "Heading 1", shortcut: ["Ctrl", "Alt", "1"] },
+  { kind: "item", icon: Heading2, label: "Heading 2", shortcut: ["Ctrl", "Alt", "2"] },
+  { kind: "item", icon: Heading3, label: "Heading 3", shortcut: ["Ctrl", "Alt", "3"] },
+  { kind: "separator" },
+  { kind: "item", icon: List, label: "Bulleted list", shortcut: ["Ctrl", "⇧", "8"] },
+  { kind: "item", icon: ListOrdered, label: "Numbered list", shortcut: ["Ctrl", "⇧", "9"] },
+  { kind: "item", icon: ListChecks, label: "Checklist", shortcut: ["Ctrl", "⇧", "7"] },
+  { kind: "separator" },
+  { kind: "item", icon: Image, label: "Insert media…" },
+  { kind: "item", icon: Paperclip, label: "Attach files…", shortcut: ["Ctrl", "⇧", "U"] },
+  { kind: "separator" },
+  { kind: "item", icon: Code2, label: "Code block", shortcut: ["Ctrl", "⇧", "\\"] },
+  { kind: "item", icon: Workflow, label: "Diagram" },
+  {
+    kind: "item",
+    icon: ChevronsDownUp,
+    label: "Collapsible section",
+    shortcut: ["Ctrl", "⇧", "6"],
+  },
+  { kind: "item", icon: Quote, label: "Blockquote", shortcut: ["Alt", "⇧", "."] },
+  { kind: "item", icon: Lightbulb, label: "Callout" },
+];
 
 export function Page() {
   return (
@@ -120,11 +127,23 @@ export function Page() {
             </p>
           ),
         },
-        showcase: <OpenMenu label="Type / for commands" />,
+        showcase: (
+          <StaticMenu
+            label="Menu / aberto, com a primeira linha destacada"
+            rows={SLASH_ROWS}
+            highlighted={0}
+          />
+        ),
         states: null,
         statesNote:
-          "Linha destacada (hover ou teclado): fundo bg-selected em raio 6. Item desabilitado: opacidade reduzida e sem destaque. Veja no playground com o mouse e as setas.",
-        themes: (theme) => <OpenMenu label={theme === "dark" ? "Escuro" : "Claro"} />,
+          "Linha destacada (hover ou teclado): fundo bg-selected em raio 6. Item desabilitado: opacidade reduzida e sem destaque. Os exemplos abertos desta página são estáticos (mesmas classes, sem Radix); o comportamento real está no playground.",
+        themes: (theme) => (
+          <StaticMenu
+            label={theme === "dark" ? "Menu no tema escuro" : "Menu no tema claro"}
+            rows={SLASH_ROWS}
+            highlighted={0}
+          />
+        ),
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
             Popover de raio 10, borda border-strong, fundo bg-popover, sombra md e 4 px de folga.

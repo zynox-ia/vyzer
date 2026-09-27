@@ -30,6 +30,25 @@ export const optionRow =
 /** Rótulo de grupo (Figma 1:927: 12 px/500, px 14, py 8). */
 export const groupHeading = "px-2 pt-2 pb-1 text-label-sm text-secondary";
 
+/**
+ * Checkbox visual de uma linha de multisseleção (Figma 1:1241: 14 px, raio 3 → 4). Não é
+ * interativo: a linha inteira é a opção.
+ */
+export function CheckBox({ checked }: { checked: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={
+        checked
+          ? "flex size-3.5 shrink-0 items-center justify-center rounded-inline border border-checked bg-checked text-on-checked"
+          : "flex size-3.5 shrink-0 items-center justify-center rounded-inline border border-control"
+      }
+    >
+      {checked && <Icon icon={Check} className="size-2.5" />}
+    </span>
+  );
+}
+
 /** Conteúdo da linha: ícone, rótulo, marcação e número de atalho. */
 export function OptionContent({
   option,

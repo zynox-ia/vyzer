@@ -29,6 +29,11 @@ export type SegmentedControlProps<T extends string> = {
   onValueChange: (value: T) => void;
   options: SegmentedOption<T>[];
   size?: SegmentedSize;
+  /**
+   * track: trilho com a ativa em relevo (Figma 1:6366). pills: pílulas separadas, todas em
+   * relevo, a ativa mais clara (Figma 1:12, granularidade do date picker).
+   */
+  variant?: "track" | "pills";
   className?: string;
 };
 
@@ -38,6 +43,7 @@ export function SegmentedControl<T extends string>({
   onValueChange,
   options,
   size = "sm",
+  variant = "track",
   className,
 }: SegmentedControlProps<T>) {
   return (
@@ -50,7 +56,9 @@ export function SegmentedControl<T extends string>({
         if (v) onValueChange(v as T);
       }}
       className={cn(
-        "inline-flex items-center rounded-full border border-default bg-control",
+        variant === "track"
+          ? "inline-flex items-center rounded-full border border-default bg-control"
+          : "flex items-center gap-1",
         className,
       )}
     >
@@ -61,7 +69,9 @@ export function SegmentedControl<T extends string>({
           disabled={o.disabled}
           className={cn(
             "inline-flex min-w-control-sm items-center justify-center gap-1 rounded-full whitespace-nowrap text-secondary transition-colors select-none focus-ring hovered:text-primary disabled:cursor-not-allowed disabled:opacity-disabled",
-            "data-[state=on]:bg-control-strong data-[state=on]:text-primary data-[state=on]:shadow-raised",
+            variant === "track"
+              ? "data-[state=on]:bg-control-strong data-[state=on]:text-primary data-[state=on]:shadow-raised"
+              : "bg-control-strong shadow-raised data-[state=on]:[background-image:linear-gradient(var(--bg-pressed),var(--bg-pressed))] data-[state=on]:text-primary",
             itemSize[size],
           )}
         >
