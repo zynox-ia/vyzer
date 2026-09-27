@@ -76,7 +76,7 @@ export function DocTable({
       // Rola na horizontal em telas estreitas: a região recebe foco para rolar pelo teclado.
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
-      className="overflow-x-auto rounded-container border border-default"
+      className="overflow-x-auto rounded-container border border-subtle"
     >
       <table className="w-full min-w-max border-collapse text-left text-body-md">
         <caption className="sr-only">{caption}</caption>
@@ -128,7 +128,7 @@ export function CodeBlock({ code }: { code: string }) {
       // Rola na horizontal: recebe foco para rolar pelo teclado.
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
-      className="overflow-x-auto rounded-container border border-default bg-subtle p-4 text-code text-primary"
+      className="overflow-x-auto rounded-container border border-subtle bg-subtle p-4 text-code text-primary"
     >
       <code>{code}</code>
     </pre>
@@ -144,7 +144,7 @@ export function Decisions({ items }: { items: Decision[] }) {
       title="Decisões"
       description="Cada valor com a regra que o justifica (skill vyzer-ui-design, ADR ou Figma)."
     >
-      <ul className="flex flex-col rounded-container border border-default">
+      <ul className="flex flex-col rounded-container border border-subtle">
         {items.map((d, i) => (
           // oxlint-disable-next-line react/no-array-index-key
           <li

@@ -66,11 +66,11 @@ export function ComponentPage({ doc }: { doc: ComponentDoc }) {
       </DocSection>
 
       <DocSection title="Playground" description="O componente ao vivo; mude as opções abaixo.">
-        <div className="flex flex-col overflow-hidden rounded-container border border-default">
+        <div className="flex flex-col overflow-hidden rounded-container border border-subtle">
           <div className="flex min-h-40 items-center justify-center bg-panel p-8">
             {doc.playground.preview}
           </div>
-          <div className="flex flex-wrap gap-4 border-t border-default bg-subtle p-4">
+          <div className="flex flex-wrap gap-4 border-t border-subtle bg-subtle p-4">
             {doc.playground.controls}
           </div>
         </div>

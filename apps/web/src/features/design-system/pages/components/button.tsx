@@ -146,7 +146,7 @@ export function Page() {
       doc={{
         title: "Button",
         description:
-          "Dispara uma ação. Pílula, como no Figma. O primário é um degradê de 3 tons (claro ao cinza no escuro, grafite ao quase preto no claro) e no hover sobe 1 px com um brilho por trás.",
+          "Dispara uma ação. Pílula, como no Figma. O primário é um degradê de 3 tons (claro ao cinza no escuro, grafite ao quase preto no claro) e todas as variantes sobem 1 px com um brilho por trás no hover.",
         whenToUse: [
           "Ações de formulário e de diálogo (Create issue, Save changes, Cancel)",
           "Ações de cabeçalho de página (New project)",
@@ -260,8 +260,8 @@ import { Plus } from "lucide-react";
             rule: "Figma 12 Medium nos botões de 24–28; 13 Medium no login",
           },
           {
-            decision: "Padding 8 · 10 · 12 · 16 px; lado do ícone −2 px",
-            rule: "Figma 0/8/0/8 e 0/8/0/6; §1 horizontal ≥ vertical",
+            decision: "Padding 10 · 12 · 16 · 20 px; lado do ícone −2 px",
+            rule: "Figma 0/8 e 0/10 + 2 px ou mais a pedido do responsável; §1 horizontal ≥ vertical",
           },
           { decision: "Gap ícone–texto 4–6 px", rule: "§10 0,4–0,6 × o tamanho do texto" },
           { decision: "Hover 4% e pressionado 10% como camadas", rule: "§12 estados translúcidos" },
@@ -275,7 +275,8 @@ import { Plus } from "lucide-react";
             rule: "§3 texto normal (medido em Foundations → Colors, text-inverse)",
           },
           {
-            decision: "Hover: sobe 1 px + brilho 0 4 16; pressionado volta a 0",
+            decision:
+              "Hover em todas as variantes: sobe 1 px + brilho 0 4 16; pressionado volta a 0",
             rule: "Pedido do responsável (1 px, abaixo dos 4–8 px da §8: o brilho carrega o efeito); 120 ms; reduced motion zera a subida",
           },
           {

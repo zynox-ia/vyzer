@@ -16,36 +16,43 @@ export type ButtonSize = "sm" | "md" | "lg" | "xl";
 const layers =
   "hovered:[background-image:linear-gradient(var(--bg-hover),var(--bg-hover))] pressed:[background-image:linear-gradient(var(--bg-pressed),var(--bg-pressed))]";
 
+/*
+ * Hover de todas as variantes do Button: sobe 1 px com brilho por trás e volta ao pressionar.
+ * O ::after cobre o espaço deixado embaixo, para o hover não piscar ao subir.
+ * O Icon Button não sobe (fica em barras de ferramentas densas).
+ */
+const lift = cn(
+  "transition-[color,background-color,translate,box-shadow] duration-fast ease-standard",
+  "hovered:-translate-y-(--motion-lift) hovered:shadow-glow pressed:translate-y-0 pressed:shadow-none",
+  "after:absolute after:inset-x-0 after:top-full after:h-(--motion-lift) after:content-['']",
+);
+
 const variantClass: Record<ButtonVariant, string> = {
-  /*
-   * Degradê de 3 tons; no hover sobe 1 px com brilho por trás e volta ao pressionar.
-   * O ::after cobre o espaço deixado embaixo, para o hover não piscar ao subir.
-   */
-  primary: cn(
+  /* Degradê de 3 tons, o mais claro no topo. */
+  primary:
     "bg-inverse [background-image:linear-gradient(180deg,var(--primary-stop-1),var(--primary-stop-2),var(--primary-stop-3))] text-inverse focus-ring-outside",
-    "transition-[translate,box-shadow] duration-fast ease-standard",
-    "hovered:-translate-y-(--motion-lift) hovered:shadow-glow pressed:translate-y-0 pressed:shadow-none",
-    "after:absolute after:inset-x-0 after:top-full after:h-(--motion-lift) after:content-['']",
-  ),
   secondary: cn("border-default bg-control text-primary", layers),
   ghost: cn("text-primary", layers),
   danger: cn("bg-danger-subtle text-danger-strong", layers),
 };
 
-/** Alturas da escala compartilhada (§6); padding horizontal ≥ vertical (§1). */
+/**
+ * Alturas da escala compartilhada (§6). Padding horizontal 10 · 12 · 16 · 20 px: o Figma usa
+ * 8 e 10, aumentados a pedido do responsável (≥ +2 px) para dar mais respiro ao rótulo.
+ */
 const sizeClass: Record<ButtonSize, string> = {
-  sm: "h-control-sm gap-1 px-2 text-label-sm",
-  md: "h-control-md gap-1.5 px-2.5 text-label-sm",
-  lg: "h-control-lg gap-1.5 px-3 text-label-md",
-  xl: "h-control-xl gap-2 px-4 text-label-md",
+  sm: "h-control-sm gap-1 px-2.5 text-label-sm",
+  md: "h-control-md gap-1.5 px-3 text-label-sm",
+  lg: "h-control-lg gap-1.5 px-4 text-label-md",
+  xl: "h-control-xl gap-2 px-5 text-label-md",
 };
 
 /** Com ícone à esquerda, o lado do ícone perde 2 px (Figma: 0/8/0/6). */
 const leadingPad: Record<ButtonSize, string> = {
-  sm: "pl-1.5",
-  md: "pl-2",
-  lg: "pl-2.5",
-  xl: "pl-3.5",
+  sm: "pl-2",
+  md: "pl-2.5",
+  lg: "pl-3.5",
+  xl: "pl-4.5",
 };
 
 const iconSize = { sm: "xs", md: "sm", lg: "sm", xl: "md" } as const;
@@ -112,7 +119,7 @@ export function Button({
     return (
       <Slot.Root
         aria-disabled={disabled || undefined}
-        className={cn(base, variantClass[variant], sizeClass[size], className)}
+        className={cn(base, variantClass[variant], lift, sizeClass[size], className)}
         {...rest}
       >
         {children}
@@ -122,6 +129,7 @@ export function Button({
   const classes = cn(
     base,
     variantClass[variant],
+    lift,
     sizeClass[size],
     leading && leadingPad[size],
     className,

@@ -30,7 +30,7 @@ export function ThemeFrame({
       data-theme={theme}
       data-selection={selection}
       className={cn(
-        "flex min-w-0 flex-col gap-4 rounded-container border border-default bg-app p-5 text-primary",
+        "flex min-w-0 flex-col gap-4 rounded-container border border-subtle bg-app p-5 text-primary",
         className,
       )}
     >

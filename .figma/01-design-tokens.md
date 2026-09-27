@@ -24,6 +24,7 @@
 | Fonte Inter em todo o arquivo                             | Figtree (corpo, interface e títulos)                                      | Decisão do responsável (ADR-0013)                                              |
 | Inputs sem borda nem fundo, padding 6 px (1:7563, 1:7571) | Campo com borda de controle e fundo, padding horizontal 8 px              | Skill §1 e §3: controle de formulário precisa de borda ≥ 3:1 e padding 8–12 px |
 | Accent do Linear no toggle ligado e no checkbox marcado   | `bg-checked` (cor do texto primário)                                      | ADR-0013: controles ativos sem acento                                          |
+| Padding de botão 0/8 (24 px) e 0/10 (28 px)               | 10 · 12 · 16 · 20 px por tamanho                                          | Decisão do responsável: mais respiro interno (≥ +2 px)                         |
 | Quase-duplicados de tipografia, raio e espaçamento        | Um valor canônico (o mais usado)                                          | Ruído de captura                                                               |
 
 ## Sem design

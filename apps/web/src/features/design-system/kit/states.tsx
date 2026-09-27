@@ -8,7 +8,7 @@ export type StateCell = { label: string; node: ReactNode };
 
 export function StatesGrid({ states }: { states: StateCell[] }) {
   return (
-    <ul className="grid grid-cols-2 gap-4 rounded-container border border-default bg-panel p-6 tablet:grid-cols-3 desktop:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-4 rounded-container border border-subtle bg-panel p-6 tablet:grid-cols-3 desktop:grid-cols-4">
       {states.map((s) => (
         <li key={s.label} className="flex flex-col items-start gap-2">
           <span className="text-caption text-secondary">{s.label}</span>
