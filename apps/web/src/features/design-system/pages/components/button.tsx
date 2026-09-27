@@ -146,7 +146,7 @@ export function Page() {
       doc={{
         title: "Button",
         description:
-          "Dispara uma ação. Pílula, como no Figma, com o primário invertido (claro no escuro, escuro no claro).",
+          "Dispara uma ação. Pílula, como no Figma. O primário é um degradê de 3 tons (claro ao cinza no escuro, grafite ao quase preto no claro) e no hover sobe 5 px com um brilho por trás.",
         whenToUse: [
           "Ações de formulário e de diálogo (Create issue, Save changes, Cancel)",
           "Ações de cabeçalho de página (New project)",
@@ -197,7 +197,8 @@ export function Page() {
           <p className="max-w-prose text-body-md text-secondary">
             Contêiner em pílula com borda de 1 px (transparente, exceto no secundário, que reserva o
             tamanho como no Figma), ícone opcional à esquerda ou à direita e rótulo. No carregamento
-            o spinner ocupa o lugar do ícone e a largura não muda.
+            o spinner ocupa o lugar do ícone e a largura não muda. No primário, uma área invisível
+            de 5 px embaixo mantém o hover enquanto o botão está levantado.
           </p>
         ),
         keyboard: ["Tab foca; Enter e Espaço acionam.", "Desabilitado sai da ordem de Tab."],
@@ -265,6 +266,18 @@ import { Plus } from "lucide-react";
           { decision: "Gap ícone–texto 4–6 px", rule: "§10 0,4–0,6 × o tamanho do texto" },
           { decision: "Hover 4% e pressionado 10% como camadas", rule: "§12 estados translúcidos" },
           { decision: "Primário invertido, sem acento", rule: "ADR-0011; §3 orçamento de ênfase" },
+          {
+            decision: "Degradê vertical de 3 tons, o mais claro no topo",
+            rule: "Pedido do responsável (máx. 3 cores); §9 luz vem de cima",
+          },
+          {
+            decision: "Rótulo ≥ 4,5:1 contra cada tom do degradê",
+            rule: "§3 texto normal (medido em Foundations → Colors, text-inverse)",
+          },
+          {
+            decision: "Hover: sobe 5 px + brilho 0 4 16; pressionado volta a 0",
+            rule: "Pedido do responsável; §8 deslocamento 4–8 px, 120 ms; reduced motion zera a subida",
+          },
           {
             decision: "Foco por fora no primário",
             rule: "§12 foco ≥ 3:1 (medido 2,96:1 por dentro)",

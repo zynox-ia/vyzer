@@ -9,7 +9,10 @@ const surfaces: Swatch[] = [
   { token: "bg-subtle", cssVar: "--bg-subtle", usage: "cabeçalho de grupo" },
   { token: "bg-popover", cssVar: "--bg-popover", usage: "menus, popovers" },
   { token: "bg-input", cssVar: "--bg-input", usage: "campos" },
-  { token: "bg-inverse", cssVar: "--bg-inverse", usage: "botão primário" },
+  { token: "bg-inverse", cssVar: "--bg-inverse", usage: "base do botão primário" },
+  { token: "primary-stop-1", cssVar: "--primary-stop-1", usage: "degradê do primário (topo)" },
+  { token: "primary-stop-2", cssVar: "--primary-stop-2", usage: "degradê do primário (meio)" },
+  { token: "primary-stop-3", cssVar: "--primary-stop-3", usage: "degradê do primário (base)" },
 ];
 
 const states: Swatch[] = [
@@ -77,7 +80,7 @@ const textChecks: ContrastCheck[] = [
     fg: "--fg-inverse",
     target: 4.5,
     apca: 75,
-    on: ["--bg-inverse"],
+    on: ["--bg-inverse", "--primary-stop-1", "--primary-stop-2", "--primary-stop-3"],
   },
 ];
 

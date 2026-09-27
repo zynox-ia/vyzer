@@ -54,6 +54,12 @@ describe("cn", () => {
     expect(cn("text-metric", "font-light")).toBe("text-metric font-light");
   });
 
+  it("mantém cor de fundo e degradê juntos (botão primário)", () => {
+    const gradient = "[background-image:linear-gradient(180deg,var(--a),var(--b))]";
+    expect(cn("bg-inverse", gradient, "shadow-glow")).toBe(`bg-inverse ${gradient} shadow-glow`);
+    expect(cn("shadow-sm", "shadow-glow")).toBe("shadow-glow");
+  });
+
   it("aceita condicionais do clsx", () => {
     const active = true;
     expect(cn("text-secondary", active && "text-primary", undefined, false)).toBe("text-primary");

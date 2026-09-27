@@ -17,8 +17,16 @@ const layers =
   "hovered:[background-image:linear-gradient(var(--bg-hover),var(--bg-hover))] pressed:[background-image:linear-gradient(var(--bg-pressed),var(--bg-pressed))]";
 
 const variantClass: Record<ButtonVariant, string> = {
-  primary:
-    "bg-inverse text-inverse hovered:bg-inverse-hover pressed:bg-inverse-pressed focus-ring-outside",
+  /*
+   * Degradê de 3 tons; no hover sobe 5 px com brilho por trás e volta ao pressionar.
+   * O ::after cobre os 5 px deixados embaixo, para o hover não piscar ao subir.
+   */
+  primary: cn(
+    "bg-inverse [background-image:linear-gradient(180deg,var(--primary-stop-1),var(--primary-stop-2),var(--primary-stop-3))] text-inverse focus-ring-outside",
+    "transition-[translate,box-shadow] duration-fast ease-standard",
+    "hovered:-translate-y-(--motion-lift) hovered:shadow-glow pressed:translate-y-0 pressed:shadow-none",
+    "after:absolute after:inset-x-0 after:top-full after:h-(--motion-lift) after:content-['']",
+  ),
   secondary: cn("border-default bg-control text-primary", layers),
   ghost: cn("text-primary", layers),
   danger: cn("bg-danger-subtle text-danger-strong", layers),

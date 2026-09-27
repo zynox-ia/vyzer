@@ -19,6 +19,7 @@ const animations = [
   ["animate-slide-up / -down", "Tooltip, toast: 4 px + opacidade"],
   ["animate-dialog-in / -out", "Modal: escala 0,97 → 1, duração lenta"],
   ["animate-fade-in / -out", "Scrim, conteúdo que troca"],
+  ["-translate-y-(--motion-lift)", "Botão primário no hover: sobe 5 px (0 com movimento reduzido)"],
 ];
 
 function Demo() {
@@ -114,6 +115,10 @@ export function Page() {
           },
           { decision: "Tooltip abre em 500 ms (--tooltip-delay)", rule: "§8 atraso de 400–700 ms" },
           { decision: "Reduced motion: só opacidade, 100 ms", rule: "§8 prefers-reduced-motion" },
+          {
+            decision: "Botão primário sobe 5 px no hover (--motion-lift)",
+            rule: "Pedido do responsável; §8 desloca 4–8 px ✓; §1 grid de 4 sugeriria 4 px",
+          },
         ]}
       />
     </DocPage>

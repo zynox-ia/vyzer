@@ -94,7 +94,7 @@ const twMerge = extendTailwindMerge({
         "container",
         "surface",
       ],
-      shadow: ["sm", "md", "lg", "focus"],
+      shadow: ["sm", "md", "lg", "glow", "focus"],
       blur: ["sm", "md", "lg"],
       breakpoint: ["tablet", "desktop", "wide"],
       container: ["prose", "content", "wide"],

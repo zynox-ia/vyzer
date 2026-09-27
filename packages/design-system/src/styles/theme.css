@@ -248,6 +248,8 @@
   --shadow-lg:
     0 4px 8px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 0.6)),
     0 16px 32px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 0.4));
+  /* Brilho do botão primário no hover (themes.css define por tema) */
+  --shadow-glow: var(--glow);
   --shadow-focus: 0 0 0 var(--focus-halo-size) color-mix(in srgb, var(--accent) 25%, transparent);
 
   /* ---------- Opacidade, blur ---------- */
