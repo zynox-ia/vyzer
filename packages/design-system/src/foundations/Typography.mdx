@@ -1,3 +1,4 @@
+import { DocTable } from "./DocTable";
 import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
 import { TypeScale } from "./FoundationDocs";
 
@@ -6,10 +7,31 @@ import { TypeScale } from "./FoundationDocs";
 # Typography
 
 - **Inter**: corpo, labels e UI. Componentes funcionais usam Inter.
-- **Inter Tight**: display e headings (`font-display`).
+- **Inter Tight**: display e headings (`type-display`, `type-heading-1` a `type-heading-4`, que já trazem a família).
 - **JetBrains Mono**: code, kbd e identificadores de issue (`font-mono`).
 
-Pesos: **somente 400 e 500**. Cada nível define tamanho, altura de linha, peso e espaçamento por token (`text-body-md` etc.). Cabeçalho de painel (ex.: "Issues" de uma lista) usa `label-md` (13 px / 500); títulos grandes só em nível de página.
+## Pesos
+
+<Unstyled>
+  <DocTable
+    head={["Peso", "Token", "Uso"]}
+    rows={[
+      ["400", "`font-normal`", "corpo, descrições, metadados"],
+      ["500", "`font-medium`", "labels, botões, títulos de painel e headings menores (3 e 4)"],
+      [
+        "600",
+        "`font-semibold`",
+        "display e headings de página (1 e 2); ênfase pontual em números e nomes",
+      ],
+    ]}
+  />
+</Unstyled>
+
+700 fica de fora: em interface densa, pesa demais e compete com o conteúdo. Cabeçalho de painel (ex.: "Issues" de uma lista) usa `label-md` (13 px / 500); títulos grandes só em nível de página.
+
+## Maiúsculas
+
+Só em rótulos curtos que organizam a tela, nunca em frases: `type-overline` (eyebrow de página, seção de configurações) e `type-label-caps` (seção da sidebar como "Your teams", cabeçalho de tabela). Ambos com espaçamento de `0,06em` para compensar a caixa alta.
 
 <Unstyled>
   <TypeScale />

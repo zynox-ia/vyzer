@@ -14,7 +14,9 @@
 .sbdocs.sbdocs-content :is(h1, h2, h3, h4, h5, h6):not(.sb-unstyled *) {
   color: var(--fg-primary);
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 600;
+  /* O body usa altura de linha fixa (body-md); títulos grandes precisam da própria */
+  line-height: 1.25;
   border-color: var(--line-default);
 }
 
@@ -37,4 +39,9 @@
 .sbdocs.sbdocs-content .docs-story,
 .sbdocs.sbdocs-content .docs-story > div:first-child {
   background: var(--bg-panel);
+}
+
+/* Respiro entre blocos de demonstração e o texto seguinte */
+.sbdocs.sbdocs-content .sb-unstyled {
+  margin-block: 16px 32px;
 }

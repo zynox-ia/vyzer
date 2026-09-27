@@ -58,7 +58,7 @@ const toOklchL = (hex) => {
 const themes = {
   dark: {
     surfaces: {
-      "bg-app": "#0e0e0d",
+      "bg-app": "#0a0a09",
       "bg-sidebar": "#141413",
       "bg-panel": "#141413",
       "bg-surface": "#1a1a18",

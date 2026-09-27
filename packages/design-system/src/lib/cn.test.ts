@@ -25,6 +25,7 @@ describe("cn", () => {
     expect(cn("h-row", "h-control-lg")).toBe("h-control-lg");
     expect(cn("px-3", "px-2")).toBe("px-2");
     expect(cn("rounded-md", "rounded-full")).toBe("rounded-full");
+    expect(cn("rounded-control", "rounded-overlay")).toBe("rounded-overlay");
     expect(cn("shadow-md", "shadow-overlay")).toBe("shadow-overlay");
     expect(cn("size-icon-sm", "size-icon-lg")).toBe("size-icon-lg");
   });

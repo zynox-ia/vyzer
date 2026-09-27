@@ -142,20 +142,21 @@
   --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Consolas, monospace;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
+  --font-weight-semibold: 600;
 
   /* Display e headings: use com font-display. Demais níveis: Inter (font-sans) */
   --text-display: 32px;
   --text-display--line-height: 40px;
   --text-display--letter-spacing: -0.02em;
-  --text-display--font-weight: 500;
+  --text-display--font-weight: 600;
   --text-heading-1: 24px;
   --text-heading-1--line-height: 32px;
   --text-heading-1--letter-spacing: -0.015em;
-  --text-heading-1--font-weight: 500;
+  --text-heading-1--font-weight: 600;
   --text-heading-2: 20px;
   --text-heading-2--line-height: 28px;
   --text-heading-2--letter-spacing: -0.01em;
-  --text-heading-2--font-weight: 500;
+  --text-heading-2--font-weight: 600;
   --text-heading-3: 16px;
   --text-heading-3--line-height: 24px;
   --text-heading-3--letter-spacing: -0.005em;
@@ -205,15 +206,24 @@
   --text-kbd--letter-spacing: 0em;
   --text-kbd--font-weight: 500;
   --tracking-id: -0.02em;
+  --tracking-caps: 0.06em;
 
-  /* ---------- Raio: none, xs … 2xl seguem --radius-base; full só onde a forma importa ---------- */
+  /* ---------- Raio (ADR-0014): escala do preset ativo + papéis semânticos ----------
+   * Papéis: inline (checkbox, kbd, tag pequena) · control (botão, input, chip, item de menu)
+   * · container (card, painel, tabela) · overlay (popover, menu, toast) · dialog (modal, sheet).
+   * `full` só onde a forma carrega significado (radio, status, avatar, thumb do switch). */
   --radius-none: 0px;
-  --radius-xs: calc(var(--radius-base) * 0.5);
-  --radius-sm: var(--radius-base);
-  --radius-md: var(--radius-base);
-  --radius-lg: calc(var(--radius-base) * 1.5);
-  --radius-xl: calc(var(--radius-base) * 2);
-  --radius-2xl: calc(var(--radius-base) * 3);
+  --radius-xs: var(--radius-scale-xs);
+  --radius-sm: var(--radius-scale-sm);
+  --radius-md: var(--radius-scale-md);
+  --radius-lg: var(--radius-scale-lg);
+  --radius-xl: var(--radius-scale-xl);
+  --radius-2xl: var(--radius-scale-2xl);
+  --radius-inline: var(--radius-scale-xs);
+  --radius-control: var(--radius-scale-sm);
+  --radius-container: var(--radius-scale-md);
+  --radius-overlay: var(--radius-scale-lg);
+  --radius-dialog: var(--radius-scale-xl);
   --radius-full: 9999px;
 
   /* ---------- Sombras: só popover, menus e modais ---------- */
@@ -384,6 +394,16 @@
   }
 }
 
+/* Estado de foco sempre visível: só para documentar estados (stories "States"), nunca em produto */
+@utility focus-ring-shown {
+  outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+  outline-offset: -1px;
+  --tw-ring-shadow: 0 0 0 var(--focus-halo-size) color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
 /* Níveis de título com a família certa (display e headings usam Inter Tight) */
 @utility type-display {
   font-family: var(--font-display);
@@ -404,4 +424,14 @@
 @utility type-heading-4 {
   font-family: var(--font-display);
   @apply text-heading-4;
+}
+
+/* Rótulos em maiúsculas: seção de sidebar, cabeçalho de tabela, eyebrow de página */
+@utility type-overline {
+  @apply text-overline uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+@utility type-label-caps {
+  @apply text-label-sm uppercase;
+  letter-spacing: var(--tracking-caps);
 }

@@ -1,5 +1,6 @@
+import { DocTable } from "./DocTable";
 import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
-import { SpacingScale, SizeScale, DensityScale } from "./FoundationDocs";
+import { DensityCompare, DensityScale, SizeScale, SpacingScale } from "./FoundationDocs";
 
 <Meta title="Foundations/Spacing" />
 
@@ -23,7 +24,13 @@ Escala compartilhada xs a xl entre Button, IconButton, Input, Select, Avatar e B
 
 ## Densidade
 
-Comfortable e compact via tokens (toolbar, Densidade). Tabela, lista, menu, input, sidebar e command menu usam estes tamanhos, nunca ajustes locais.
+Densidade muda **altura de linhas, itens de menu, itens da sidebar e campos** (e o respiro lateral de células), sem mudar o tamanho do texto. Confortável é o padrão; compacta serve para telas com muita informação, como tabelas longas e board.
+
+Abaixo, o mesmo conteúdo nas duas densidades. O seletor **Densidade** do toolbar muda a página inteira (e a coluna de valores da tabela).
+
+<Unstyled>
+  <DensityCompare />
+</Unstyled>
 
 <Unstyled>
   <DensityScale />
@@ -31,13 +38,30 @@ Comfortable e compact via tokens (toolbar, Densidade). Tabela, lista, menu, inpu
 
 ## Layout
 
-| Token                                                   | Valor                                 | Uso                                                    |
-| ------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------ |
-| `tablet:`                                               | 768 px                                | breakpoint (mobile é o padrão)                         |
-| `desktop:`                                              | 1024 px                               | breakpoint                                             |
-| `wide:`                                                 | 1440 px                               | breakpoint                                             |
-| `max-w-prose` / `max-w-content` / `max-w-wide`          | 40 / 72 / 90 rem                      | contêineres                                            |
-| `gap-gutter`                                            | 24 px                                 | calha do grid (12 colunas: `grid-cols-12`)             |
-| `z-base` a `z-tooltip`                                  | 0, 1000, 1100, 1200, 1300, 1400, 1500 | base, dropdown, sticky, overlay, modal, toast, tooltip |
-| `opacity-disabled` / `opacity-muted` / `opacity-subtle` | 50 / 60 / 15%                         | desabilitado, apagado, fundos de badge                 |
-| `blur-sm` / `blur-md` / `blur-lg`                       | 4 / 8 / 16 px                         | fundos de overlay, quando necessário                   |
+<Unstyled>
+  <DocTable
+    head={["Token", "Valor", "Uso"]}
+    rows={[
+      ["`tablet:`", "768 px", "breakpoint (mobile é o padrão)"],
+      ["`desktop:`", "1024 px", "breakpoint"],
+      ["`wide:`", "1440 px", "breakpoint"],
+      ["`max-w-prose` / `max-w-content` / `max-w-wide`", "40 / 72 / 90 rem", "contêineres"],
+      ["`gap-gutter`", "24 px", "calha do grid (12 colunas: `grid-cols-12`)"],
+      [
+        "`z-base` a `z-tooltip`",
+        "0, 1000, 1100, 1200, 1300, 1400, 1500",
+        "base, dropdown, sticky, overlay, modal, toast, tooltip",
+      ],
+      [
+        "`opacity-disabled` / `opacity-muted` / `opacity-subtle`",
+        "50 / 60 / 15%",
+        "desabilitado, apagado, fundos de badge",
+      ],
+      [
+        "`blur-sm` / `blur-md` / `blur-lg`",
+        "4 / 8 / 16 px",
+        "fundos de overlay, quando necessário",
+      ],
+    ]}
+  />
+</Unstyled>

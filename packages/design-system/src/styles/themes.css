@@ -4,7 +4,7 @@
  *
  * Atributos no <html> (ou em qualquer contêiner):
  *   data-theme   = dark (padrão) | light
- *   data-radius  = 0 (padrão) | 2 | 4        escala de raio inteira
+ *   data-radius  = 0 (padrão) | soft | rounded   preset de raio (ADR-0014)
  *   data-focus   = b (padrão) | a            indicador de foco (ADR-0013)
  *   data-density = comfortable (padrão) | compact
  */
@@ -16,7 +16,7 @@
   color-scheme: dark;
 
   /* Superfícies: a seleção é só um degrau acima do painel */
-  --bg-app: var(--vz-warm-975);
+  --bg-app: var(--vz-warm-990);
   --bg-sidebar: var(--vz-warm-950);
   --bg-panel: var(--vz-warm-950);
   --bg-surface: var(--vz-warm-925);
@@ -76,7 +76,8 @@
 
   /* Sombras: só popover, menus e modais */
   --shadow-base: var(--vz-shadow-black);
-  --shadow-alpha: 0.13;
+  /* Sombra sobre fundo quase preto precisa de mais opacidade para aparecer */
+  --shadow-alpha: 0.45;
 }
 
 /* ---------- Tema claro: conteúdo sobre o creme ---------- */
@@ -140,19 +141,36 @@
   --shadow-alpha: 0.07;
 }
 
-/* ---------- Raio: 0 (padrão), 2 ou 4 px; a escala inteira acompanha ---------- */
+/* ---------- Raio (ADR-0014): presets com escala inteira ----------
+ * data-radius = 0 (padrão, reto) | soft (suave) | rounded (arredondado).
+ * Componentes usam papéis (rounded-inline, -control, -container, -overlay), não números. */
 
 :root,
 [data-radius="0"] {
-  --radius-base: 0px;
+  --radius-scale-xs: 0px;
+  --radius-scale-sm: 0px;
+  --radius-scale-md: 0px;
+  --radius-scale-lg: 0px;
+  --radius-scale-xl: 0px;
+  --radius-scale-2xl: 0px;
 }
 
-[data-radius="2"] {
-  --radius-base: 2px;
+[data-radius="soft"] {
+  --radius-scale-xs: 2px;
+  --radius-scale-sm: 4px;
+  --radius-scale-md: 6px;
+  --radius-scale-lg: 8px;
+  --radius-scale-xl: 10px;
+  --radius-scale-2xl: 12px;
 }
 
-[data-radius="4"] {
-  --radius-base: 4px;
+[data-radius="rounded"] {
+  --radius-scale-xs: 4px;
+  --radius-scale-sm: 6px;
+  --radius-scale-md: 8px;
+  --radius-scale-lg: 12px;
+  --radius-scale-xl: 16px;
+  --radius-scale-2xl: 20px;
 }
 
 /* ---------- Foco (ADR-0013): B é o padrão; A só para comparação ----------

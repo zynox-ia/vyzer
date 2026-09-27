@@ -1,3 +1,4 @@
+import { DocTable } from "./DocTable";
 import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
 
 <Meta title="Foundations/Introduction" />
@@ -14,18 +15,23 @@ A linguagem visual de todos os produtos Vyzer: SaaS, dashboards, ferramentas int
 - **Contenção.** Profundidade por degrau de superfície e hairline de 1 px. Sombra só em popover, menus e modais.
 - **Acento terracota em dose mínima:** foco, indicador do item ativo da sidebar e contadores de destaque. Nunca em botões, fundos ou texto corrido.
 - **Cor com significado:** status, labels e data viz usam a mesma luminosidade e croma (OKLCH), variando só o matiz. Cor nunca é o único indicador.
-- **Raio zero** por padrão; `full` só onde a forma carrega significado (radio, ícone de status, avatar, thumb do switch).
+- **Raio por papéis** (`inline`, `control`, `container`, `overlay`, `dialog`) com presets; a direção atual é reta. `full` só onde a forma carrega significado.
 
-Decisões registradas na ADR-0013, que substitui a parte visual das ADR-0011 e ADR-0012.
+Decisões registradas nas ADR-0013 e ADR-0014.
 
 ## Toolbar
 
-| Seletor   | Opções                                                     | Padrão      |
-| --------- | ---------------------------------------------------------- | ----------- |
-| Tema      | Escuro, Claro, Sistema                                     | Escuro      |
-| Raio      | 0, 2, 4 px (a escala inteira acompanha)                    | 0           |
-| Foco      | B (borda terracota + halo), A (borda a 25%, só comparação) | B           |
-| Densidade | Comfortable, Compact                                       | Comfortable |
+<Unstyled>
+  <DocTable
+    head={["Seletor", "Opções", "Padrão"]}
+    rows={[
+      ["Tema", "Escuro, Claro, Sistema", "Escuro"],
+      ["Raio", "Reto, Suave, Arredondado (presets; ver Radius)", "Reto"],
+      ["Foco", "B (borda terracota + halo), A (borda a 25%, só comparação)", "B"],
+      ["Densidade", "Confortável, Compacta", "Confortável"],
+    ]}
+  />
+</Unstyled>
 
 ## Como usar
 

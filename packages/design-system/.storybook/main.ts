@@ -4,6 +4,7 @@ const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(ts|tsx)"],
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-vitest"],
   framework: { name: "@storybook/react-vite", options: {} },
+  core: { disableTelemetry: true, disableWhatsNewNotifications: true },
   // TypeScript 7 não expõe a API em JS: o autodocs usa o react-docgen (Babel).
   typescript: { reactDocgen: "react-docgen" },
   async viteFinal(viteConfig) {

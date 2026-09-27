@@ -4,6 +4,7 @@
  */
 :root {
   /* Neutros quentes (sem tom azulado), do mais escuro ao mais claro */
+  --vz-warm-990: #0a0a09;
   --vz-warm-975: #0e0e0d;
   --vz-warm-950: #141413;
   --vz-warm-925: #1a1a18;
