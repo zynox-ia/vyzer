@@ -31,7 +31,11 @@ const variantClass: Record<ButtonVariant, string> = {
   /* Degradê de 3 tons, o mais claro no topo. */
   primary:
     "bg-inverse [background-image:linear-gradient(180deg,var(--primary-stop-1),var(--primary-stop-2),var(--primary-stop-3))] text-inverse focus-ring-outside",
-  secondary: cn("border-default bg-control text-primary hovered:shadow-glow-secondary", layers),
+  // Figma: fundo de controle com relevo (anel de 1 px + contato), sem borda sólida.
+  secondary: cn(
+    "bg-control-strong text-primary shadow-raised hovered:shadow-glow-secondary pressed:shadow-raised",
+    layers,
+  ),
   ghost: cn("text-primary", layers),
   danger: cn("bg-danger-subtle text-danger-strong hovered:shadow-glow-danger", layers),
 };

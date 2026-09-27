@@ -14,10 +14,16 @@ import {
   Checkbox,
   Field,
   IconButton,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuTrigger,
   PasswordInput,
   Radio,
   RadioGroup,
   SearchInput,
+  SegmentedControl,
   Switch,
   TextArea,
   TextInput,
@@ -219,5 +225,83 @@ describe("SearchInput e PasswordInput", () => {
     await expect
       .element(screen.getByRole("button", { name: "Hide password" }))
       .toHaveAttribute("aria-pressed", "true");
+  });
+});
+
+describe("Menu", () => {
+  function Slash({ onSelect }: { onSelect: (v: string) => void }) {
+    return (
+      <Menu>
+        <MenuTrigger asChild>
+          <Button>Insert block</Button>
+        </MenuTrigger>
+        <MenuContent>
+          <MenuItem shortcut={["Ctrl", "Alt", "1"]} onSelect={() => onSelect("h1")}>
+            Heading 1
+          </MenuItem>
+          <MenuSeparator />
+          <MenuItem onSelect={() => onSelect("list")}>Bulleted list</MenuItem>
+        </MenuContent>
+      </Menu>
+    );
+  }
+
+  it("abre pelo teclado, navega com setas, seleciona com Enter e devolve o foco", async () => {
+    const onSelect = vi.fn();
+    const screen = await render(<Slash onSelect={onSelect} />);
+    const trigger = screen.getByRole("button", { name: "Insert block" });
+    await trigger.click();
+    await expect.element(screen.getByRole("menu")).toBeVisible();
+    await userEvent.keyboard("{ArrowDown}");
+    await userEvent.keyboard("{ArrowDown}");
+    await expect.element(screen.getByRole("menuitem", { name: "Bulleted list" })).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    expect(onSelect).toHaveBeenCalledWith("list");
+    await expect.element(screen.getByRole("menu")).not.toBeInTheDocument();
+    await expect.element(trigger).toHaveFocus();
+  });
+
+  it("Esc fecha sem selecionar e o menu passa no axe", async () => {
+    const onSelect = vi.fn();
+    const screen = await render(<Slash onSelect={onSelect} />);
+    await screen.getByRole("button", { name: "Insert block" }).click();
+    await expect.element(screen.getByRole("menu")).toBeVisible();
+    // Audita o próprio menu: com o menu modal aberto, o Radix esconde o fundo (aria-hidden) de
+    // propósito, e a página de teste não tem landmarks.
+    const menu = document.querySelector('[role="menu"]');
+    if (!menu) throw new Error("menu não abriu");
+    expect(await violations(menu)).toEqual([]);
+    await userEvent.keyboard("{Escape}");
+    await expect.element(screen.getByRole("menu")).not.toBeInTheDocument();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+});
+
+describe("SegmentedControl", () => {
+  function Modes() {
+    const [mode, setMode] = useState<"comment" | "update">("update");
+    return (
+      <SegmentedControl
+        label="Post type"
+        value={mode}
+        onValueChange={setMode}
+        options={[
+          { value: "comment", label: "Comment" },
+          { value: "update", label: "Update" },
+        ]}
+      />
+    );
+  }
+
+  it("marca a opção clicada e não desmarca a atual", async () => {
+    const screen = await render(<Modes />);
+    const comment = screen.getByRole("radio", { name: "Comment" });
+    const update = screen.getByRole("radio", { name: "Update" });
+    await expect.element(update).toHaveAttribute("aria-checked", "true");
+    await comment.click();
+    await expect.element(comment).toHaveAttribute("aria-checked", "true");
+    await comment.click();
+    await expect.element(comment).toHaveAttribute("aria-checked", "true");
+    expect(await violations(screen.container)).toEqual([]);
   });
 });

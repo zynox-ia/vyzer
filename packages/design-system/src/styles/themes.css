@@ -36,8 +36,11 @@
   --primary-stop-3: var(--vz-warm-250);
   /* Brilho por trás do primário no hover: halo claro no escuro */
   --glow: 0 4px 16px rgb(var(--vz-overlay-light) / 0.22);
-  /* Secondary: metade da opacidade do brilho; danger: brilho na própria cor */
-  --glow-secondary: 0 4px 16px rgb(var(--vz-overlay-light) / 0.11);
+  /* Relevo (Figma 1:6366, 1:6404): anel de 1 px a 9% + contato curto. Borda de chips e botões */
+  --raised:
+    0 0 0 1px rgb(var(--vz-overlay-light) / 0.09), 0 0.5px 1px 1px rgb(var(--vz-shadow-black) / 0.3);
+  /* Secondary: relevo + metade da opacidade do brilho; danger: brilho na própria cor */
+  --glow-secondary: var(--raised), 0 4px 16px rgb(var(--vz-overlay-light) / 0.11);
   --glow-danger: 0 4px 16px color-mix(in srgb, var(--st-danger) 40%, transparent);
 
   /* Estados como camadas translúcidas: funcionam sobre qualquer superfície (skill §12) */
@@ -120,7 +123,9 @@
   --primary-stop-3: var(--vz-warm-950);
   /* No claro o brilho vira uma sombra suave do próprio botão */
   --glow: 0 4px 16px rgb(var(--vz-overlay-ink) / 0.28);
-  --glow-secondary: 0 4px 16px rgb(var(--vz-overlay-ink) / 0.14);
+  --raised:
+    0 0 0 1px rgb(var(--vz-overlay-ink) / 0.1), 0 0.5px 1px 1px rgb(var(--vz-overlay-ink) / 0.08);
+  --glow-secondary: var(--raised), 0 4px 16px rgb(var(--vz-overlay-ink) / 0.14);
   --glow-danger: 0 4px 16px color-mix(in srgb, var(--st-danger) 40%, transparent);
 
   --bg-hover: rgb(var(--vz-overlay-ink) / 0.04);

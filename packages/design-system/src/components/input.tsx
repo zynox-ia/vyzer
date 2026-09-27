@@ -128,20 +128,33 @@ export function InputGroupInput({ invalid, className, ...rest }: InputGroupInput
 
 export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   invalid?: boolean;
+  /**
+   * default: campo com borda. plain: sem borda nem fundo, texto 16 px, para dentro de um
+   * contêiner que já é o campo (Composer, Figma 1:6383); o contêiner mostra o foco
+   * (focus-ring-within).
+   */
+  variant?: "default" | "plain";
   ref?: Ref<HTMLTextAreaElement>;
 };
 
 /** Texto longo. Cresce na vertical; linha de 20 px como o corpo (§2). */
-export function TextArea({ invalid, rows = 3, className, ...rest }: TextAreaProps) {
+export function TextArea({
+  invalid,
+  variant = "default",
+  rows = 3,
+  className,
+  ...rest
+}: TextAreaProps) {
   const { invalid: isInvalid, ...a11y } = useFieldControl({ ...rest, invalid });
   return (
     <textarea
       rows={rows}
       className={cn(
-        box,
         field,
-        "block w-full resize-y px-2 py-1.5 focus-ring disabled:opacity-disabled",
-        isInvalid && "border-danger",
+        variant === "default"
+          ? cn(box, "block w-full resize-y px-2 py-1.5 focus-ring disabled:opacity-disabled")
+          : "block w-full resize-none bg-transparent px-4 py-1 text-body-lg disabled:opacity-disabled",
+        variant === "default" && isInvalid && "border-danger",
         className,
       )}
       {...rest}

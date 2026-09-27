@@ -43,3 +43,20 @@ export {
   type TextAreaProps,
   type TextInputProps,
 } from "./input";
+export {
+  Menu,
+  MenuContent,
+  MenuGroup,
+  MenuItem,
+  MenuLabel,
+  MenuSeparator,
+  MenuTrigger,
+  type MenuContentProps,
+  type MenuItemProps,
+} from "./menu";
+export {
+  SegmentedControl,
+  type SegmentedControlProps,
+  type SegmentedOption,
+  type SegmentedSize,
+} from "./segmented";

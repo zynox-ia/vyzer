@@ -116,9 +116,19 @@ export const sections: DocSection[] = [
       { slug: "checkbox", title: "Checkbox", Page: page(() => import("./pages/forms/checkbox")) },
       { slug: "radio", title: "Radio", Page: page(() => import("./pages/forms/radio")) },
       { slug: "switch", title: "Switch", Page: page(() => import("./pages/forms/switch")) },
+      {
+        slug: "segmented-control",
+        title: "Segmented Control",
+        Page: page(() => import("./pages/forms/segmented-control")),
+      },
+      { slug: "composer", title: "Composer", Page: page(() => import("./pages/forms/composer")) },
     ],
   },
-  { slug: "navigation", title: "Navigation", plannedIn: "Fase 3 (Seleção e menus)", items: [] },
+  {
+    slug: "navigation",
+    title: "Navigation",
+    items: [{ slug: "menu", title: "Menu", Page: page(() => import("./pages/navigation/menu")) }],
+  },
   { slug: "feedback", title: "Feedback", plannedIn: "Fase 4 (Feedback)", items: [] },
   {
     slug: "data-display",
