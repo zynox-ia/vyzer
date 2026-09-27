@@ -223,8 +223,8 @@
   --motion-slow-exit: 180ms;
   --motion-shift: 4px;
   --motion-scale: 0.97;
-  /* Subida do botão primário no hover (pedido do responsável: 5 px) */
-  --motion-lift: 5px;
+  /* Subida do botão primário no hover (pedido do responsável: 1 px, ajuste óptico da §1) */
+  --motion-lift: 1px;
   --tooltip-delay: 500ms;
 }
 

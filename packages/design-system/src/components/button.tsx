@@ -18,8 +18,8 @@ const layers =
 
 const variantClass: Record<ButtonVariant, string> = {
   /*
-   * Degradê de 3 tons; no hover sobe 5 px com brilho por trás e volta ao pressionar.
-   * O ::after cobre os 5 px deixados embaixo, para o hover não piscar ao subir.
+   * Degradê de 3 tons; no hover sobe 1 px com brilho por trás e volta ao pressionar.
+   * O ::after cobre o espaço deixado embaixo, para o hover não piscar ao subir.
    */
   primary: cn(
     "bg-inverse [background-image:linear-gradient(180deg,var(--primary-stop-1),var(--primary-stop-2),var(--primary-stop-3))] text-inverse focus-ring-outside",

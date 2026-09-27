@@ -146,7 +146,7 @@ export function Page() {
       doc={{
         title: "Button",
         description:
-          "Dispara uma ação. Pílula, como no Figma. O primário é um degradê de 3 tons (claro ao cinza no escuro, grafite ao quase preto no claro) e no hover sobe 5 px com um brilho por trás.",
+          "Dispara uma ação. Pílula, como no Figma. O primário é um degradê de 3 tons (claro ao cinza no escuro, grafite ao quase preto no claro) e no hover sobe 1 px com um brilho por trás.",
         whenToUse: [
           "Ações de formulário e de diálogo (Create issue, Save changes, Cancel)",
           "Ações de cabeçalho de página (New project)",
@@ -198,7 +198,7 @@ export function Page() {
             Contêiner em pílula com borda de 1 px (transparente, exceto no secundário, que reserva o
             tamanho como no Figma), ícone opcional à esquerda ou à direita e rótulo. No carregamento
             o spinner ocupa o lugar do ícone e a largura não muda. No primário, uma área invisível
-            de 5 px embaixo mantém o hover enquanto o botão está levantado.
+            de 1 px embaixo mantém o hover enquanto o botão está levantado.
           </p>
         ),
         keyboard: ["Tab foca; Enter e Espaço acionam.", "Desabilitado sai da ordem de Tab."],
@@ -275,8 +275,8 @@ import { Plus } from "lucide-react";
             rule: "§3 texto normal (medido em Foundations → Colors, text-inverse)",
           },
           {
-            decision: "Hover: sobe 5 px + brilho 0 4 16; pressionado volta a 0",
-            rule: "Pedido do responsável; §8 deslocamento 4–8 px, 120 ms; reduced motion zera a subida",
+            decision: "Hover: sobe 1 px + brilho 0 4 16; pressionado volta a 0",
+            rule: "Pedido do responsável (1 px, abaixo dos 4–8 px da §8: o brilho carrega o efeito); 120 ms; reduced motion zera a subida",
           },
           {
             decision: "Foco por fora no primário",
