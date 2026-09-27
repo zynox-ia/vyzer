@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 import type { HTMLAttributes } from "react";
 import { Icon } from "../icons/Icon";
 import { cn } from "../lib/cn";
+import { isHexColor, type HexColor } from "../lib/color-value";
 
 export type LabelColor =
   | "grey"
@@ -58,7 +59,8 @@ export const labelTextClass: Record<LabelColor, string> = {
 };
 
 export type ColorDotProps = HTMLAttributes<HTMLSpanElement> & {
-  color: LabelColor;
+  /** Cor da paleta ou uma cor personalizada (#rrggbb, escolhida no Icon Picker). */
+  color: LabelColor | HexColor;
   /** sm: 9 px (label). md: 14 px (status de projeto). lg: 22 px (amostra do seletor). */
   size?: "sm" | "md" | "lg";
   /** Marca de selecionado (amostra do seletor de cor). */
@@ -67,16 +69,26 @@ export type ColorDotProps = HTMLAttributes<HTMLSpanElement> & {
 
 const sizeClass = { sm: "size-2.25", md: "size-3.5", lg: "size-5.5" };
 
-export function ColorDot({ color, size = "sm", checked, className, ...rest }: ColorDotProps) {
+export function ColorDot({
+  color,
+  size = "sm",
+  checked,
+  className,
+  style,
+  ...rest
+}: ColorDotProps) {
+  const custom = isHexColor(color);
   return (
     <span
       aria-hidden
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-full text-inverse",
-        bg[color],
+        !custom && bg[color as LabelColor],
         sizeClass[size],
         className,
       )}
+      // Cor personalizada é dado da pessoa, não token: entra pelo estilo.
+      style={custom ? { ...style, backgroundColor: color } : style}
       {...rest}
     >
       {checked && <Icon icon={Check} size="xs" />}

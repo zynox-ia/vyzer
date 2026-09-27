@@ -193,6 +193,51 @@ describe("IconPickerPanel", () => {
   });
 });
 
+describe("Icon Picker: cor personalizada", () => {
+  it("abre pelo botão, aceita HEX, muda a matiz e a área pelo teclado", async () => {
+    const onChange = vi.fn();
+    const screen = await render(
+      <IconPickerPanel
+        value={{ kind: "icon", name: "Rocket", color: "orange" }}
+        onValueChange={onChange}
+      />,
+    );
+    const toggle = screen.getByRole("button", { name: "Set custom color" });
+    await expect.element(toggle).toHaveAttribute("aria-pressed", "false");
+    await toggle.click();
+    await expect.element(toggle).toHaveAttribute("aria-pressed", "true");
+    // Começa da cor atual (Orange), sem trocar o ícone antes de a pessoa mexer.
+    expect(onChange).not.toHaveBeenCalled();
+
+    const hex = screen.getByRole("textbox", { name: "Hex color" });
+    await hex.fill("#FF2FCD");
+    await userEvent.keyboard("{Enter}");
+    expect(onChange).toHaveBeenLastCalledWith({ kind: "icon", name: "Rocket", color: "#ff2fcd" });
+    await expect.element(hex).toHaveValue("#ff2fcd");
+
+    await hex.fill("pink");
+    await expect.element(hex).toHaveAttribute("aria-invalid", "true");
+    await userEvent.keyboard("{Enter}");
+    await expect.element(hex).toHaveValue("#ff2fcd");
+
+    const hue = screen.getByRole("slider", { name: "Hue" });
+    await hue.click();
+    await userEvent.keyboard("{Home}");
+    expect(onChange).toHaveBeenLastCalledWith({ kind: "icon", name: "Rocket", color: "#ff2f2f" });
+
+    const brightness = screen.getByRole("slider", { name: "Brightness" });
+    brightness.element().focus();
+    await userEvent.keyboard("{End}");
+    await expect.element(brightness).toHaveValue("100");
+
+    expect(await violations(screen.container)).toEqual([]);
+
+    // Voltar à paleta: nenhuma amostra marcada, porque a cor atual é personalizada.
+    await toggle.click();
+    await expect.element(screen.getByRole("radio", { name: "Orange" })).not.toBeChecked();
+  });
+});
+
 describe("Tabs", () => {
   it("← → trocam de aba e mostram o painel", async () => {
     const screen = await render(

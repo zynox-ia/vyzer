@@ -105,6 +105,7 @@ export {
   IconPicker,
   IconPickerPanel,
   ProjectIcon,
+  type IconColor,
   type IconPickerPanelProps,
   type IconPickerProps,
   type ProjectIconValue,
@@ -117,3 +118,4 @@ export {
   type LabelPickerPanelProps,
   type LabelPickerProps,
 } from "./label-picker";
+export { ColorArea, HueSlider, type ColorAreaProps, type HueSliderProps } from "./custom-color";

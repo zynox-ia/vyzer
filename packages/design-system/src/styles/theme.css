@@ -108,6 +108,8 @@
 
   /* Foco: outline de 1 px sobre a borda (outline-focus); calculado no elemento */
   --outline-color-focus: color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+  /* Anel de estado ligado (botão de cor personalizada pressionado) */
+  --outline-color-strong: var(--line-strong);
 
   /* Cursor de texto, sublinhado, controles nativos marcados */
   --caret-color-primary: var(--fg-primary);
@@ -440,6 +442,50 @@
   box-shadow:
     var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
     var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+/*
+ * Seletor de cor personalizada (Icon Picker, Figma 1:1425). O espectro é o dado que o controle
+ * mostra (matiz de 0 a 360°, saturação e brilho), não um valor de marca: por isso é fixo aqui e
+ * não entra nos temas. A matiz atual chega pela variável --picker-hue (definida no elemento).
+ */
+@utility bg-hue-spectrum {
+  background-image: linear-gradient(
+    to bottom,
+    hsl(0 100% 50%),
+    hsl(60 100% 50%),
+    hsl(120 100% 50%),
+    hsl(180 100% 50%),
+    hsl(240 100% 50%),
+    hsl(300 100% 50%),
+    hsl(360 100% 50%)
+  );
+}
+@utility bg-hue-wheel {
+  background-image: conic-gradient(
+    hsl(0 100% 50%),
+    hsl(60 100% 50%),
+    hsl(120 100% 50%),
+    hsl(180 100% 50%),
+    hsl(240 100% 50%),
+    hsl(300 100% 50%),
+    hsl(360 100% 50%)
+  );
+}
+@utility bg-saturation-brightness {
+  background-color: hsl(var(--picker-hue, 0) 100% 50%);
+  background-image:
+    linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent);
+}
+@utility bg-picker-hue {
+  background-color: hsl(var(--picker-hue, 0) 100% 50%);
+}
+/* Alça sobre o espectro: anel branco com contorno escuro, legível em qualquer cor */
+@utility picker-handle {
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.35),
+    0 1px 2px rgb(0 0 0 / 0.3);
 }
 
 /*

@@ -38,14 +38,15 @@ export function Page() {
       doc={{
         title: "Icon Picker",
         description:
-          'Escolha do ícone do projeto (Figma 1:1401, "Icon Project"): abas Icons e Emojis. Icons tem a cor do ícone, busca e grade; Emojis tem busca e seções.',
+          'Escolha do ícone do projeto (Figma 1:1401, "Icon Project"): abas Icons e Emojis. Icons tem a cor do ícone (nove da paleta ou uma personalizada), busca e grade; Emojis tem busca e seções.',
         whenToUse: ["Ícone de projeto, time, view ou documento"],
         whenNotToUse: ["Ícones de status e prioridade: são fixos (Visual assets)"],
         playground: {
           preview: <LiveIconPicker />,
           controls: (
             <p className="text-body-sm text-secondary">
-              Troque a cor, busque &quot;rocket&quot; e escolha; na aba Emojis, busque
+              Troque a cor, abra a cor personalizada (bolinha colorida depois da divisória) e digite
+              um HEX ou arraste na área; busque &quot;rocket&quot; e escolha. Na aba Emojis, busque
               &quot;fire&quot;.
             </p>
           ),
@@ -53,12 +54,13 @@ export function Page() {
         showcase: (
           <div className="flex flex-wrap items-start gap-8">
             <StaticPanel initial={{ kind: "icon", name: "Rocket", color: "orange" }} />
+            <StaticPanel initial={{ kind: "icon", name: "Rocket", color: "#ff2fcd" }} />
             <StaticPanel initial={{ kind: "emoji", emoji: "🚀" }} />
           </div>
         ),
         states: null,
         statesNote:
-          'Cor escolhida: amostra com marca branca. Ícone ou emoji atual: fundo bg-selected. Hover: bg-hover. Busca sem resultado: "No icons found".',
+          'Cor escolhida: amostra com marca branca. Cor personalizada: o botão da roda de cores fica com anel (pressionado), a linha mostra a amostra marcada e o HEX, e abaixo aparecem a área de saturação × brilho e a barra de matiz; HEX inválido fica em vermelho até Enter ou sair do campo, e volta ao valor anterior. Ícone ou emoji atual: fundo bg-selected. Hover: bg-hover. Busca sem resultado: "No icons found".',
         themes: () => <StaticPanel initial={{ kind: "icon", name: "Rocket", color: "orange" }} />,
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
@@ -69,12 +71,14 @@ export function Page() {
         ),
         keyboard: [
           "← → trocam de aba (Tabs) e de cor.",
+          "Cor personalizada: Enter no HEX aplica; na área, Saturation e Brightness são controles deslizantes (setas, Home, End); na barra de matiz, ↑ ↓ e Home/End.",
           "Tab leva à busca e à grade; Enter ou Espaço escolhe.",
           "Esc fecha o popover.",
         ],
         accessibility: [
           'Cores são um radiogroup com o nome de cada cor ("Teal", "Orange").',
           "Cada ícone e emoji tem nome acessível; o atual tem aria-pressed.",
+          'O botão "Set custom color" é um toggle (aria-pressed); a área é um grupo com dois controles deslizantes nomeados, e a matiz é o Slider do Radix.',
         ],
         content: ['Busca: "Search icons…", "Search emoji…".'],
         dos: ["Mostre o ícone escolhido no gatilho, na cor escolhida"],
@@ -113,8 +117,22 @@ export function Page() {
             rule: "ADR-0013 (lucide é a biblioteca de ícones); divergência registrada em .figma/",
           },
           {
-            decision: "Botão de cor personalizada não implementado",
-            rule: "Fora do escopo desta fase; divergência registrada em .figma/",
+            decision:
+              "Divisória de 1 px e o botão de cor personalizada de 22 px depois das amostras",
+            rule: "Figma 1:1424 e 1:1425",
+          },
+          {
+            decision:
+              "Cor personalizada em HSV: área de saturação × brilho e barra de matiz vertical",
+            rule: "Referência enviada pelo responsável; modelo padrão de seletores de cor",
+          },
+          {
+            decision: "Espectro e alça como utilitários fixos (bg-hue-spectrum, picker-handle)",
+            rule: "AGENTS.md regra 2: o espectro é o dado mostrado, não valor de marca; fica no theme.css",
+          },
+          {
+            decision: "Trocar a cor não fecha o popover; escolher um ícone ou emoji fecha",
+            rule: "§7 Jakob (Linear): a cor se ajusta enquanto se vê o ícone",
           },
         ],
       }}
