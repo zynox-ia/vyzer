@@ -1,0 +1,3 @@
+/* Entrada de estilos do Storybook: o núcleo do pacote + tudo em src (inclui stories e docs). */
+@import "../src/styles/core.css";
+@source "../src";

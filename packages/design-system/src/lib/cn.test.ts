@@ -29,6 +29,18 @@ describe("cn", () => {
     expect(cn("size-icon-sm", "size-icon-lg")).toBe("size-icon-lg");
   });
 
+  it("trata shadow-focus como sombra e border-focus como cor de borda", () => {
+    expect(cn("shadow-overlay", "shadow-focus")).toBe("shadow-focus");
+    expect(cn("border-control", "border-focus")).toBe("border-focus");
+    expect(cn("outline-focus", "text-primary")).toBe("outline-focus text-primary");
+  });
+
+  it("mantém placeholder e cor de texto separados por variante", () => {
+    expect(cn("text-primary", "placeholder:text-placeholder")).toBe(
+      "text-primary placeholder:text-placeholder",
+    );
+  });
+
   it("reconhece z-index, opacidade e duração nomeados", () => {
     expect(cn("z-dropdown", "z-modal")).toBe("z-modal");
     expect(cn("opacity-disabled", "opacity-muted")).toBe("opacity-muted");

@@ -1,0 +1,10 @@
+/*
+ * Núcleo de estilos (sem @source): tokens em três camadas e base.
+ * Entradas: index.css (apps, exportado como styles.css) e .storybook/storybook.css.
+ */
+@import "tailwindcss";
+@import "./fonts.css";
+@import "./primitives.css";
+@import "./themes.css";
+@import "./theme.css";
+@import "./base.css";

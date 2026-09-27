@@ -61,7 +61,7 @@ export const Foundations: Story = {
             </div>
 
             <div className="flex flex-col gap-1 bg-panel p-4">
-              <h2 className="font-display text-heading-2 text-primary">Executar automação</h2>
+              <h2 className="type-heading-2 text-primary">Executar automação</h2>
               <p className="text-body-md text-secondary">
                 O agente lê o CRM, pesquisa na web e envia a mensagem quando a automação rodar.
               </p>

@@ -1,7 +1,7 @@
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { GLOBALS_UPDATED, SET_GLOBALS } from "storybook/internal/core-events";
 import { addons } from "storybook/preview-api";
-import "../src/styles/index.css";
+import "./storybook.css";
 import "./preview.css";
 
 export type ThemeGlobal = "dark" | "light" | "system";
@@ -33,10 +33,20 @@ function applyModes(globals: Globals) {
 
 // Páginas só de docs (MDX sem story) não passam pelo decorator: acompanham o toolbar pelo canal.
 export const channel = addons.getChannel();
-channel.on(SET_GLOBALS, ({ globals }: { globals: Globals }) => applyModes(globals));
-channel.on(GLOBALS_UPDATED, ({ globals }: { globals: Globals }) => applyModes(globals));
+let lastGlobals: Globals = {};
+const remember = ({ globals }: { globals: Globals }) => {
+  lastGlobals = globals;
+  applyModes(globals);
+};
+channel.on(SET_GLOBALS, remember);
+channel.on(GLOBALS_UPDATED, remember);
+// "Sistema" acompanha a troca de tema do sistema operacional.
+window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+  if (lastGlobals.theme === "system") applyModes(lastGlobals);
+});
 
 const withVyzerModes: Decorator = (Story, context) => {
+  lastGlobals = context.globals;
   applyModes(context.globals);
   return <Story />;
 };

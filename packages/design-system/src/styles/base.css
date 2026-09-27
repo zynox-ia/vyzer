@@ -6,13 +6,17 @@
 
   /* Foco padrão para qualquer elemento focável (mesma regra do utilitário focus-ring) */
   :focus-visible {
-    outline: 1px solid var(--focus-color);
+    outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
     outline-offset: -1px;
-    box-shadow: var(--focus-halo);
+    --tw-ring-shadow: 0 0 0 var(--focus-halo-size)
+      color-mix(in srgb, var(--accent) 25%, transparent);
+    box-shadow:
+      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
   }
 
   a {
-    @apply text-primary underline underline-offset-2;
+    @apply text-primary underline decoration-primary underline-offset-2;
   }
 
   code,

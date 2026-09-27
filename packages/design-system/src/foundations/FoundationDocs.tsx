@@ -13,31 +13,31 @@ type TypeLevel = {
 export const typeLevels: TypeLevel[] = [
   {
     token: "display",
-    className: "font-display text-display",
+    className: "type-display",
     sample: "Novo agente",
     family: "display",
   },
   {
     token: "heading-1",
-    className: "font-display text-heading-1",
+    className: "type-heading-1",
     sample: "Conectar integração",
     family: "display",
   },
   {
     token: "heading-2",
-    className: "font-display text-heading-2",
+    className: "type-heading-2",
     sample: "Executar automação",
     family: "display",
   },
   {
     token: "heading-3",
-    className: "font-display text-heading-3",
+    className: "type-heading-3",
     sample: "Selecionar modelo",
     family: "display",
   },
   {
     token: "heading-4",
-    className: "font-display text-heading-4",
+    className: "type-heading-4",
     sample: "Pesquisar conversas",
     family: "display",
   },

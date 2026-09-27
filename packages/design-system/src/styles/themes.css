@@ -37,6 +37,8 @@
   --fg-primary: var(--vz-warm-50);
   --fg-secondary: var(--vz-warm-400);
   --fg-tertiary: var(--vz-warm-500);
+  /* Placeholder: ≥ 4,5:1 nas superfícies onde há campos (WCAG 1.4.3 vale para placeholder) */
+  --fg-placeholder: var(--vz-warm-500);
   --fg-inverse: var(--vz-warm-975);
 
   /* Bordas (hairline de 1 px) */
@@ -103,6 +105,7 @@
   --fg-primary: var(--vz-warm-950);
   --fg-secondary: var(--vz-warm-600);
   --fg-tertiary: var(--vz-warm-500);
+  --fg-placeholder: var(--vz-warm-580);
   --fg-inverse: var(--vz-warm-50);
 
   --line-subtle: var(--vz-warm-150);
@@ -152,19 +155,21 @@
   --radius-base: 4px;
 }
 
-/* ---------- Foco (ADR-0013): B é o padrão; A só para comparação ---------- */
+/* ---------- Foco (ADR-0013): B é o padrão; A só para comparação ----------
+ * Só parâmetros aqui; a cor é calculada no próprio elemento (base.css, focus-ring), para
+ * seguir o --accent do tema mais próximo (temas aninhados). */
 
 :root,
 [data-focus="b"] {
   /* Borda de 1 px no terracota cheio + halo externo de 2 px a 25% */
-  --focus-color: var(--accent);
-  --focus-halo: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+  --focus-alpha: 100%;
+  --focus-halo-size: 2px;
 }
 
 [data-focus="a"] {
   /* Só a borda de 1 px, no terracota a 25% (não atinge 3:1: ver Foundations → Colors) */
-  --focus-color: color-mix(in srgb, var(--accent) 25%, transparent);
-  --focus-halo: 0 0 0 0 transparent;
+  --focus-alpha: 25%;
+  --focus-halo-size: 0px;
 }
 
 /* ---------- Densidade ---------- */

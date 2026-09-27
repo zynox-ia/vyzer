@@ -3,12 +3,13 @@
  *   import "@vyzer/design-system/styles.css";
  * Tokens em três camadas: primitives.css → themes.css (semânticos por tema) → theme.css (utilitários).
  */
-@import "tailwindcss";
-@import "./fonts.css";
-@import "./primitives.css";
-@import "./themes.css";
-@import "./theme.css";
-@import "./base.css";
+@import "./core.css";
 
 /* Classes usadas pelos componentes do pacote (o app consumidor também as recebe). */
 @source "../";
+/* Documentação não entra no CSS dos apps. */
+@source not "../**/*.stories.tsx";
+@source not "../**/*.mdx";
+@source not "../**/*.test.ts";
+@source not "../foundations";
+@source not "../qa";

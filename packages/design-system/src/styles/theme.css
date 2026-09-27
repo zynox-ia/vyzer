@@ -65,6 +65,7 @@
   --text-color-primary: var(--fg-primary);
   --text-color-secondary: var(--fg-secondary);
   --text-color-tertiary: var(--fg-tertiary);
+  --text-color-placeholder: var(--fg-placeholder);
   --text-color-inverse: var(--fg-inverse);
   --text-color-on-checked: var(--fg-inverse);
   --text-color-accent: var(--accent-text);
@@ -94,10 +95,24 @@
   --border-color-control: var(--line-control);
   --border-color-checked: var(--fg-primary);
   --border-color-danger: var(--st-danger);
-  --border-color-focus: var(--focus-color);
+  --border-color-focus: color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
 
-  /* Foco: outline de 1 px sobre a borda (outline-focus) */
-  --outline-color-focus: var(--focus-color);
+  /* Foco: outline de 1 px sobre a borda (outline-focus); calculado no elemento */
+  --outline-color-focus: color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+
+  /* Cursor de texto, sublinhado, controles nativos marcados */
+  --caret-color-primary: var(--fg-primary);
+  --text-decoration-color-primary: var(--fg-primary);
+  --text-decoration-color-secondary: var(--fg-secondary);
+  --accent-color-checked: var(--fg-primary);
+
+  /* Ícones SVG de cor fixa (fill-*, stroke-*) */
+  --fill-primary: var(--fg-primary);
+  --fill-secondary: var(--fg-secondary);
+  --fill-tertiary: var(--fg-tertiary);
+  --stroke-primary: var(--fg-primary);
+  --stroke-secondary: var(--fg-secondary);
+  --stroke-tertiary: var(--fg-tertiary);
 
   /* Data viz: paleta categórica (fill-chart-*, stroke-chart-*) */
   --fill-chart-1: var(--hue-blue);
@@ -221,12 +236,14 @@
     0 3px 20px rgb(var(--shadow-base) / var(--shadow-alpha)),
     0 4px 40px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 0.8));
   --shadow-overlay: 0 8px 64px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 2));
-  --shadow-focus: var(--focus-halo);
+  --shadow-focus: 0 0 0 var(--focus-halo-size) color-mix(in srgb, var(--accent) 25%, transparent);
 
   /* ---------- Opacidade, blur ---------- */
   --opacity-disabled: 50%;
   --opacity-muted: 60%;
   --opacity-subtle: 15%;
+  --opacity-inactive: 40%;
+  --opacity-soft: 90%;
   --blur-sm: 4px;
   --blur-md: 8px;
   --blur-lg: 16px;
@@ -278,6 +295,61 @@
   --ease-emphasized: cubic-bezier(0.3, 0, 0, 1.2);
   --default-transition-duration: var(--motion-fast);
   --default-transition-timing-function: var(--ease-standard);
+
+  /* Animações: entradas e saídas de overlays (Radix usa data-state) e indicadores */
+  --animate-fade-in: vz-fade-in var(--motion-normal) var(--ease-enter);
+  --animate-fade-out: vz-fade-out var(--motion-fast) var(--ease-exit);
+  --animate-scale-in: vz-scale-in var(--motion-normal) var(--ease-enter);
+  --animate-scale-out: vz-scale-out var(--motion-fast) var(--ease-exit);
+  --animate-slide-up: vz-slide-up var(--motion-normal) var(--ease-enter);
+  --animate-slide-down: vz-slide-down var(--motion-normal) var(--ease-enter);
+  --animate-spin: vz-spin 800ms linear infinite;
+  --animate-pulse: vz-pulse 1600ms var(--ease-standard) infinite;
+
+  @keyframes vz-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes vz-fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes vz-scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes vz-scale-out {
+    to {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes vz-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  @keyframes vz-slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+  @keyframes vz-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes vz-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
 }
 
 /* Durações nomeadas (duration-instant/fast/normal/slow), zeradas com prefers-reduced-motion */
@@ -297,12 +369,39 @@
 /*
  * Foco (ADR-0013): indicador só na navegação por teclado. Outline de 1 px sobre a borda do
  * componente (offset -1 px), sem anel grosso; na variante B, halo externo de 2 px a 25%.
+ * O halo entra pela variável de ring do Tailwind, então soma com a sombra do componente.
  * Componentes sem borda própria ganham a mesma linha de 1 px no foco.
  */
 @utility focus-ring {
   &:focus-visible {
-    outline: 1px solid var(--focus-color);
+    outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
     outline-offset: -1px;
-    box-shadow: var(--focus-halo);
+    --tw-ring-shadow: 0 0 0 var(--focus-halo-size)
+      color-mix(in srgb, var(--accent) 25%, transparent);
+    box-shadow:
+      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
   }
+}
+
+/* Níveis de título com a família certa (display e headings usam Inter Tight) */
+@utility type-display {
+  font-family: var(--font-display);
+  @apply text-display;
+}
+@utility type-heading-1 {
+  font-family: var(--font-display);
+  @apply text-heading-1;
+}
+@utility type-heading-2 {
+  font-family: var(--font-display);
+  @apply text-heading-2;
+}
+@utility type-heading-3 {
+  font-family: var(--font-display);
+  @apply text-heading-3;
+}
+@utility type-heading-4 {
+  font-family: var(--font-display);
+  @apply text-heading-4;
 }

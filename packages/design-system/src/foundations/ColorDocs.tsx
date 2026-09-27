@@ -74,6 +74,8 @@ export type ContrastCheck = {
   fgAlpha?: number;
   /** Se definido, o fundo é esta variável a 15% sobre cada superfície (badges). */
   tintedBy?: string;
+  /** Superfícies a medir; o padrão é a lista completa. */
+  on?: string[];
   target: number;
 };
 
@@ -96,7 +98,7 @@ function measure(el: HTMLElement, checks: ContrastCheck[]): Row[] {
     let min = Infinity;
     let worst = "";
     let onPanel = 0;
-    for (const s of SURFACES) {
+    for (const s of c.on ?? SURFACES) {
       const surface = toRgba(readVar(el, s));
       const bg = c.tintedBy
         ? over(withAlpha(toRgba(readVar(el, c.tintedBy)), 0.15), surface)
@@ -238,12 +240,19 @@ export const textChecks: ContrastCheck[] = [
   { label: "text-primary", fg: "--fg-primary", target: 4.5 },
   { label: "text-secondary", fg: "--fg-secondary", target: 4.5 },
   { label: "text-tertiary", fg: "--fg-tertiary", target: 4.5 },
+  {
+    label: "text-placeholder (em campos)",
+    fg: "--fg-placeholder",
+    target: 4.5,
+    on: ["--bg-input", "--bg-panel", "--bg-surface", "--bg-sidebar", "--bg-hover"],
+  },
   { label: "text-accent (contador)", fg: "--accent-text", target: 4.5 },
 ];
 
 export const indicatorChecks: ContrastCheck[] = [
   { label: "Foco B (padrão): terracota 100%", fg: "--accent", target: 3 },
   { label: "Foco A: terracota 25%", fg: "--accent", fgAlpha: 0.25, target: 3 },
+  { label: "Foco B sobre botão primário", fg: "--accent", target: 3, on: ["--bg-inverse"] },
   { label: "border-control", fg: "--line-control", target: 3 },
   { label: "border-default (hairline)", fg: "--line-default", target: 3 },
   { label: "controle ativo (text-primary)", fg: "--fg-primary", target: 3 },

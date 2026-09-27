@@ -137,3 +137,32 @@ export const Priorities: Story = {
     </ul>
   ),
 };
+
+/** Workflow e prioridade no tema claro (o teste de acessibilidade roda nos dois temas). */
+export const LightTheme: Story = {
+  globals: { theme: "light" },
+  render: () => (
+    <div className="flex gap-10 bg-app p-4 text-body-md">
+      <ul className="flex flex-col gap-2">
+        {workflow.map((s) => (
+          <li key={s.name} className="flex items-center gap-2 text-primary">
+            <StatusIcon
+              type={s.type}
+              progress={"progress" in s ? s.progress : undefined}
+              tone={"tone" in s ? s.tone : undefined}
+            />
+            {s.name}
+          </li>
+        ))}
+      </ul>
+      <ul className="flex flex-col gap-2">
+        {priorities.map(({ p, name }) => (
+          <li key={p} className="flex items-center gap-2 text-primary">
+            <PriorityIcon priority={p} />
+            {name}
+          </li>
+        ))}
+      </ul>
+    </div>
+  ),
+};
