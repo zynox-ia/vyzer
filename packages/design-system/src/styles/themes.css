@@ -50,6 +50,8 @@
   /* Borda de controles de formulário (input, checkbox, radio, switch): ≥ 3:1 também sobre a
    * seleção (checkbox numa linha selecionada); warm-575 dava 2,8:1 ali */
   --line-control: var(--vz-warm-550);
+  /* Hover de controle: um degrau mais forte que a borda de controle */
+  --line-control-hover: var(--vz-warm-500);
 
   /* Acento terracota: foco, indicador ativo da sidebar, contadores de destaque */
   --accent: var(--vz-terracotta-dark);
@@ -116,6 +118,7 @@
   --line-default: var(--vz-warm-250);
   --line-strong: var(--vz-warm-300);
   --line-control: var(--vz-warm-550);
+  --line-control-hover: var(--vz-warm-600);
 
   --accent: var(--vz-terracotta-light);
   --accent-text: var(--vz-terracotta-light-text);

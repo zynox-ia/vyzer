@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 supersedes: visual parts of ADR-0011 and ADR-0012
 ---
 

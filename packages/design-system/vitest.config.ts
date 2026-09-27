@@ -9,6 +9,20 @@ export default defineConfig({
   // Raiz no pacote: dependências resolvem a partir daqui, não da raiz do monorepo.
   root: fileURLToPath(new URL(".", import.meta.url)),
   plugins: [react(), tailwindcss()],
+  // Pré-otimiza tudo que os testes importam: sem isso o Vite recarrega no meio da execução.
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react/jsx-dev-runtime",
+      "radix-ui",
+      "lucide-react",
+      "axe-core",
+      "vitest-browser-react",
+      "clsx",
+      "tailwind-merge",
+    ],
+  },
   test: {
     name: "design-system",
     include: ["src/**/*.browser.test.tsx"],

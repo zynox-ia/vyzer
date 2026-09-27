@@ -8,6 +8,21 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     root: fileURLToPath(new URL(".", import.meta.url)),
+    // Pré-otimiza tudo que as páginas importam: sem isso o Vite recarrega no meio da execução.
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "react/jsx-dev-runtime",
+        "react-router",
+        "radix-ui",
+        "lucide-react",
+        "axe-core",
+        "vitest-browser-react",
+        "clsx",
+        "tailwind-merge",
+      ],
+    },
     test: {
       name: "web",
       include: ["src/**/*.browser.test.tsx"],

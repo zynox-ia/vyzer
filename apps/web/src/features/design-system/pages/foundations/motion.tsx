@@ -1,3 +1,4 @@
+import { Button } from "@vyzer/design-system/components";
 import { useState } from "react";
 import { Code, Decisions, DocPage, DocSection, DocTable } from "../../kit/doc";
 
@@ -24,13 +25,9 @@ function Demo() {
   const [open, setOpen] = useState(true);
   return (
     <div className="flex flex-col items-start gap-4">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="inline-flex h-control-md items-center rounded-full bg-inverse px-3 text-label-md text-inverse transition-colors hover:bg-inverse-hover"
-      >
+      <Button variant="primary" onClick={() => setOpen((o) => !o)}>
         {open ? "Close popover" : "Open popover"}
-      </button>
+      </Button>
       <div className="h-28">
         {open && (
           <div className="w-56 animate-scale-in rounded-container border border-strong bg-popover p-3 shadow-md">

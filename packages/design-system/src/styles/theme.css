@@ -44,6 +44,9 @@
   --background-color-scrim: var(--bg-scrim);
   --background-color-checked: var(--fg-primary);
   --background-color-accent: var(--accent);
+  /* Trilho do switch desligado: mesma cor da borda de controle (≥ 3:1) */
+  --background-color-track: var(--line-control);
+  --background-color-track-hover: var(--line-control-hover);
   --background-color-success-subtle: color-mix(in srgb, var(--st-success) 15%, transparent);
   --background-color-info-subtle: color-mix(in srgb, var(--st-info) 15%, transparent);
   --background-color-warning-subtle: color-mix(in srgb, var(--st-warning) 15%, transparent);
@@ -93,6 +96,7 @@
   --border-color-default: var(--line-default);
   --border-color-strong: var(--line-strong);
   --border-color-control: var(--line-control);
+  --border-color-control-hover: var(--line-control-hover);
   --border-color-checked: var(--fg-primary);
   --border-color-danger: var(--st-danger);
   --border-color-focus: color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
@@ -380,7 +384,8 @@
  * Componentes sem borda própria ganham a mesma linha de 1 px no foco.
  */
 @utility focus-ring {
-  &:focus-visible {
+  &:focus-visible,
+  &[data-preview~="focus"] {
     outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
     outline-offset: -1px;
     --tw-ring-shadow: 0 0 0 var(--focus-halo-size)
@@ -388,6 +393,32 @@
     box-shadow:
       var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
       var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+}
+
+/* Mesmo foco num contêiner cujo controle interno recebe o foco (InputGroup) */
+@utility focus-ring-within {
+  &:has(input:focus-visible, textarea:focus-visible),
+  &:has([data-preview~="focus"]),
+  &[data-preview~="focus"] {
+    outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+    outline-offset: -1px;
+    --tw-ring-shadow: 0 0 0 var(--focus-halo-size)
+      color-mix(in srgb, var(--accent) 25%, transparent);
+    box-shadow:
+      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+}
+
+/*
+ * Foco por fora do componente (offset +1 px): para superfícies claras cheias (botão primário
+ * no escuro), onde o terracota sobre o próprio fundo fica abaixo de 3:1 (2,96:1 medido).
+ */
+@utility focus-ring-outside {
+  &:focus-visible,
+  &[data-preview~="focus"] {
+    outline-offset: 1px;
   }
 }
 
@@ -399,6 +430,29 @@
   box-shadow:
     var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
     var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+/*
+ * Estados que a documentação reproduz de forma estática com data-preview="hover active".
+ * Componentes usam hovered: e pressed: no lugar de hover: e active:.
+ */
+@custom-variant hovered {
+  @media (hover: hover) {
+    &:hover:not(:disabled, [aria-disabled="true"]) {
+      @slot;
+    }
+  }
+  &[data-preview~="hover"] {
+    @slot;
+  }
+}
+@custom-variant pressed {
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    @slot;
+  }
+  &[data-preview~="active"] {
+    @slot;
+  }
 }
 
 /* Níveis de título (metric, display, title e headings) */

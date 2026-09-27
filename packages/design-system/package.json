@@ -12,7 +12,8 @@
     "./cn": "./src/lib/cn.ts",
     "./contrast": "./src/lib/contrast.ts",
     "./icons": "./src/icons/index.ts",
-    "./font-coverage": "./src/lib/font-coverage.ts"
+    "./font-coverage": "./src/lib/font-coverage.ts",
+    "./components": "./src/components/index.ts"
   },
   "scripts": {
     "build": "tsc -b --noEmit",

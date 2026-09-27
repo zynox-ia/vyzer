@@ -71,8 +71,53 @@ export const sections: DocSection[] = [
       },
     ],
   },
-  { slug: "components", title: "Components", plannedIn: "Fase 2 (Base)", items: [] },
-  { slug: "forms", title: "Forms", plannedIn: "Fase 2 (Base)", items: [] },
+  {
+    slug: "components",
+    title: "Components",
+    items: [
+      { slug: "button", title: "Button", Page: page(() => import("./pages/components/button")) },
+      {
+        slug: "icon-button",
+        title: "Icon Button",
+        Page: page(() => import("./pages/components/icon-button")),
+      },
+    ],
+  },
+  {
+    slug: "forms",
+    title: "Forms",
+    items: [
+      { slug: "field", title: "Field", Page: page(() => import("./pages/forms/field")) },
+      {
+        slug: "text-input",
+        title: "Text Input",
+        Page: page(() => import("./pages/forms/text-input")),
+      },
+      {
+        slug: "text-area",
+        title: "Text Area",
+        Page: page(() => import("./pages/forms/text-area")),
+      },
+      {
+        slug: "search-input",
+        title: "Search Input",
+        Page: page(() => import("./pages/forms/search-input")),
+      },
+      {
+        slug: "password-input",
+        title: "Password Input",
+        Page: page(() => import("./pages/forms/password-input")),
+      },
+      {
+        slug: "input-group",
+        title: "Input Group",
+        Page: page(() => import("./pages/forms/input-group")),
+      },
+      { slug: "checkbox", title: "Checkbox", Page: page(() => import("./pages/forms/checkbox")) },
+      { slug: "radio", title: "Radio", Page: page(() => import("./pages/forms/radio")) },
+      { slug: "switch", title: "Switch", Page: page(() => import("./pages/forms/switch")) },
+    ],
+  },
   { slug: "navigation", title: "Navigation", plannedIn: "Fase 3 (Seleção e menus)", items: [] },
   { slug: "feedback", title: "Feedback", plannedIn: "Fase 4 (Feedback)", items: [] },
   {

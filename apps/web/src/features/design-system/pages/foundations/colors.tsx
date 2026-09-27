@@ -31,6 +31,7 @@ const borders: Swatch[] = [
   { token: "border-default", cssVar: "--line-default", usage: "cards, modal" },
   { token: "border-strong", cssVar: "--line-strong", usage: "popovers" },
   { token: "border-control", cssVar: "--line-control", usage: "campos e controles" },
+  { token: "border-control-hover", cssVar: "--line-control-hover", usage: "hover de controles" },
   { token: "accent (foco)", cssVar: "--accent", usage: "foco, item ativo" },
 ];
 
@@ -85,6 +86,7 @@ const indicatorChecks: ContrastCheck[] = [
   { label: "Foco A: terracota 25%", fg: "--accent", fgAlpha: 0.25, target: 3 },
   { label: "Foco B sobre o botão primário", fg: "--accent", target: 3, on: ["--bg-inverse"] },
   { label: "border-control", fg: "--line-control", target: 3 },
+  { label: "border-control-hover", fg: "--line-control-hover", target: 3 },
   {
     label: "border-default (hairline)",
     fg: "--line-default",
