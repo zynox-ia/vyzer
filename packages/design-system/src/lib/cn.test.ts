@@ -58,6 +58,9 @@ describe("cn", () => {
     const gradient = "[background-image:linear-gradient(180deg,var(--a),var(--b))]";
     expect(cn("bg-inverse", gradient, "shadow-glow")).toBe(`bg-inverse ${gradient} shadow-glow`);
     expect(cn("shadow-sm", "shadow-glow")).toBe("shadow-glow");
+    expect(cn("hovered:shadow-glow", "hovered:shadow-glow-danger")).toBe(
+      "hovered:shadow-glow-danger",
+    );
   });
 
   it("aceita condicionais do clsx", () => {

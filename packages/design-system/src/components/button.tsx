@@ -31,9 +31,9 @@ const variantClass: Record<ButtonVariant, string> = {
   /* Degradê de 3 tons, o mais claro no topo. */
   primary:
     "bg-inverse [background-image:linear-gradient(180deg,var(--primary-stop-1),var(--primary-stop-2),var(--primary-stop-3))] text-inverse focus-ring-outside",
-  secondary: cn("border-default bg-control text-primary", layers),
+  secondary: cn("border-default bg-control text-primary hovered:shadow-glow-secondary", layers),
   ghost: cn("text-primary", layers),
-  danger: cn("bg-danger-subtle text-danger-strong", layers),
+  danger: cn("bg-danger-subtle text-danger-strong hovered:shadow-glow-danger", layers),
 };
 
 /**
@@ -119,7 +119,7 @@ export function Button({
     return (
       <Slot.Root
         aria-disabled={disabled || undefined}
-        className={cn(base, variantClass[variant], lift, sizeClass[size], className)}
+        className={cn(base, lift, variantClass[variant], sizeClass[size], className)}
         {...rest}
       >
         {children}
@@ -128,8 +128,8 @@ export function Button({
   }
   const classes = cn(
     base,
-    variantClass[variant],
     lift,
+    variantClass[variant],
     sizeClass[size],
     leading && leadingPad[size],
     className,

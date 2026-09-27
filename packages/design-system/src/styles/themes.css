@@ -36,6 +36,9 @@
   --primary-stop-3: var(--vz-warm-250);
   /* Brilho por trás do primário no hover: halo claro no escuro */
   --glow: 0 4px 16px rgb(var(--vz-overlay-light) / 0.22);
+  /* Secondary: metade da opacidade do brilho; danger: brilho na própria cor */
+  --glow-secondary: 0 4px 16px rgb(var(--vz-overlay-light) / 0.11);
+  --glow-danger: 0 4px 16px color-mix(in srgb, var(--st-danger) 40%, transparent);
 
   /* Estados como camadas translúcidas: funcionam sobre qualquer superfície (skill §12) */
   --bg-hover: rgb(var(--vz-overlay-light) / 0.04);
@@ -117,6 +120,8 @@
   --primary-stop-3: var(--vz-warm-950);
   /* No claro o brilho vira uma sombra suave do próprio botão */
   --glow: 0 4px 16px rgb(var(--vz-overlay-ink) / 0.28);
+  --glow-secondary: 0 4px 16px rgb(var(--vz-overlay-ink) / 0.14);
+  --glow-danger: 0 4px 16px color-mix(in srgb, var(--st-danger) 40%, transparent);
 
   --bg-hover: rgb(var(--vz-overlay-ink) / 0.04);
   --bg-pressed: rgb(var(--vz-overlay-ink) / 0.1);
