@@ -1,0 +1,80 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import {
+  SwatchGroup,
+  ContrastReport,
+  surfaceSwatches,
+  textSwatches,
+  borderSwatches,
+  statusSwatches,
+  hueSwatches,
+  textChecks,
+  indicatorChecks,
+  iconChecks,
+  badgeChecks,
+} from "./ColorDocs";
+
+<Meta title="Foundations/Colors" />
+
+# Colors
+
+Paleta quente e monocromática. Os valores abaixo são lidos ao vivo dos tokens em cada tema, e o contraste é medido no próprio navegador (fórmula do WCAG 2.x). Metas: **4,5:1 para texto**; **3:1 para ícones, indicadores e bordas de controle**.
+
+## Superfícies
+
+A seleção fica só um degrau acima do painel. No claro, o conteúdo fica sobre o creme e nenhuma superfície é mais clara que `#faf9f5`.
+
+<Unstyled>
+  <SwatchGroup swatches={surfaceSwatches} />
+</Unstyled>
+
+## Texto
+
+<Unstyled>
+  <SwatchGroup swatches={textSwatches} />
+</Unstyled>
+
+<Unstyled>
+  <ContrastReport checks={textChecks} />
+</Unstyled>
+
+`text-tertiary` não atinge 4,5:1 em todas as superfícies do tema claro: use só em placeholder e metadados não essenciais, nunca em texto necessário para agir.
+
+## Bordas, foco e controles
+
+Hairlines (`border-subtle`, `border-default`, `border-strong`) são decorativas: separam superfícies e não precisam de 3:1. Campos e controles de formulário usam `border-control`, que atinge 3:1.
+
+<Unstyled>
+  <SwatchGroup swatches={borderSwatches} />
+</Unstyled>
+
+<Unstyled>
+  <ContrastReport checks={indicatorChecks} />
+</Unstyled>
+
+**Foco.** A variante A (borda do terracota a 25%) não atinge 3:1 em nenhum tema, por isso **B é o padrão**: borda de 1 px no terracota cheio + halo externo de 2 px a 25%. A continua no toolbar só para comparação.
+
+## Status
+
+<Unstyled>
+  <SwatchGroup swatches={statusSwatches} />
+</Unstyled>
+
+<Unstyled>
+  <ContrastReport checks={iconChecks} />
+</Unstyled>
+
+## Badges
+
+Fundo com a cor a 15% e texto na cor cheia no escuro; no claro, o texto usa um tom mais escuro do mesmo matiz para chegar a 4,5:1.
+
+<Unstyled>
+  <ContrastReport checks={badgeChecks} />
+</Unstyled>
+
+## Labels e data viz
+
+Mesma luminosidade e croma por tema (escuro L 0,72; claro L 0,55; C até 0,15 dentro da gama sRGB). A ordem `chart-1` a `chart-10` é a paleta categórica.
+
+<Unstyled>
+  <SwatchGroup swatches={hueSwatches} />
+</Unstyled>

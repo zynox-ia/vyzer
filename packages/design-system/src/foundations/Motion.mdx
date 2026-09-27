@@ -1,0 +1,22 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import { MotionDemo, FocusDemo } from "./FoundationDocs";
+
+<Meta title="Foundations/Motion" />
+
+# Motion
+
+Transições de UI entre 100 e 150 ms. Durações: `instant` 50, `fast` 100 (padrão), `normal` 150 e `slow` 250 ms. Curvas: `standard` (padrão), `enter`, `exit` e `emphasized`. Com `prefers-reduced-motion`, todas as durações vão a zero pelos próprios tokens.
+
+Passe o mouse ou use Tab nos trilhos:
+
+<Unstyled>
+  <MotionDemo />
+</Unstyled>
+
+## Foco
+
+Indicador só na navegação por teclado (`:focus-visible`), sem anel grosso: a borda de 1 px do componente muda de cor; componentes sem borda própria ganham a mesma linha no foco. Use Tab e troque a variante no toolbar.
+
+<Unstyled>
+  <FocusDemo />
+</Unstyled>

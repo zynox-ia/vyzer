@@ -1,0 +1,14 @@
+/*
+ * Vyzer Design System: ponto de entrada de estilos. Importe uma vez no app:
+ *   import "@vyzer/design-system/styles.css";
+ * Tokens em três camadas: primitives.css → themes.css (semânticos por tema) → theme.css (utilitários).
+ */
+@import "tailwindcss";
+@import "./fonts.css";
+@import "./primitives.css";
+@import "./themes.css";
+@import "./theme.css";
+@import "./base.css";
+
+/* Classes usadas pelos componentes do pacote (o app consumidor também as recebe). */
+@source "../";

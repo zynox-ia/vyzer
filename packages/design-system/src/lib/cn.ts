@@ -1,0 +1,97 @@
+/**
+ * Junta classes e resolve conflitos do Tailwind conhecendo os tokens do Vyzer.
+ * Sem esta configuração, o tailwind-merge confundiria `text-body-sm` (tamanho) com
+ * `text-primary` (cor) e descartaria um dos dois.
+ */
+import { clsx, type ClassValue } from "clsx";
+import { extendTailwindMerge } from "tailwind-merge";
+
+/** Nomes de cor usados em bg-*, text-*, border-*, outline-*, fill-* e stroke-*. */
+const colors = [
+  "app",
+  "sidebar",
+  "panel",
+  "surface",
+  "subtle",
+  "popover",
+  "control",
+  "input",
+  "control-strong",
+  "hover",
+  "pressed",
+  "selected",
+  "inverse",
+  "inverse-hover",
+  "inverse-pressed",
+  "scrim",
+  "checked",
+  "on-checked",
+  "accent",
+  "primary",
+  "secondary",
+  "tertiary",
+  "default",
+  "strong",
+  "focus",
+  ...["success", "info", "warning", "danger", "accent", "neutral"].map((s) => `${s}-subtle`),
+  ...["success", "info", "warning", "danger"].flatMap((s) => [s, `${s}-strong`]),
+  ...["green", "blue", "amber", "red", "purple", "pink", "cyan", "orange", "lime", "indigo"],
+  ...Array.from({ length: 10 }, (_, i) => `chart-${i + 1}`),
+];
+
+const textSizes = [
+  "display",
+  "heading-1",
+  "heading-2",
+  "heading-3",
+  "heading-4",
+  "body-lg",
+  "body-md",
+  "body-sm",
+  "label-lg",
+  "label-md",
+  "label-sm",
+  "caption",
+  "overline",
+  "code",
+  "kbd",
+];
+
+const spacing = [
+  ...["xs", "sm", "md", "lg", "xl"].flatMap((s) => [`control-${s}`, `icon-${s}`]),
+  "row",
+  "menu-item",
+  "nav-item",
+  "field",
+  "command-item",
+  "cell-x",
+  "gutter",
+];
+
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      color: colors,
+      text: textSizes,
+      font: ["sans", "display", "mono"],
+      "font-weight": ["normal", "medium"],
+      tracking: ["id"],
+      spacing,
+      radius: ["none", "xs", "sm", "md", "lg", "xl", "2xl", "full"],
+      shadow: ["xs", "sm", "md", "lg", "xl", "overlay", "focus"],
+      blur: ["sm", "md", "lg"],
+      breakpoint: ["tablet", "desktop", "wide"],
+      container: ["prose", "content", "wide"],
+      ease: ["standard", "enter", "exit", "emphasized"],
+    },
+    classGroups: {
+      z: [{ z: ["base", "dropdown", "sticky", "overlay", "modal", "toast", "tooltip"] }],
+      opacity: [{ opacity: ["disabled", "muted", "subtle"] }],
+      duration: [{ duration: ["instant", "fast", "normal", "slow"] }],
+    },
+  },
+});
+
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
+}

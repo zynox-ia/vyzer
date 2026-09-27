@@ -1,0 +1,40 @@
+/*
+ * Só a moldura da documentação do Storybook (não é estilo de componente): as páginas de
+ * docs seguem o tema escolhido no toolbar, para que texto e fundo usem os mesmos tokens.
+ */
+.sbdocs.sbdocs-wrapper {
+  background: var(--bg-app);
+}
+
+.sbdocs.sbdocs-content {
+  color: var(--fg-primary);
+  font-family: var(--font-sans);
+}
+
+.sbdocs.sbdocs-content :is(h1, h2, h3, h4, h5, h6):not(.sb-unstyled *) {
+  color: var(--fg-primary);
+  font-family: var(--font-display);
+  font-weight: 500;
+  border-color: var(--line-default);
+}
+
+.sbdocs.sbdocs-content :is(p, li, td, th, blockquote):not(.sb-unstyled *) {
+  color: var(--fg-secondary);
+}
+
+.sbdocs.sbdocs-content :is(table, tr, td, th):not(.sb-unstyled *) {
+  background: transparent;
+  border-color: var(--line-default);
+}
+
+.sbdocs.sbdocs-content code:not(.sb-unstyled *) {
+  background: var(--bg-surface);
+  border-color: var(--line-default);
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+}
+
+.sbdocs.sbdocs-content .docs-story,
+.sbdocs.sbdocs-content .docs-story > div:first-child {
+  background: var(--bg-panel);
+}

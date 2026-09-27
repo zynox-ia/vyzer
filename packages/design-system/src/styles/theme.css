@@ -1,0 +1,308 @@
+/*
+ * Utilitários do Tailwind v4 ligados aos semânticos (themes.css). Só existe o que está aqui:
+ * as escalas padrão do Tailwind são zeradas, então `gray-500`, `text-sm` ou `rounded-lg`
+ * genéricos não existem. Spacing continua na escala nativa (múltiplos de 4 px).
+ */
+@theme inline {
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --font-*: initial;
+  --font-weight-*: initial;
+  --tracking-*: initial;
+  --leading-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+  --container-*: initial;
+  --perspective-*: initial;
+  --breakpoint-*: initial;
+
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* ---------- Fundos (bg-*) ---------- */
+  --background-color-app: var(--bg-app);
+  --background-color-sidebar: var(--bg-sidebar);
+  --background-color-panel: var(--bg-panel);
+  --background-color-surface: var(--bg-surface);
+  --background-color-subtle: var(--bg-subtle);
+  --background-color-popover: var(--bg-popover);
+  --background-color-control: var(--bg-control);
+  --background-color-input: var(--bg-input);
+  --background-color-control-strong: var(--bg-control-strong);
+  --background-color-hover: var(--bg-hover);
+  --background-color-pressed: var(--bg-pressed);
+  --background-color-selected: var(--bg-selected);
+  --background-color-inverse: var(--bg-inverse);
+  --background-color-inverse-hover: var(--bg-inverse-hover);
+  --background-color-inverse-pressed: var(--bg-inverse-pressed);
+  --background-color-scrim: var(--bg-scrim);
+  --background-color-checked: var(--fg-primary);
+  --background-color-accent: var(--accent);
+  --background-color-success-subtle: color-mix(in srgb, var(--st-success) 15%, transparent);
+  --background-color-info-subtle: color-mix(in srgb, var(--st-info) 15%, transparent);
+  --background-color-warning-subtle: color-mix(in srgb, var(--st-warning) 15%, transparent);
+  --background-color-danger-subtle: color-mix(in srgb, var(--st-danger) 15%, transparent);
+  --background-color-accent-subtle: color-mix(in srgb, var(--accent) 15%, transparent);
+  --background-color-neutral-subtle: color-mix(in srgb, var(--fg-secondary) 15%, transparent);
+  --background-color-green: var(--hue-green);
+  --background-color-blue: var(--hue-blue);
+  --background-color-amber: var(--hue-amber);
+  --background-color-red: var(--hue-red);
+  --background-color-purple: var(--hue-purple);
+  --background-color-pink: var(--hue-pink);
+  --background-color-cyan: var(--hue-cyan);
+  --background-color-orange: var(--hue-orange);
+  --background-color-lime: var(--hue-lime);
+  --background-color-indigo: var(--hue-indigo);
+
+  /* ---------- Texto e ícones (text-*, via currentColor) ---------- */
+  --text-color-primary: var(--fg-primary);
+  --text-color-secondary: var(--fg-secondary);
+  --text-color-tertiary: var(--fg-tertiary);
+  --text-color-inverse: var(--fg-inverse);
+  --text-color-on-checked: var(--fg-inverse);
+  --text-color-accent: var(--accent-text);
+  --text-color-success: var(--st-success);
+  --text-color-info: var(--st-info);
+  --text-color-warning: var(--st-warning);
+  --text-color-danger: var(--st-danger);
+  --text-color-success-strong: var(--st-success-text);
+  --text-color-info-strong: var(--st-info-text);
+  --text-color-warning-strong: var(--st-warning-text);
+  --text-color-danger-strong: var(--st-danger-text);
+  --text-color-green: var(--hue-green);
+  --text-color-blue: var(--hue-blue);
+  --text-color-amber: var(--hue-amber);
+  --text-color-red: var(--hue-red);
+  --text-color-purple: var(--hue-purple);
+  --text-color-pink: var(--hue-pink);
+  --text-color-cyan: var(--hue-cyan);
+  --text-color-orange: var(--hue-orange);
+  --text-color-lime: var(--hue-lime);
+  --text-color-indigo: var(--hue-indigo);
+
+  /* ---------- Bordas (border-*) ---------- */
+  --border-color-subtle: var(--line-subtle);
+  --border-color-default: var(--line-default);
+  --border-color-strong: var(--line-strong);
+  --border-color-control: var(--line-control);
+  --border-color-checked: var(--fg-primary);
+  --border-color-danger: var(--st-danger);
+  --border-color-focus: var(--focus-color);
+
+  /* Foco: outline de 1 px sobre a borda (outline-focus) */
+  --outline-color-focus: var(--focus-color);
+
+  /* Data viz: paleta categórica (fill-chart-*, stroke-chart-*) */
+  --fill-chart-1: var(--hue-blue);
+  --fill-chart-2: var(--hue-green);
+  --fill-chart-3: var(--hue-amber);
+  --fill-chart-4: var(--hue-purple);
+  --fill-chart-5: var(--hue-red);
+  --fill-chart-6: var(--hue-cyan);
+  --fill-chart-7: var(--hue-orange);
+  --fill-chart-8: var(--hue-pink);
+  --fill-chart-9: var(--hue-lime);
+  --fill-chart-10: var(--hue-indigo);
+  --stroke-chart-1: var(--hue-blue);
+  --stroke-chart-2: var(--hue-green);
+  --stroke-chart-3: var(--hue-amber);
+  --stroke-chart-4: var(--hue-purple);
+  --stroke-chart-5: var(--hue-red);
+  --stroke-chart-6: var(--hue-cyan);
+  --stroke-chart-7: var(--hue-orange);
+  --stroke-chart-8: var(--hue-pink);
+  --stroke-chart-9: var(--hue-lime);
+  --stroke-chart-10: var(--hue-indigo);
+
+  /* ---------- Tipografia ---------- */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Tight Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+
+  /* Display e headings: use com font-display. Demais níveis: Inter (font-sans) */
+  --text-display: 32px;
+  --text-display--line-height: 40px;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 500;
+  --text-heading-1: 24px;
+  --text-heading-1--line-height: 32px;
+  --text-heading-1--letter-spacing: -0.015em;
+  --text-heading-1--font-weight: 500;
+  --text-heading-2: 20px;
+  --text-heading-2--line-height: 28px;
+  --text-heading-2--letter-spacing: -0.01em;
+  --text-heading-2--font-weight: 500;
+  --text-heading-3: 16px;
+  --text-heading-3--line-height: 24px;
+  --text-heading-3--letter-spacing: -0.005em;
+  --text-heading-3--font-weight: 500;
+  --text-heading-4: 14px;
+  --text-heading-4--line-height: 20px;
+  --text-heading-4--letter-spacing: 0em;
+  --text-heading-4--font-weight: 500;
+  --text-body-lg: 15px;
+  --text-body-lg--line-height: 24px;
+  --text-body-lg--letter-spacing: -0.005em;
+  --text-body-lg--font-weight: 400;
+  --text-body-md: 13px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--letter-spacing: 0em;
+  --text-body-md--font-weight: 400;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-body-sm--letter-spacing: 0em;
+  --text-body-sm--font-weight: 400;
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 20px;
+  --text-label-lg--letter-spacing: 0em;
+  --text-label-lg--font-weight: 500;
+  --text-label-md: 13px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0em;
+  --text-label-md--font-weight: 500;
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--letter-spacing: 0em;
+  --text-label-sm--font-weight: 500;
+  --text-caption: 11px;
+  --text-caption--line-height: 16px;
+  --text-caption--letter-spacing: 0em;
+  --text-caption--font-weight: 400;
+  --text-overline: 11px;
+  --text-overline--line-height: 16px;
+  --text-overline--letter-spacing: 0.06em;
+  --text-overline--font-weight: 500;
+  --text-code: 12px;
+  --text-code--line-height: 16px;
+  --text-code--letter-spacing: 0em;
+  --text-code--font-weight: 400;
+  --text-kbd: 11px;
+  --text-kbd--line-height: 16px;
+  --text-kbd--letter-spacing: 0em;
+  --text-kbd--font-weight: 500;
+  --tracking-id: -0.02em;
+
+  /* ---------- Raio: none, xs … 2xl seguem --radius-base; full só onde a forma importa ---------- */
+  --radius-none: 0px;
+  --radius-xs: calc(var(--radius-base) * 0.5);
+  --radius-sm: var(--radius-base);
+  --radius-md: var(--radius-base);
+  --radius-lg: calc(var(--radius-base) * 1.5);
+  --radius-xl: calc(var(--radius-base) * 2);
+  --radius-2xl: calc(var(--radius-base) * 3);
+  --radius-full: 9999px;
+
+  /* ---------- Sombras: só popover, menus e modais ---------- */
+  --shadow-xs: 0 1px 1px rgb(var(--shadow-base) / var(--shadow-alpha));
+  --shadow-sm:
+    0 1px 1px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 2px 5px rgb(var(--shadow-base) / var(--shadow-alpha));
+  --shadow-md:
+    0 1px 1px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 2px 5px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 3px 8px rgb(var(--shadow-base) / var(--shadow-alpha));
+  --shadow-lg:
+    0 1px 1px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 2px 8px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 3px 12px rgb(var(--shadow-base) / var(--shadow-alpha));
+  --shadow-xl:
+    0 1px 1px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 2px 8px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 3px 12px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 3px 20px rgb(var(--shadow-base) / var(--shadow-alpha)),
+    0 4px 40px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 0.8));
+  --shadow-overlay: 0 8px 64px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 2));
+  --shadow-focus: var(--focus-halo);
+
+  /* ---------- Opacidade, blur ---------- */
+  --opacity-disabled: 50%;
+  --opacity-muted: 60%;
+  --opacity-subtle: 15%;
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 16px;
+
+  /* ---------- Camadas (z-*) ---------- */
+  --z-index-base: 0;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1100;
+  --z-index-overlay: 1200;
+  --z-index-modal: 1300;
+  --z-index-toast: 1400;
+  --z-index-tooltip: 1500;
+
+  /* ---------- Breakpoints: mobile é o padrão ---------- */
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-wide: 1440px;
+
+  /* ---------- Grid e contêineres ---------- */
+  --container-prose: 40rem;
+  --container-content: 72rem;
+  --container-wide: 90rem;
+  --spacing-gutter: 24px;
+
+  /* ---------- Tamanhos (xs … xl) compartilhados entre controles ---------- */
+  --spacing-control-xs: 20px;
+  --spacing-control-sm: 24px;
+  --spacing-control-md: 28px;
+  --spacing-control-lg: 32px;
+  --spacing-control-xl: 40px;
+  --spacing-icon-xs: 12px;
+  --spacing-icon-sm: 16px;
+  --spacing-icon-md: 20px;
+  --spacing-icon-lg: 24px;
+  --spacing-icon-xl: 32px;
+
+  /* ---------- Densidade (comfortable | compact) ---------- */
+  --spacing-row: var(--density-row);
+  --spacing-menu-item: var(--density-menu-item);
+  --spacing-nav-item: var(--density-nav-item);
+  --spacing-field: var(--density-field);
+  --spacing-command-item: var(--density-command-item);
+  --spacing-cell-x: var(--density-cell-x);
+
+  /* ---------- Movimento ---------- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1.2);
+  --default-transition-duration: var(--motion-fast);
+  --default-transition-timing-function: var(--ease-standard);
+}
+
+/* Durações nomeadas (duration-instant/fast/normal/slow), zeradas com prefers-reduced-motion */
+@utility duration-instant {
+  transition-duration: var(--motion-instant);
+}
+@utility duration-fast {
+  transition-duration: var(--motion-fast);
+}
+@utility duration-normal {
+  transition-duration: var(--motion-normal);
+}
+@utility duration-slow {
+  transition-duration: var(--motion-slow);
+}
+
+/*
+ * Foco (ADR-0013): indicador só na navegação por teclado. Outline de 1 px sobre a borda do
+ * componente (offset -1 px), sem anel grosso; na variante B, halo externo de 2 px a 25%.
+ * Componentes sem borda própria ganham a mesma linha de 1 px no foco.
+ */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 1px solid var(--focus-color);
+    outline-offset: -1px;
+    box-shadow: var(--focus-halo);
+  }
+}

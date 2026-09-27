@@ -1,0 +1,38 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+<Meta title="Foundations/Introduction" />
+
+# Vyzer Design System
+
+A linguagem visual de todos os produtos Vyzer: SaaS, dashboards, ferramentas internas, agentes de IA e automações. Qualquer tela nova deve parecer parte do mesmo produto.
+
+**Princípios.** Consistência antes de criatividade isolada. Composição antes de componentes monolíticos. Tokens antes de valores soltos. Acessibilidade antes de truques visuais. APIs simples. Identidade Vyzer antes de aparência de biblioteca.
+
+## Identidade
+
+- **Quente e monocromática.** Grafite, creme e cinzas quentes. Sem cor de marca saturada na interface e sem tons azulados nos neutros.
+- **Contenção.** Profundidade por degrau de superfície e hairline de 1 px. Sombra só em popover, menus e modais.
+- **Acento terracota em dose mínima:** foco, indicador do item ativo da sidebar e contadores de destaque. Nunca em botões, fundos ou texto corrido.
+- **Cor com significado:** status, labels e data viz usam a mesma luminosidade e croma (OKLCH), variando só o matiz. Cor nunca é o único indicador.
+- **Raio zero** por padrão; `full` só onde a forma carrega significado (radio, ícone de status, avatar, thumb do switch).
+
+Decisões registradas na ADR-0013, que substitui a parte visual das ADR-0011 e ADR-0012.
+
+## Toolbar
+
+| Seletor   | Opções                                                     | Padrão      |
+| --------- | ---------------------------------------------------------- | ----------- |
+| Tema      | Escuro, Claro, Sistema                                     | Escuro      |
+| Raio      | 0, 2, 4 px (a escala inteira acompanha)                    | 0           |
+| Foco      | B (borda terracota + halo), A (borda a 25%, só comparação) | B           |
+| Densidade | Comfortable, Compact                                       | Comfortable |
+
+## Como usar
+
+```ts
+import "@vyzer/design-system/styles.css"; // uma vez, no app
+import { StatusIcon } from "@vyzer/design-system/icons";
+import { cn } from "@vyzer/design-system/cn";
+```
+
+Tokens em três camadas: **primitivos** (`--vz-*`, só no CSS), **semânticos** por tema (`bg-panel`, `text-secondary`, `border-control`) e **de componente** quando necessário. Componentes usam só semânticos; as escalas padrão do Tailwind foram removidas.

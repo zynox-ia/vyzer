@@ -1,0 +1,43 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import { SpacingScale, SizeScale, DensityScale } from "./FoundationDocs";
+
+<Meta title="Foundations/Spacing" />
+
+# Spacing, sizing e layout
+
+## Spacing
+
+Escala nativa do Tailwind (passo de 4 px). Use estes passos: 0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24.
+
+<Unstyled>
+  <SpacingScale />
+</Unstyled>
+
+## Tamanhos de controle
+
+Escala compartilhada xs a xl entre Button, IconButton, Input, Select, Avatar e Badge (`h-control-*`, `size-control-*`).
+
+<Unstyled>
+  <SizeScale />
+</Unstyled>
+
+## Densidade
+
+Comfortable e compact via tokens (toolbar, Densidade). Tabela, lista, menu, input, sidebar e command menu usam estes tamanhos, nunca ajustes locais.
+
+<Unstyled>
+  <DensityScale />
+</Unstyled>
+
+## Layout
+
+| Token                                                   | Valor                                 | Uso                                                    |
+| ------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------ |
+| `tablet:`                                               | 768 px                                | breakpoint (mobile é o padrão)                         |
+| `desktop:`                                              | 1024 px                               | breakpoint                                             |
+| `wide:`                                                 | 1440 px                               | breakpoint                                             |
+| `max-w-prose` / `max-w-content` / `max-w-wide`          | 40 / 72 / 90 rem                      | contêineres                                            |
+| `gap-gutter`                                            | 24 px                                 | calha do grid (12 colunas: `grid-cols-12`)             |
+| `z-base` a `z-tooltip`                                  | 0, 1000, 1100, 1200, 1300, 1400, 1500 | base, dropdown, sticky, overlay, modal, toast, tooltip |
+| `opacity-disabled` / `opacity-muted` / `opacity-subtle` | 50 / 60 / 15%                         | desabilitado, apagado, fundos de badge                 |
+| `blur-sm` / `blur-md` / `blur-lg`                       | 4 / 8 / 16 px                         | fundos de overlay, quando necessário                   |

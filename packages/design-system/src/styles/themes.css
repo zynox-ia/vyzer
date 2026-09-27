@@ -1,0 +1,207 @@
+/*
+ * Camada 2: semânticos por tema e por modo. Mesmos nomes nos dois temas; os utilitários
+ * do Tailwind (theme.css) apontam para estas variáveis.
+ *
+ * Atributos no <html> (ou em qualquer contêiner):
+ *   data-theme   = dark (padrão) | light
+ *   data-radius  = 0 (padrão) | 2 | 4        escala de raio inteira
+ *   data-focus   = b (padrão) | a            indicador de foco (ADR-0013)
+ *   data-density = comfortable (padrão) | compact
+ */
+
+/* ---------- Tema escuro (padrão) ---------- */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Superfícies: a seleção é só um degrau acima do painel */
+  --bg-app: var(--vz-warm-975);
+  --bg-sidebar: var(--vz-warm-950);
+  --bg-panel: var(--vz-warm-950);
+  --bg-surface: var(--vz-warm-925);
+  --bg-subtle: var(--vz-warm-925);
+  --bg-popover: var(--vz-warm-900);
+  --bg-control: var(--vz-warm-925);
+  --bg-input: var(--vz-warm-925);
+  --bg-control-strong: var(--vz-warm-900);
+  --bg-hover: var(--vz-warm-925);
+  --bg-pressed: var(--vz-warm-850);
+  --bg-selected: var(--vz-warm-900);
+  --bg-inverse: var(--vz-warm-50);
+  --bg-inverse-hover: var(--vz-warm-150);
+  --bg-inverse-pressed: var(--vz-warm-250);
+  --bg-scrim: rgb(var(--vz-shadow-ink) / 0.7);
+
+  /* Texto e ícones */
+  --fg-primary: var(--vz-warm-50);
+  --fg-secondary: var(--vz-warm-400);
+  --fg-tertiary: var(--vz-warm-500);
+  --fg-inverse: var(--vz-warm-975);
+
+  /* Bordas (hairline de 1 px) */
+  --line-subtle: var(--vz-warm-900);
+  --line-default: var(--vz-warm-850);
+  --line-strong: var(--vz-warm-800);
+  /* Borda de controles de formulário (input, checkbox, radio, switch): ≥ 3:1 */
+  --line-control: var(--vz-warm-575);
+
+  /* Acento terracota: foco, indicador ativo da sidebar, contadores de destaque */
+  --accent: var(--vz-terracotta-dark);
+  --accent-text: var(--vz-terracotta-dark);
+
+  /* Status: ícone e texto de badge */
+  --st-success: var(--vz-green-dark);
+  --st-success-text: var(--vz-green-dark);
+  --st-info: var(--vz-blue-dark);
+  --st-info-text: var(--vz-blue-dark);
+  --st-warning: var(--vz-amber-dark);
+  --st-warning-text: var(--vz-amber-dark);
+  --st-danger: var(--vz-red-dark);
+  --st-danger-text: var(--vz-red-dark);
+
+  /* Labels e paleta categórica de data viz */
+  --hue-green: var(--vz-green-dark);
+  --hue-blue: var(--vz-blue-dark);
+  --hue-amber: var(--vz-amber-dark);
+  --hue-red: var(--vz-red-dark);
+  --hue-purple: var(--vz-purple-dark);
+  --hue-pink: var(--vz-pink-dark);
+  --hue-cyan: var(--vz-cyan-dark);
+  --hue-orange: var(--vz-orange-dark);
+  --hue-lime: var(--vz-lime-dark);
+  --hue-indigo: var(--vz-indigo-dark);
+
+  /* Sombras: só popover, menus e modais */
+  --shadow-base: var(--vz-shadow-black);
+  --shadow-alpha: 0.13;
+}
+
+/* ---------- Tema claro: conteúdo sobre o creme ---------- */
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Nenhuma superfície mais clara que #faf9f5; cards são creme mais escuro */
+  --bg-app: var(--vz-warm-50);
+  --bg-sidebar: var(--vz-warm-100);
+  --bg-panel: var(--vz-warm-50);
+  --bg-surface: var(--vz-warm-100);
+  --bg-subtle: var(--vz-warm-100);
+  --bg-popover: var(--vz-warm-50);
+  --bg-control: var(--vz-warm-100);
+  --bg-input: var(--vz-warm-50);
+  --bg-control-strong: var(--vz-warm-150);
+  --bg-hover: var(--vz-warm-150);
+  --bg-pressed: var(--vz-warm-200);
+  --bg-selected: var(--vz-warm-200);
+  --bg-inverse: var(--vz-warm-950);
+  --bg-inverse-hover: var(--vz-warm-750);
+  --bg-inverse-pressed: var(--vz-warm-600);
+  --bg-scrim: rgb(var(--vz-shadow-ink) / 0.25);
+
+  --fg-primary: var(--vz-warm-950);
+  --fg-secondary: var(--vz-warm-600);
+  --fg-tertiary: var(--vz-warm-500);
+  --fg-inverse: var(--vz-warm-50);
+
+  --line-subtle: var(--vz-warm-150);
+  --line-default: var(--vz-warm-250);
+  --line-strong: var(--vz-warm-300);
+  --line-control: var(--vz-warm-550);
+
+  --accent: var(--vz-terracotta-light);
+  --accent-text: var(--vz-terracotta-light-text);
+
+  --st-success: var(--vz-green-light);
+  --st-success-text: var(--vz-green-light-text);
+  --st-info: var(--vz-blue-light);
+  --st-info-text: var(--vz-blue-light-text);
+  --st-warning: var(--vz-amber-light);
+  --st-warning-text: var(--vz-amber-light-text);
+  --st-danger: var(--vz-red-light);
+  --st-danger-text: var(--vz-red-light-text);
+
+  --hue-green: var(--vz-green-light);
+  --hue-blue: var(--vz-blue-light);
+  --hue-amber: var(--vz-amber-light);
+  --hue-red: var(--vz-red-light);
+  --hue-purple: var(--vz-purple-light);
+  --hue-pink: var(--vz-pink-light);
+  --hue-cyan: var(--vz-cyan-light);
+  --hue-orange: var(--vz-orange-light);
+  --hue-lime: var(--vz-lime-light);
+  --hue-indigo: var(--vz-indigo-light);
+
+  --shadow-base: var(--vz-shadow-ink);
+  --shadow-alpha: 0.07;
+}
+
+/* ---------- Raio: 0 (padrão), 2 ou 4 px; a escala inteira acompanha ---------- */
+
+:root,
+[data-radius="0"] {
+  --radius-base: 0px;
+}
+
+[data-radius="2"] {
+  --radius-base: 2px;
+}
+
+[data-radius="4"] {
+  --radius-base: 4px;
+}
+
+/* ---------- Foco (ADR-0013): B é o padrão; A só para comparação ---------- */
+
+:root,
+[data-focus="b"] {
+  /* Borda de 1 px no terracota cheio + halo externo de 2 px a 25% */
+  --focus-color: var(--accent);
+  --focus-halo: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+[data-focus="a"] {
+  /* Só a borda de 1 px, no terracota a 25% (não atinge 3:1: ver Foundations → Colors) */
+  --focus-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  --focus-halo: 0 0 0 0 transparent;
+}
+
+/* ---------- Densidade ---------- */
+
+:root,
+[data-density="comfortable"] {
+  --density-row: 44px;
+  --density-menu-item: 32px;
+  --density-nav-item: 28px;
+  --density-field: 32px;
+  --density-command-item: 36px;
+  --density-cell-x: 16px;
+}
+
+[data-density="compact"] {
+  --density-row: 32px;
+  --density-menu-item: 28px;
+  --density-nav-item: 24px;
+  --density-field: 28px;
+  --density-command-item: 30px;
+  --density-cell-x: 12px;
+}
+
+/* ---------- Movimento: transições de UI entre 100 e 150 ms ---------- */
+
+:root {
+  --motion-instant: 50ms;
+  --motion-fast: 100ms;
+  --motion-normal: 150ms;
+  --motion-slow: 250ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant: 0ms;
+    --motion-fast: 0ms;
+    --motion-normal: 0ms;
+    --motion-slow: 0ms;
+  }
+}

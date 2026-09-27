@@ -1,0 +1,127 @@
+import type { SVGProps } from "react";
+import { cn } from "../lib/cn";
+import { iconSizeClass, type IconSize } from "./Icon";
+
+/**
+ * Tipo do status de workflow (categorias do Linear). Cada tipo tem um formato próprio,
+ * para que a cor nunca seja o único indicador.
+ */
+export type StatusType =
+  | "backlog"
+  | "unstarted"
+  | "started"
+  | "completed"
+  | "canceled"
+  | "duplicate";
+
+export type StatusTone = "neutral" | "success" | "info" | "warning" | "danger";
+
+const toneClass: Record<StatusTone, string> = {
+  neutral: "text-secondary",
+  success: "text-success",
+  info: "text-info",
+  warning: "text-warning",
+  danger: "text-danger",
+};
+
+const defaultTone: Record<StatusType, StatusTone> = {
+  backlog: "neutral",
+  unstarted: "neutral",
+  started: "warning",
+  completed: "success",
+  canceled: "neutral",
+  duplicate: "neutral",
+};
+
+export type StatusIconProps = Omit<SVGProps<SVGSVGElement>, "type"> & {
+  type: StatusType;
+  /** Só para `started`: fração preenchida do setor (0 a 1). Figma: 1/6, 1/3, 1/2, 2/3, 5/6. */
+  progress?: number;
+  /** Tom semântico; o padrão depende do tipo (started = warning, completed = success). */
+  tone?: StatusTone;
+  size?: IconSize;
+  /** Rótulo acessível (ex.: "In Progress"). Sem ele, o ícone é decorativo. */
+  label?: string;
+};
+
+/** Setor circular a partir das 12 h, no sentido horário, com raio 3,5 (geometria do Figma). */
+export function sectorPath(progress: number): string {
+  const p = Math.min(Math.max(progress, 0), 1);
+  if (p >= 1) return "M7 3.5a3.5 3.5 0 1 1 0 7a3.5 3.5 0 1 1 0-7Z";
+  const angle = p * 2 * Math.PI;
+  const x = 7 + 3.5 * Math.sin(angle);
+  const y = 7 - 3.5 * Math.cos(angle);
+  const large = p > 0.5 ? 1 : 0;
+  return `M7 7V3.5A3.5 3.5 0 ${large} 1 ${x.toFixed(4)} ${y.toFixed(4)}Z`;
+}
+
+/**
+ * Ícone de status de workflow, com os desenhos exatos do Figma (nó 6:1543).
+ * Desenho de 14 px centralizado num quadro de 16 px, como no Figma.
+ */
+export function StatusIcon({
+  type,
+  progress = 1 / 3,
+  tone,
+  size = "sm",
+  label,
+  className,
+  ...rest
+}: StatusIconProps) {
+  return (
+    <svg
+      viewBox="-1 -1 16 16"
+      fill="none"
+      className={cn(
+        "shrink-0",
+        iconSizeClass[size],
+        toneClass[tone ?? defaultTone[type]],
+        className,
+      )}
+      aria-hidden={label ? undefined : true}
+      aria-label={label}
+      role={label ? "img" : undefined}
+      focusable="false"
+      {...rest}
+    >
+      {type === "backlog" && (
+        <path
+          fill="currentColor"
+          d="M13.9408 7.91426L11.9576 7.65557C11.9855 7.4419 12 7.22314 12 7C12 6.77686 11.9855 6.5581 11.9576 6.34443L13.9408 6.08573C13.9799 6.38496 14 6.69013 14 7C14 7.30987 13.9799 7.61504 13.9408 7.91426ZM13.4688 4.32049C13.2328 3.7514 12.9239 3.22019 12.5538 2.73851L10.968 3.95716C11.2328 4.30185 11.4533 4.68119 11.6214 5.08659L13.4688 4.32049ZM11.2615 1.4462L10.0428 3.03204C9.69815 2.76716 9.31881 2.54673 8.91341 2.37862L9.67951 0.531163C10.2486 0.767153 10.7798 1.07605 11.2615 1.4462ZM7.91426 0.0591659L7.65557 2.04237C7.4419 2.01449 7.22314 2 7 2C6.77686 2 6.5581 2.01449 6.34443 2.04237L6.08574 0.059166C6.38496 0.0201343 6.69013 0 7 0C7.30987 0 7.61504 0.0201343 7.91426 0.0591659ZM4.32049 0.531164L5.08659 2.37862C4.68119 2.54673 4.30185 2.76716 3.95716 3.03204L2.73851 1.4462C3.22019 1.07605 3.7514 0.767153 4.32049 0.531164ZM1.4462 2.73851L3.03204 3.95716C2.76716 4.30185 2.54673 4.68119 2.37862 5.08659L0.531164 4.32049C0.767153 3.7514 1.07605 3.22019 1.4462 2.73851ZM0.0591659 6.08574C0.0201343 6.38496 0 6.69013 0 7C0 7.30987 0.0201343 7.61504 0.059166 7.91426L2.04237 7.65557C2.01449 7.4419 2 7.22314 2 7C2 6.77686 2.01449 6.5581 2.04237 6.34443L0.0591659 6.08574ZM0.531164 9.67951L2.37862 8.91341C2.54673 9.31881 2.76716 9.69815 3.03204 10.0428L1.4462 11.2615C1.07605 10.7798 0.767153 10.2486 0.531164 9.67951ZM2.73851 12.5538L3.95716 10.968C4.30185 11.2328 4.68119 11.4533 5.08659 11.6214L4.32049 13.4688C3.7514 13.2328 3.22019 12.9239 2.73851 12.5538ZM6.08574 13.9408L6.34443 11.9576C6.5581 11.9855 6.77686 12 7 12C7.22314 12 7.4419 11.9855 7.65557 11.9576L7.91427 13.9408C7.61504 13.9799 7.30987 14 7 14C6.69013 14 6.38496 13.9799 6.08574 13.9408ZM9.67951 13.4688L8.91341 11.6214C9.31881 11.4533 9.69815 11.2328 10.0428 10.968L11.2615 12.5538C10.7798 12.9239 10.2486 13.2328 9.67951 13.4688ZM12.5538 11.2615L10.968 10.0428C11.2328 9.69815 11.4533 9.31881 11.6214 8.91341L13.4688 9.67951C13.2328 10.2486 12.924 10.7798 12.5538 11.2615Z"
+        />
+      )}
+      {(type === "unstarted" || type === "started") && (
+        <path
+          stroke="currentColor"
+          strokeWidth="1.5"
+          d="M13 7C13 3.68629 10.3137 1 7 1C3.68629 1 1 3.68629 1 7C1 10.3137 3.68629 13 7 13C10.3137 13 13 10.3137 13 7Z"
+        />
+      )}
+      {type === "started" && <path fill="currentColor" d={sectorPath(progress)} />}
+      {type === "completed" && (
+        <path
+          fill="currentColor"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M7 0C3.13401 0 0 3.13401 0 7C0 10.866 3.13401 14 7 14C10.866 14 14 10.866 14 7C14 3.13401 10.866 0 7 0ZM11.101 5.10104C11.433 4.76909 11.433 4.23091 11.101 3.89896C10.7691 3.56701 10.2309 3.56701 9.89896 3.89896L5.5 8.29792L4.10104 6.89896C3.7691 6.56701 3.2309 6.56701 2.89896 6.89896C2.56701 7.2309 2.56701 7.7691 2.89896 8.10104L4.89896 10.101C5.2309 10.433 5.7691 10.433 6.10104 10.101L11.101 5.10104Z"
+        />
+      )}
+      {type === "canceled" && (
+        <path
+          fill="currentColor"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M7 14C10.866 14 14 10.866 14 7C14 3.13401 10.866 0 7 0C3.13401 0 0 3.13401 0 7C0 10.866 3.13401 14 7 14ZM5.03033 3.96967C4.73744 3.67678 4.26256 3.67678 3.96967 3.96967C3.67678 4.26256 3.67678 4.73744 3.96967 5.03033L5.93934 7L3.96967 8.96967C3.67678 9.26256 3.67678 9.73744 3.96967 10.0303C4.26256 10.3232 4.73744 10.3232 5.03033 10.0303L7 8.06066L8.96967 10.0303C9.26256 10.3232 9.73744 10.3232 10.0303 10.0303C10.3232 9.73744 10.3232 9.26256 10.0303 8.96967L8.06066 7L10.0303 5.03033C10.3232 4.73744 10.3232 4.26256 10.0303 3.96967C9.73744 3.67678 9.26256 3.67678 8.96967 3.96967L7 5.93934L5.03033 3.96967Z"
+        />
+      )}
+      {type === "duplicate" && (
+        <path
+          fill="currentColor"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M7 14C10.866 14 14 10.866 14 7C14 3.13401 10.866 0 7 0C3.13401 0 0 3.13401 0 7C0 10.866 3.13401 14 7 14ZM9.5791 5.71973C9.872 5.42684 10.3468 5.42686 10.6396 5.71973C10.9325 6.01262 10.9325 6.48738 10.6396 6.78027L6.78027 10.6396C6.48738 10.9325 6.01262 10.9325 5.71973 10.6396C5.42686 10.3468 5.42684 9.872 5.71973 9.5791L9.5791 5.71973ZM7.21973 3.36035C7.51261 3.06746 7.98738 3.06747 8.28027 3.36035C8.57315 3.65325 8.57316 4.12801 8.28027 4.4209L4.4209 8.28027C4.12801 8.57316 3.65325 8.57315 3.36035 8.28027C3.06747 7.98738 3.06746 7.51261 3.36035 7.21973L7.21973 3.36035Z"
+        />
+      )}
+    </svg>
+  );
+}

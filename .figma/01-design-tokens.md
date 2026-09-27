@@ -2,18 +2,19 @@
 
 - **Arquivo:** [Vyzer](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Vyzer), página `0:1`. Sem variáveis nem estilos no Figma.
 - **Origem da estrutura:** inventário em `inventory/` (valores, contagens e node-ids por tela).
-- **Cores:** não vêm do Figma. Seguem a ADR-0011 e a ADR-0012 (paleta quente, acento terracota mínimo, status em OKLCH, dois temas); tabela final em `docs/specs/design-tokens.md`.
+- **Cores:** não vêm do Figma. Seguem a ADR-0013 (paleta quente, acento terracota mínimo, status em OKLCH, dois temas, raio zero); valores em `packages/design-system/src/styles/` e no Storybook (Foundations → Colors).
 
 ## Divergências intencionais
 
-| Figma                                              | Implementação                                                                          | Motivo                                             |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| Cores do Linear (cinzas frios, accent `#5e6ad2`)   | Paleta quente, acento terracota mínimo                                                 | ADR-0011, ADR-0012                                 |
-| Títulos de página em Inter 13 px medium            | Títulos em Inter Tight (`font-display`) 20 px semibold; corpo em Inter, igual ao Figma | ADR-0012                                           |
-| Modal com raio 21 px                               | `rounded-xl` (12 px)                                                                   | Decisão do responsável; 21 px fica registrado aqui |
-| Anéis brancos translúcidos em pills e cards        | Bordas hairline (`border-*`)                                                           | Contenção: profundidade por superfície e hairline  |
-| Sombra "raised" em painel, cards e botões          | Sem sombra                                                                             | Sombra só em popover e modal                       |
-| Quase-duplicados de tipografia, raio e espaçamento | Um valor canônico (o mais usado)                                                       | Ruído de captura                                   |
+| Figma                                                | Implementação                                                                                                     | Motivo                                            |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Cores do Linear (cinzas frios, accent `#5e6ad2`)     | Paleta quente, acento terracota mínimo                                                                            | ADR-0011, ADR-0012                                |
+| Inter Variable em tudo                               | Corpo em Inter (igual ao Figma); display e headings em Inter Tight; code, kbd e identificadores em JetBrains Mono | ADR-0013                                          |
+| Raios do Figma (pílulas, 8, 10, 12 e 21 px no modal) | Raio zero; `full` só em radio, ícone de status, avatar e thumb do switch; toolbar compara 0/2/4 px                | ADR-0013                                          |
+| Pesos 400, 500 e 600                                 | Só 400 e 500                                                                                                      | ADR-0013                                          |
+| Anéis brancos translúcidos em pills e cards          | Bordas hairline (`border-*`)                                                                                      | Contenção: profundidade por superfície e hairline |
+| Sombra "raised" em painel, cards e botões            | Sem sombra                                                                                                        | Sombra só em popover e modal                      |
+| Quase-duplicados de tipografia, raio e espaçamento   | Um valor canônico (o mais usado)                                                                                  | Ruído de captura                                  |
 
 ## Sem design
 

@@ -83,10 +83,10 @@ const themes = {
   },
   light: {
     surfaces: {
-      "bg-app": "#f0eee6",
+      "bg-app": "#faf9f5",
       "bg-sidebar": "#f0eee6",
       "bg-panel": "#faf9f5",
-      "bg-surface": "#faf9f5",
+      "bg-surface": "#f0eee6",
       "bg-subtle": "#f0eee6",
       "bg-popover": "#faf9f5",
       "bg-control": "#f0eee6",
@@ -102,7 +102,7 @@ const themes = {
       "border-strong": "#bdbbb1",
     },
     inverse: "#faf9f5",
-    L0: 0.52,
+    L0: 0.55,
     dir: -1,
   },
 };
@@ -221,6 +221,10 @@ for (const [name, t] of Object.entries(out)) {
   };
   for (const [k, v] of Object.entries(t.text)) row("texto", k, v, (s) => contrast(v, s));
   row("acento (foco)", "accent", t.accent, (s) => contrast(t.accent, s));
+  row("foco A (acento 25%)", "focus-a", mix(t.accent, surf["bg-panel"], 0.25), (s) =>
+    contrast(mix(t.accent, s, 0.25), s),
+  );
+  row("foco B (acento 100%)", "focus-b", t.accent, (s) => contrast(t.accent, s));
   row("acento como texto", "text-accent", t.accentText, (s) => contrast(t.accentText, s));
   for (const [k, v] of Object.entries(t.status)) row("ícone status", k, v, (s) => contrast(v, s));
   for (const [k, v] of Object.entries(t.labels)) row("ícone label", k, v, (s) => contrast(v, s));

@@ -1,0 +1,18 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+import { TypeScale } from "./FoundationDocs";
+
+<Meta title="Foundations/Typography" />
+
+# Typography
+
+- **Inter**: corpo, labels e UI. Componentes funcionais usam Inter.
+- **Inter Tight**: display e headings (`font-display`).
+- **JetBrains Mono**: code, kbd e identificadores de issue (`font-mono`).
+
+Pesos: **somente 400 e 500**. Cada nível define tamanho, altura de linha, peso e espaçamento por token (`text-body-md` etc.). Cabeçalho de painel (ex.: "Issues" de uma lista) usa `label-md` (13 px / 500); títulos grandes só em nível de página.
+
+<Unstyled>
+  <TypeScale />
+</Unstyled>
+
+Fontes self-hosted em `src/assets/fonts`, todas sob a SIL Open Font License 1.1.

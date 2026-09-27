@@ -12,12 +12,17 @@
     "check:format": "oxfmt --check .",
     "check:lint": "oxlint --deny-warnings .",
     "check:types": "pnpm -r check:types",
-    "fix": "oxfmt . && oxlint --fix ."
+    "fix": "oxfmt . && oxlint --fix .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "storybook": "pnpm --filter @vyzer/design-system storybook",
+    "build-storybook": "pnpm --filter @vyzer/design-system build-storybook"
   },
   "devDependencies": {
     "oxfmt": "^0.70.0",
     "oxlint": "^1.85.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=22"

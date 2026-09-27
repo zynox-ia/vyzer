@@ -1,0 +1,24 @@
+/* Estilos de base: só elementos nativos, nada específico de componente. */
+@layer base {
+  body {
+    @apply bg-app font-sans text-body-md text-primary antialiased;
+  }
+
+  /* Foco padrão para qualquer elemento focável (mesma regra do utilitário focus-ring) */
+  :focus-visible {
+    outline: 1px solid var(--focus-color);
+    outline-offset: -1px;
+    box-shadow: var(--focus-halo);
+  }
+
+  a {
+    @apply text-primary underline underline-offset-2;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    @apply font-mono;
+  }
+}
