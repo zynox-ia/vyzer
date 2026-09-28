@@ -24,7 +24,7 @@ export const tooltipStyles = {
 };
 
 /** Lê uma duração do tema (ex.: "500ms"). Sem o token, o Radix usa o próprio padrão. */
-function themeDuration(name: string): number | undefined {
+export function themeDuration(name: string): number | undefined {
   if (typeof document === "undefined") return undefined;
   const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const value = Number.parseFloat(raw);

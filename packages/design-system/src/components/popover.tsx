@@ -24,8 +24,9 @@ const FOCUSABLE =
 /**
  * Foco inicial: o primeiro elemento focável (ou o próprio conteúdo). O Radix faz o mesmo, mas
  * seleciona o texto do campo; aqui o cursor vai para o fim, pronto para continuar digitando.
+ * Também usado pelo Dialog e pelo Command Menu.
  */
-function focusFirst(event: Event) {
+export function focusFirst(event: Event) {
   event.preventDefault();
   const content = event.currentTarget as HTMLElement;
   // Pula os ocultos (hidden, display: none, inert): o foco neles não teria efeito.

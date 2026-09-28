@@ -6,8 +6,11 @@ Monorepo pnpm (ADR-0003). Front (`apps/web`): Vite + React 19 + TypeScript (stri
 
 ## Regras inegociáveis
 
-1. **Figma é a fonte da verdade.** Todo valor visual (cor, espaço, raio, tipografia, sombra, ícone) vem do Figma via MCP. Na dúvida, consulte o nó; nunca invente.
-2. **Nada hardcoded.** Sem hex, rgb, px, sombras ou durações fixos em componentes. Se faltar token para um valor do Figma, pare e pergunte.
+1. **O design system é a fonte da verdade; o Figma é referência visual.**
+   - Reutilize o que já existe em vez de criar peça ou prop só para bater o pixel de um frame.
+   - O que não tiver frame no Figma, crie seguindo os tokens e os padrões já implementados, sem parar para perguntar.
+   - Divergências relevantes vão para `.figma/`, uma linha cada.
+2. **Nada hardcoded.** Sem hex, rgb, px, sombras ou durações fixos em componentes. Se faltar token, pare e pergunte: token novo precisa de aprovação.
 3. **Só tokens semânticos em componentes.** Componentes usam tokens semânticos (ex.: `bg-surface`, `text-muted`), nunca primitivos (ex.: `gray-500`).
 4. **Escopo estrito.** Implemente só o que a tarefa pede. Nada de refatorar, renomear ou "melhorar" o que está fora dela; anote e pergunte.
 5. **Sem dependências novas sem consulta.** Qualquer `pnpm add` precisa de aprovação prévia.
