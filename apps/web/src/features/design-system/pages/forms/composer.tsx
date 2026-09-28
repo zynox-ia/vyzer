@@ -1,5 +1,5 @@
 import { Button, IconButton, SegmentedControl, TextArea } from "@vyzer/design-system/components";
-import { Activity, ListChecks, Paperclip } from "lucide-react";
+import { Activity, Bot, Paperclip } from "lucide-react";
 import { useState } from "react";
 import { Code, Decisions, DocPage, DocSection, Prose } from "../../kit/doc";
 import { ThemePair } from "../../kit/theme-frame";
@@ -42,7 +42,7 @@ function Composer() {
         </div>
       )}
       <div className="flex items-center justify-between px-3 py-3">
-        <Button icon={ListChecks}>Write with Agent</Button>
+        <Button icon={Bot}>Write with Agent</Button>
         <div className="flex items-center gap-3">
           <IconButton icon={Paperclip} label="Attach images, files, or videos" size="md" />
           <Button type="submit">Post update</Button>
@@ -105,6 +105,10 @@ export function Page() {
           {
             decision: "Rodapé com ação principal à direita",
             rule: "§4 ações de conclusão no fim do fluxo",
+          },
+          {
+            decision: 'Ícone do "Write with Agent" trocado para Bot',
+            rule: "Fase 7 (AI e chat), item 9 — mesmo ícone de agente em todos os gatilhos (ListChecks era o valor antes da Fase 7)",
           },
         ]}
       />

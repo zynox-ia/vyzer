@@ -91,7 +91,7 @@ describe("Icon Picker: ícones adicionais", () => {
 });
 
 describe("Icon", () => {
-  it("mantém 2,5 px reais de traço em xs e xl pela fórmula do Lucide", async () => {
+  it("mantém 2 px reais de traço em xs e xl pela fórmula do Lucide", async () => {
     const screen = await render(
       <>
         <Icon icon={Circle} size="xs" data-testid="icon-xs" />
@@ -105,7 +105,7 @@ describe("Icon", () => {
       const renderedSize = Number(svg.getAttribute("width"));
       const expected = (ICON_STROKE * viewBoxSize) / renderedSize;
       expect(Number(svg.getAttribute("stroke-width"))).toBe(expected);
-      expect(expected).toBe(2.5);
+      expect(expected).toBe(2);
     }
   });
 });

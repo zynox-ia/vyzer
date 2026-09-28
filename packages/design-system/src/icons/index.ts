@@ -6,3 +6,4 @@ export {
   type ProjectStatusIconProps,
   type ProjectStatusType,
 } from "./ProjectStatusIcon";
+export { HealthTrendIcon, type HealthTrend, type HealthTrendIconProps } from "./HealthTrendIcon";

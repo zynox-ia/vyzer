@@ -187,6 +187,11 @@ export function Page() {
             decision: "Padding de 10 px de cada lado",
             rule: "Pedido do responsável: +2 px, como o chip do Select",
           },
+          {
+            decision:
+              "HealthBadge on-track/off-track: disco a 25% + seta de tendência (HealthTrendIcon), no lugar de CircleCheck/TriangleAlert",
+            rule: "Figma 25:5384 e 1:5177 (VYZ-36): diferença perceptível contra o glifo genérico anterior",
+          },
           { decision: "Algarismos tabulares no Counter", rule: "§2 números alinhados em listas" },
         ],
       }}

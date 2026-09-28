@@ -59,6 +59,33 @@ export function Page() {
         </ThemePair>
       </DocSection>
 
+      <DocSection
+        title="Relevo e contato"
+        description={
+          <>
+            <Code>--raised</Code> (anel de 1 px a 9%/10% claro + a camada de contato) é o relevo de
+            chips, botões secondary e cartões de valor (ADR-0013). <Code>--contact</Code> é só a
+            camada de baixo — <Code>--raised</Code> a compõe, sem repetir o valor. Usada sozinha (
+            <Code>shadow-contact</Code>) no painel de conteúdo do App Shell (<Code>ShellFrame</Code>
+            ): medida ao vivo no Linear, o painel dele tem só a sombra de contato, sem o anel claro
+            (aprovado pelo responsável, 28/09).
+          </>
+        }
+      >
+        <DocTable
+          caption="Relevo e contato"
+          columns={["Token", "Camadas", "Uso"]}
+          rows={[
+            [<Code key="t">shadow-raised</Code>, "Anel 1 px + contato", "Chips, botão secondary"],
+            [
+              <Code key="t">shadow-contact</Code>,
+              "Só o contato",
+              "Painel de conteúdo do App Shell",
+            ],
+          ]}
+        />
+      </DocSection>
+
       <Decisions
         items={[
           { decision: "Luz de cima: y > 0, x = 0", rule: "§9 elevação" },
@@ -75,6 +102,11 @@ export function Page() {
           {
             decision: "Sem sombra em painel, card e botão",
             rule: "ADR-0013 sombra só em overlays (Figma raised descartado)",
+          },
+          {
+            decision:
+              "Exceção: o painel de conteúdo do App Shell usa shadow-contact (só a camada de contato, sem anel) — medido ao vivo no Linear",
+            rule: "ADR-0013 (28/09), aprovado pelo responsável",
           },
         ]}
       />

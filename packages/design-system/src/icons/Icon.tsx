@@ -2,11 +2,18 @@ import type { LucideIcon } from "lucide-react";
 import type { Ref, SVGProps } from "react";
 import { cn } from "../lib/cn";
 
-/** Tamanhos de ícone: xs 12 · sm 16 · md 20 · lg 24 · xl 32 px. */
-export type IconSize = "xs" | "sm" | "md" | "lg" | "xl";
+/**
+ * Tamanhos de ícone: xs 12 · 14 · sm 16 · md 20 · lg 24 · xl 32 px. O degrau "14" (entre xs e
+ * sm) veio do Icon Button de 28 px (owner, 28/09): nem xs nem sm cabiam no ícone medido do
+ * Linear ali, então ganhou o nome literal em vez de forçar um t-shirt size que não existe.
+ * (Um degrau "15" foi testado para os itens de nav da sidebar na mesma tarde e revertido — os
+ * itens voltaram para "14".)
+ */
+export type IconSize = "xs" | "14" | "sm" | "md" | "lg" | "xl";
 
 export const iconSizeClass: Record<IconSize, string> = {
   xs: "size-icon-xs",
+  "14": "size-icon-14",
   sm: "size-icon-sm",
   md: "size-icon-md",
   lg: "size-icon-lg",
@@ -15,9 +22,9 @@ export const iconSizeClass: Record<IconSize, string> = {
 
 /**
  * Traço padrão dos ícones de linha (lucide), em px reais (absoluteStrokeWidth). Era 1,5 px (peso
- * do Figma); o responsável pediu +1 px em todo o sistema.
+ * do Figma); o responsável pediu +1 px e, em 28/09, depois de comparar com 1,5 px, fixou +0,5 px.
  */
-export const ICON_STROKE = 2.5;
+export const ICON_STROKE = 2;
 
 export type IconProps = Omit<SVGProps<SVGSVGElement>, "ref"> & {
   icon: LucideIcon;

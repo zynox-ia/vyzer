@@ -2,7 +2,7 @@
 
 Issue: [VYZ-36](https://linear.app/zynox-dev/issue/VYZ-36/fase-9-data-visualization), sub-issue da [VYZ-12](https://linear.app/zynox-dev/issue/VYZ-12/design-system). Branch `vyz-36-fase-9-data-visualization`, a partir de `vyz-34-fases-4-5-e-6-feedback-dados-e-command-menu`, depois do commit da VYZ-34.
 
-**Aprovada pelo responsável em 28/09, com todas as recomendações da seção de decisões.**
+**Aprovada pelo responsável em 28/09, com as recomendações da seção de decisões. A exceção é a decisão 1: no mesmo dia, o responsável trocou o SVG feito à mão pelo Recharts ([ADR-0014](../adr/0014-recharts-for-charts.md)).**
 
 ## Como usar o Figma nesta entrega
 
@@ -42,9 +42,9 @@ Os cinco resolvem hoje (28/09), inclusive 1:6376 — que a tabela "não existem 
 
 Cada item com página em `/design-system/data-visualization`.
 
-1. **BurnUpChart** (25:3040): gráfico de progresso de projeto e ciclo. Três séries de papel fixo — Scope (linha tracejada neutra, teto do total), Started (linha sólida em `--hue-amber`) e Completed (linha sólida em `--hue-indigo`, com preenchimento) — cada uma com contagem na legenda ("Scope · 9", "Started · 4", "Completed · 2"). Eixo X com poucas marcas de data (início e fim, mais 3 intermediárias, como no Figma). Não é um componente de séries genéricas: as três cores são fixas por papel, não vêm da paleta categórica do item 4.
+1. **BurnUpChart** (25:3040): gráfico de progresso de projeto e ciclo. Três séries de papel fixo, todas **sólidas** (a spec original pedia Scope tracejada; o Linear ao vivo e o Figma 25:3040 mostram sólida — corrigido na revisão de fidelidade) e com o mesmo traço de **1,5 px**: Scope (neutra, teto do total), Started (`--hue-amber`) e Completed (`--hue-indigo`) — cada uma com contagem na legenda ("Scope · 9", "Started · 4", "Completed · 2") **e preenchimento em gradiente** (0% → transparente, opacidade de topo em `--opacity-subtle`), como o gráfico real do projeto no Linear (conferido ao vivo em 28/09 — não só Completed). Eixo X em **escala de tempo real** (não categórica): `date` recebe uma data ISO (`AAAA-MM-DD`); o eixo mostra só **duas** marcas — início e fim reais do período (`ticks` explícito, nunca esconde a data inicial), rótulo em 12 px. **Hachura de fim de semana**: um `<pattern>` diagonal na cor de superfície/borda cobre sábados e domingos do período, igual ao Linear real — independente da densidade dos pontos de dado. Não é um componente de séries genéricas: as três cores são fixas por papel, não vêm da paleta categórica do item 4.
 2. **Indicador de saúde**: reaproveita o `HealthBadge` já implementado (Fase 5) para a coluna Health da lista de projetos (25:4964) e o pill do cabeçalho do diálogo de update (25:4124, "On track"). Conferir os glifos atuais (`CircleCheck`/`TriangleAlert`/`CircleAlert`/`CircleDashed`) contra 1:5142/1:5177: se o Figma usa ícone de tendência (seta ondulada) e a diferença for perceptível, trocar o glifo mantendo os tons e o restante da API; registrar em `.figma/` se a divergência for mantida.
-3. **Sparkline**: novo componente, traço fino de 2 px, extremidades arredondadas, sem eixo nem grade — o par percentual + tendência da coluna Status (25:5421). Variante `bar`: mesma leitura em barras finas (sem frame dedicado no Figma; desenhado a partir do mesmo traço e do raio `radius-inline`, cobrindo "barras simples" do escopo pedido).
+3. **Sparkline**: novo componente, traço fino de ~1,25 px, sem eixo nem grade — o par percentual + tendência da coluna Status (25:5421). Variante `line` em **duotone**, igual ao traço real da coluna Status (conferido ao vivo em 28/09): uma linha em `--hue-indigo` (a reta do primeiro ao último valor, atrás) e uma em `currentColor` (o traço real dos dados, na frente) — mesmo par de cores do Linear, sem inventar uma segunda métrica. Variante `bar`: mesma leitura em barras finas, num tom só (sem frame dedicado no Figma nem referência de duotone em barra; desenhado a partir do mesmo traço, cobrindo "barras simples" do escopo pedido).
 4. **Paleta categórica de dados** (fundação dos itens 5–6): 8 tokens novos `--fill-chart-1…8` / `--stroke-chart-1…8` reordenados (ver "Decisões para o André" abaixo). Usada só por séries de identidade livre (por assignee, por label, por time) — nunca por estado de workflow, que usa os tokens de status já existentes (`st-success`, `st-warning` etc., mesmos do `StatusIcon`).
 5. **StackedBarChart**: barras empilhadas por categoria (ex.: issues por status, por ciclo), sem frame no Figma — segue o Insights do Linear hoje. Cada segmento recebe a cor certa pelo tipo de dado (status → tokens de status; identidade livre → paleta categórica do item 4), nunca embutida no componente.
 6. **LineChart** (multi-série) + **Legend**: linhas de throughput/velocidade do Insights, sem frame no Figma. Legenda: swatch + rótulo + valor, sempre com texto (nunca só cor).
@@ -53,11 +53,11 @@ Cada item com página em `/design-system/data-visualization`.
 
 ## Fatia vertical
 
-| Camada | O que entra                                                                                                                                                                                                                                                                                                                                                                                            |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Banco  | Nada                                                                                                                                                                                                                                                                                                                                                                                                   |
-| API    | Nada                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Tela   | Componentes em `packages/design-system/src/components` (novos: `burn-up-chart.tsx`, `sparkline.tsx`, `stacked-bar-chart.tsx`, `line-chart.tsx`, `chart-tooltip.tsx`, `chart-legend.tsx`), tokens em `packages/design-system/src/styles` (`primitives.css`, `themes.css`), exports em `index.ts`, páginas em `apps/web/src/features/design-system/pages/data-visualization` e registro em `registry.ts` |
+| Camada | O que entra                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Banco  | Nada                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| API    | Nada                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Tela   | Componentes em `packages/design-system/src/components` (novos: `burn-up-chart.tsx`, `sparkline.tsx`, `stacked-bar-chart.tsx`, `line-chart.tsx`, `chart-tooltip.tsx`, `chart-legend.tsx`), tokens em `packages/design-system/src/styles` (`primitives.css`, `themes.css`), dependência `recharts` só no `packages/design-system` (ADR-0014), exports em `index.ts`, páginas em `apps/web/src/features/design-system/pages/data-visualization` e registro em `registry.ts` |
 
 ## Comportamento
 
@@ -93,7 +93,7 @@ Todos nos dois temas.
 ## Critérios de aceite
 
 - [ ] Todos os itens do escopo implementados, reaproveitando `ProgressBar`, `HealthBadge`, `EmptyState`, `Skeleton` e `Tooltip` onde already existem.
-- [ ] Só tokens semânticos; nenhuma dependência nova (gráficos em SVG próprio — ver decisão 1).
+- [ ] Só tokens semânticos, passados ao Recharts como variáveis CSS. A única dependência nova é `recharts` (ADR-0014), que fica escondida atrás dos componentes do DS.
 - [ ] Paleta categórica nova validada pelo script da skill `dataviz` (`validate_palette.js`) nos dois temas, adjacente e sem qualquer FAIL.
 - [ ] Cada gráfico tem tabela textual alternativa e nunca depende só de cor para status ou identidade.
 - [ ] Testes de interação (agente de testes separado) e axe nos dois temas.
@@ -117,16 +117,21 @@ Todos nos dois temas.
 
 ### 1. Biblioteca de gráficos ou SVG feito à mão
 
-**Recomendação: SVG próprio, sem dependência nova.**
+**Decidido em 28/09: Recharts** ([ADR-0014](../adr/0014-recharts-for-charts.md)).
 
-|                        | Biblioteca (ex.: Recharts, visx)                                                                                                                                                                | SVG próprio                                                                                                                                                |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Custo                  | `pnpm add` novo (regra 5 do AGENTS.md: precisa de aprovação); Recharts sozinho soma ~500 kB antes de tree-shaking; visx é mais leve mas ainda é várias sub-libs (`@visx/shape`, `@visx/scale`…) | Zero dependência nova                                                                                                                                      |
-| Tema                   | Recharts estiliza por props/CSS-in-JS, difícil de amarrar 1:1 nos tokens semânticos (regra 3: só tokens semânticos em componentes); visx é headless, mas ainda exige uma camada de adaptação    | Direto: os componentes já usam `currentColor`/classes Tailwind ligadas aos tokens, como `ProgressRing` e `StatusIcon` já fazem hoje                        |
-| Acessibilidade         | Nenhuma das duas resolve a tabela alternativa ou o tooltip por teclado sozinha; a camada de acessibilidade é sempre escrita à mão                                                               | Mesma exigência, sem custo extra de aprender a API de terceiros                                                                                            |
-| Tamanho do vocabulário | O escopo pedido é pequeno (linha, área, barra empilhada, sparkline, tooltip) — não precisa de escalas, interpoladores ou eixos complexos que justifiquem uma lib de gráficos completa           | Cobre o escopo com os mesmos padrões já usados em `progress.tsx` (`ProgressRing` calcula `stroke-dasharray` à mão) e `icons/StatusIcon.tsx` (`sectorPath`) |
+A recomendação original era SVG próprio, e a primeira versão da fase foi feita assim. Depois de ver o resultado, o responsável preferiu uma biblioteca consolidada. O miolo dos gráficos foi refeito em Recharts, e continuam iguais:
 
-O padrão já estabelecido no design system (Progress em anel, ícones de status com geometria calculada) é fazer SVG à mão para formas simples. O escopo desta fase (linha/área com poucas séries, barra empilhada, sparkline, tooltip de ponto) cabe no mesmo padrão sem precisar de uma biblioteca de escalas. Se aparecer mais adiante uma necessidade de gráfico genuinamente complexo (zoom, brushing, milhares de pontos), vale reabrir a conversa; não é o caso aqui.
+- a API pública dos componentes;
+- os 8 tokens da paleta;
+- as páginas de documentação;
+- os testes.
+
+As regras de uso estão na ADR:
+
+- o Recharts fica atrás dos componentes do DS;
+- toda cor vem de token semântico;
+- a tabela alternativa e o tooltip por teclado continuam obrigatórios;
+- a animação respeita os tokens de movimento e o movimento reduzido.
 
 ### 2. Paleta categórica de dados
 
@@ -152,4 +157,4 @@ No claro, os valores existentes (`--hue-*-light`, L 0,55) já passam sem altera�
 
 Alternativa mais simples (menos fiel à skill): manter os 10 tokens como estão hoje, sem novo primitivo de escuro nem exclusão de vermelho/ciano — mais rápido de implementar, mas carrega a colisão com status e o par abaixo do piso no claro (âmbar↔verde, ΔE 4,7) para dentro do produto. Não recomendado.
 
-O **BurnUpChart** (item 1 do escopo) não usa essa paleta categórica: suas três séries têm papel fixo (Scope/Started/Completed), então usam tokens já existentes (`--hue-amber`, `--hue-indigo`, mais uma linha neutra tracejada) — sem token novo.
+O **BurnUpChart** (item 1 do escopo) não usa essa paleta categórica: suas três séries têm papel fixo (Scope/Started/Completed), então usam tokens já existentes (`--hue-amber`, `--hue-indigo`, mais uma linha neutra) — sem token novo.

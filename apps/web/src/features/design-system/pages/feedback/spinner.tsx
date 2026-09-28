@@ -66,8 +66,8 @@ export function Page() {
         themes: () => <Showcase />,
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
-            LoaderCircle do lucide com o traço de 2,5 px, nos tamanhos de ícone (12 a 32 px),
-            girando em 800 ms (animate-spin). Cor text-secondary por padrão; herda a do contexto com
+            LoaderCircle do lucide com o traço de 2 px, nos tamanhos de ícone (12 a 32 px), girando
+            em 800 ms (animate-spin). Cor text-secondary por padrão; herda a do contexto com
             className.
           </p>
         ),

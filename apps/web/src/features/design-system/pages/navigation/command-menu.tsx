@@ -486,6 +486,11 @@ export function Page() {
             decision: 'Sem "Ask Linear / Tab" no cabeçalho nem números 1–9 nas páginas',
             rule: "IA fica para a Fase 7; os números pediriam uma prop nova só para isso",
           },
+          {
+            decision:
+              'Ctrl/⌘+K abre e fecha de qualquer ponto, com o foco num campo de texto ou com outro diálogo aberto (ex.: o New issue do "C")',
+            rule: "Comportamento atual (sem mudança na Fase 8): o navegador da Traycer não conseguiu confirmar isso ao vivo no Linear nesta sessão (o dispatch sintético de tecla não chega ao listener real do Linear, e o Playwright recusa `press` fora de um campo editável) — mantido como já estava, sem alterar o CommandMenu do design system",
+          },
         ],
       }}
     />

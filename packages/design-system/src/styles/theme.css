@@ -77,6 +77,10 @@
   --text-color-inverse: var(--fg-inverse);
   --text-color-on-checked: var(--fg-inverse);
   --text-color-accent: var(--accent-text);
+  /* Itens não selecionados da sidebar (texto e ícone): cinza quase neutro, aprovado pelo
+   * responsável em 28/09. Nome próprio ("nav-idle", não "nav") para não colidir com o tamanho
+   * de texto --text-sidebar-title. */
+  --text-color-nav-idle: var(--fg-nav);
   --text-color-success: var(--st-success);
   --text-color-info: var(--st-info);
   --text-color-warning: var(--st-warning);
@@ -138,27 +142,35 @@
   --stroke-secondary: var(--fg-secondary);
   --stroke-tertiary: var(--fg-tertiary);
 
-  /* Data viz: paleta categórica (fill-chart-*, stroke-chart-*) */
-  --fill-chart-1: var(--hue-blue);
-  --fill-chart-2: var(--hue-green);
-  --fill-chart-3: var(--hue-amber);
-  --fill-chart-4: var(--hue-purple);
-  --fill-chart-5: var(--hue-red);
-  --fill-chart-6: var(--hue-cyan);
-  --fill-chart-7: var(--hue-orange);
-  --fill-chart-8: var(--hue-pink);
-  --fill-chart-9: var(--hue-lime);
-  --fill-chart-10: var(--hue-indigo);
-  --stroke-chart-1: var(--hue-blue);
-  --stroke-chart-2: var(--hue-green);
-  --stroke-chart-3: var(--hue-amber);
-  --stroke-chart-4: var(--hue-purple);
-  --stroke-chart-5: var(--hue-red);
-  --stroke-chart-6: var(--hue-cyan);
-  --stroke-chart-7: var(--hue-orange);
-  --stroke-chart-8: var(--hue-pink);
-  --stroke-chart-9: var(--hue-lime);
-  --stroke-chart-10: var(--hue-indigo);
+  /* Data viz: paleta categórica (fill-chart-*, stroke-chart-*), fundação do VYZ-36. Ordem fixa
+   * indigo·amber·pink·lime·blue·green·purple·orange (skill dataviz, docs/specs/fase-9-data-
+   * visualization.md decisão 2): identidade livre (assignee, label, time), nunca estado de
+   * workflow — esse usa os tokens de status (bg-success etc.). */
+  --fill-chart-1: var(--chart-1);
+  --fill-chart-2: var(--chart-2);
+  --fill-chart-3: var(--chart-3);
+  --fill-chart-4: var(--chart-4);
+  --fill-chart-5: var(--chart-5);
+  --fill-chart-6: var(--chart-6);
+  --fill-chart-7: var(--chart-7);
+  --fill-chart-8: var(--chart-8);
+  --stroke-chart-1: var(--chart-1);
+  --stroke-chart-2: var(--chart-2);
+  --stroke-chart-3: var(--chart-3);
+  --stroke-chart-4: var(--chart-4);
+  --stroke-chart-5: var(--chart-5);
+  --stroke-chart-6: var(--chart-6);
+  --stroke-chart-7: var(--chart-7);
+  --stroke-chart-8: var(--chart-8);
+
+  /* Traços dos gráficos (VYZ-36 fase 2), aprovados pelo responsável em 28/09, medidos contra o
+   * Linear real: iguais nos dois temas, por isso ficam aqui (não em themes.css). SVG só resolve
+   * `var()` dentro de `style`, nunca num atributo de apresentação — os componentes passam
+   * `style={{ strokeWidth: "var(--chart-line-width)" }}` em vez do atributo `strokeWidth`. */
+  --chart-line-width: 1.5px;
+  --chart-sparkline-width: 1.25px;
+  --chart-sparkline-bar-radius: 1px;
+  --chart-weekend-hatch-width: 3px;
 
   /* ---------- Tipografia (skill §2) ----------
    * Escala modular: 13 × 1,2^n arredondado (11, 13, 16, 19, 22, 27, 32, 47); 12 px é a exceção
@@ -216,6 +228,14 @@
   --text-label-md--line-height: 20px;
   --text-label-md--letter-spacing: 0em;
   --text-label-md--font-weight: 500;
+  /* Título da sidebar (nome do workspace): 1 px acima do texto dos itens de nav (13 px),
+   * aprovado pelo responsável em 28/09. Nasceu como teste de tamanho para os itens de nav
+   * (`text-nav`, 14 px) — os itens voltaram para 13 (`text-label-md`), e este degrau foi
+   * reaproveitado só para o título, não apagado. */
+  --text-sidebar-title: 14px;
+  --text-sidebar-title--line-height: 20px;
+  --text-sidebar-title--letter-spacing: 0em;
+  --text-sidebar-title--font-weight: 500;
   --text-label-sm: 12px;
   --text-label-sm--line-height: 16px;
   --text-label-sm--letter-spacing: 0.005em;
@@ -270,6 +290,9 @@
     0 16px 32px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 0.4));
   /* Relevo de chips e botões (themes.css define por tema) */
   --shadow-raised: var(--raised);
+  /* Só a camada de contato do --raised, sem o anel (themes.css define por tema): painel de
+   * conteúdo do shell (aprovado pelo responsável, 28/09) */
+  --shadow-contact: var(--contact);
   /* Sublinhado da aba ativa: linha de 1 px na cor do texto (Figma 1:1404, neutro pela ADR-0013) */
   --shadow-underline: inset 0 -1px 0 var(--fg-primary);
   /* Foco sem halo (pedido do responsável) */
@@ -313,6 +336,7 @@
   --spacing-control-lg: 32px;
   --spacing-control-xl: 40px;
   --spacing-icon-xs: 12px;
+  --spacing-icon-14: 14px;
   --spacing-icon-sm: 16px;
   --spacing-icon-md: 20px;
   --spacing-icon-lg: 24px;

@@ -5,6 +5,7 @@ export {
   type ButtonVariant,
   type IconButtonProps,
   type IconButtonSize,
+  type IconButtonTone,
 } from "./button";
 export {
   Checkbox,
@@ -230,6 +231,9 @@ export {
   IssueList,
   IssueRow,
   IssueRowContent,
+  issueRowStyles,
+  optionStateStyles,
+  useIssueOption,
   type IssueAssignee,
   type IssueListProps,
   type IssueRowContentProps,
@@ -266,3 +270,36 @@ export {
   type TimelineItemProps,
   type TimelineProps,
 } from "./timeline";
+export { BurnUpChart, type BurnUpChartProps, type BurnUpPoint } from "./burn-up-chart";
+export { Sparkline, type SparklineProps, type SparklineVariant } from "./sparkline";
+export {
+  StackedBarChart,
+  type StackedBarChartProps,
+  type StackedBarGroup,
+  type StackedBarSegment,
+} from "./stacked-bar-chart";
+export { LineChart, type LineChartProps, type LineSeries } from "./line-chart";
+export { Legend, type LegendItem, type LegendMark, type LegendProps } from "./chart-legend";
+export { ChartTooltip, type ChartTooltipProps, type ChartTooltipRow } from "./chart-tooltip";
+export { SelectionBar, type SelectionBarProps } from "./selection-bar";
+export {
+  AgentComposer,
+  ChatHistoryPopover,
+  ConversationHeader,
+  AgentMessage,
+  MessageFeedback,
+  SettingsEmptyRow,
+  SuggestionCard,
+  ThinkingMessage,
+  ToolCallCollapsible,
+  UserMessage,
+  type AgentComposerProps,
+  type AgentMessageProps,
+  type ChatHistoryEntry,
+  type ChatHistoryPopoverProps,
+  type ConversationHeaderProps,
+  type MessageFeedbackProps,
+  type SettingsEmptyRowProps,
+  type SuggestionCardProps,
+  type ToolCallCollapsibleProps,
+} from "./ai-chat";

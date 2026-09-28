@@ -34,6 +34,7 @@ const colors = [
   "primary",
   "secondary",
   "tertiary",
+  "nav-idle",
   "default",
   "strong",
   "control",
@@ -63,6 +64,7 @@ const textSizes = [
   "body-sm",
   "label-md",
   "label-sm",
+  "sidebar-title",
   "caption",
   "overline",
   "code",
@@ -70,7 +72,8 @@ const textSizes = [
 ];
 
 const spacing = [
-  ...["xs", "sm", "md", "lg", "xl"].flatMap((s) => [`control-${s}`, `icon-${s}`]),
+  ...["xs", "sm", "md", "lg", "xl"].map((s) => `control-${s}`),
+  ...["xs", "14", "sm", "md", "lg", "xl"].map((s) => `icon-${s}`),
   "row",
   "menu-item",
   "nav-item",
@@ -102,7 +105,7 @@ const twMerge = extendTailwindMerge({
         "container",
         "surface",
       ],
-      shadow: ["sm", "md", "lg", "raised", "underline", "focus"],
+      shadow: ["sm", "md", "lg", "raised", "contact", "underline", "focus"],
       blur: ["sm", "md", "lg"],
       breakpoint: ["tablet", "desktop", "wide"],
       container: ["prose", "content", "wide"],

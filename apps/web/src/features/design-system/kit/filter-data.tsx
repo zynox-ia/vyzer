@@ -19,6 +19,7 @@ import {
   ArrowLeftRight,
   Bell,
   Blend,
+  Bot,
   Box,
   CalendarCheck,
   CalendarChevronsRight,
@@ -40,7 +41,6 @@ import {
   Package,
   PanelTop,
   Repeat,
-  Sparkles,
   SquareArrowUpRight,
   SquareDashedMousePointer,
   SquareMinus,
@@ -151,7 +151,7 @@ const PAST = plain("Past day", "Past week", "Past month", "Past 3 months");
 
 /** Categorias do "Add Filter…" (Figma 18:353), nos grupos e na ordem do Figma. */
 export const FILTER_SECTIONS: FilterCategory[][] = [
-  [{ value: "ai-filter", label: "AI filter", icon: Sparkles }],
+  [{ value: "ai-filter", label: "AI filter", icon: Bot }],
   [{ value: "advanced-filter", label: "Advanced filter", icon: ListTree }],
   [
     { value: "status", label: "Status", icon: CircleDashed, options: PROJECT_STATUSES },

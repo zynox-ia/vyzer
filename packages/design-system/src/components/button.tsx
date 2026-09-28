@@ -1,13 +1,15 @@
 /**
  * Button e IconButton (Figma: pílulas de 28 px, label 12 px Medium, padding 10 px). O Button
  * tem um só tamanho: 28 px com 12 px de padding (pedido do responsável, como nas pílulas).
- * Primário invertido (ADR-0011), secundário em superfície de controle com hairline, ghost
- * transparente e danger. Hover e pressionado como camadas translúcidas (skill §12).
+ * Primário invertido (ADR-0011), secundário em superfície de controle com relevo "raised",
+ * ghost transparente e danger. Hover e pressionado como camadas translúcidas (skill §12).
+ * O Icon Button usa cores e fundo próprios (ver `iconButtonVariantClass`): mais discreto que o
+ * Button com texto, como o Linear (pedido do responsável, 28/09).
  */
 import { LoaderCircle, type LucideIcon } from "lucide-react";
 import { Slot } from "radix-ui";
 import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
-import { Icon } from "../icons/Icon";
+import { Icon, type IconSize } from "../icons/Icon";
 import { cn } from "../lib/cn";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -138,21 +140,58 @@ const iconButtonSize: Record<IconButtonSize, string> = {
   lg: "size-control-lg",
 };
 
+/**
+ * No Icon Button de 28 px (md), o ícone mede 14 px, não os 16 px do Button (Figma/Linear
+ * medidos pelo responsável em 28/09). Os outros tamanhos não têm referência medida: mantêm o
+ * ícone de 16 px de sempre em vez de extrapolar a proporção sem dado.
+ */
+const iconButtonIconSize: Partial<Record<IconButtonSize, "14">> = { md: "14" };
+
+/**
+ * Cor e fundo do Icon Button, diferentes do Button com texto (pedido do responsável, 28/09):
+ * secondary e ghost usam o ícone em text-secondary (hover text-primary), como o Linear — o
+ * Button com texto continua em text-primary. O secondary também perde o relevo "raised"
+ * (anel + sombra): fica só o preenchimento sutil de `bg-control`, sem borda nem sombra; o
+ * Button com texto mantém o raised (ADR-0013, exceção documentada).
+ */
+const iconButtonVariantClass: Record<ButtonVariant, string> = {
+  ...variantClass,
+  secondary: cn("bg-control text-secondary hovered:text-primary", layers),
+  ghost: cn("text-secondary hovered:text-primary", layers),
+};
+
+export type IconButtonTone = "default" | "subtle";
+
 export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
   icon: LucideIcon;
   /** Nome acessível (obrigatório: o botão não tem texto visível). */
   label: string;
   variant?: ButtonVariant;
   size?: IconButtonSize;
+  /**
+   * Peso terciário para ações de menor destaque (ex.: "+" de Add view), como o Linear.
+   * `subtle` parte de text-tertiary e só chega a text-secondary no hover, um degrau abaixo
+   * do `default` (text-secondary → text-primary).
+   */
+  tone?: IconButtonTone;
+  /**
+   * Override pontual do ícone interno, independente do `size` do botão (ex.: ícone de 14 num
+   * botão de 24, como o Search/New issue da sidebar). O `md` já usa ícone de 14 por padrão sem
+   * esta prop (`iconButtonIconSize`, decisão do responsável para o DS inteiro) — `iconSize` só
+   * serve para os casos fora desse padrão.
+   */
+  iconSize?: IconSize;
   ref?: Ref<HTMLButtonElement>;
 };
 
-/** Botão redondo só de ícone (Figma: 28 px, ícone de 16 px). */
+/** Botão redondo só de ícone (Figma: 28 px; ícone de 14 px no md, 16 px nos demais tamanhos). */
 export function IconButton({
   icon,
   label,
   variant = "ghost",
   size = "md",
+  tone = "default",
+  iconSize,
   className,
   type = "button",
   ...rest
@@ -163,14 +202,15 @@ export function IconButton({
       aria-label={label}
       className={cn(
         base,
-        variantClass[variant],
+        hover,
+        iconButtonVariantClass[variant],
         iconButtonSize[size],
-        variant === "ghost" && "text-secondary hovered:text-primary",
+        tone === "subtle" && "text-tertiary hovered:text-secondary",
         className,
       )}
       {...rest}
     >
-      <Icon icon={icon} size="sm" />
+      <Icon icon={icon} size={iconSize ?? iconButtonIconSize[size] ?? "sm"} />
     </button>
   );
 }

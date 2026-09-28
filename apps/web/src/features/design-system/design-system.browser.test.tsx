@@ -8,7 +8,13 @@ import { afterEach, describe, expect, it } from "vitest";
 import { render } from "vitest-browser-react";
 import "@/index.css";
 import { DesignSystemApp } from ".";
-import { allPaths } from "./registry";
+import { allPaths, sections } from "./registry";
+
+/**
+ * Uma seção sem itens (`plannedIn`), se sobrar alguma: dinâmico, não um slug fixo — revisão de
+ * código pediu para o teste não depender de "patterns" continuar vazia (a Fase 10 a preenche).
+ */
+const emptySection = sections.find((s) => s.items.length === 0);
 
 function renderAt(path: string) {
   return render(
@@ -50,8 +56,11 @@ describe("navegação", () => {
     await expect.element(screen.getByRole("heading", { level: 1, name: "Colors" })).toBeVisible();
   });
 
-  it("mostra a seção vazia com a fase prevista", async () => {
-    const screen = await renderAt("/design-system/ai");
-    await expect.element(screen.getByText(/Fase 7/)).toBeVisible();
+  // Pula quando todas as seções já tiverem páginas — não força "patterns" a continuar vazia só
+  // para este teste existir (a Fase 10 a preenche; nesse dia, nada mais precisa mostrar "planned").
+  it.skipIf(!emptySection)("mostra a seção vazia com a fase prevista", async () => {
+    const screen = await renderAt(`/design-system/${emptySection!.slug}`);
+    const escaped = emptySection!.plannedIn!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    await expect.element(screen.getByText(new RegExp(escaped))).toBeVisible();
   });
 });

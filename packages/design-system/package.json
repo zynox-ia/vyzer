@@ -15,6 +15,7 @@
     "./font-coverage": "./src/lib/font-coverage.ts",
     "./components": "./src/components/index.ts",
     "./date": "./src/lib/date-value.ts",
+    "./roving-focus": "./src/lib/roving-focus.ts",
     "./vite": {
       "types": "./vite-plugin.d.ts",
       "default": "./vite-plugin.js"
@@ -31,6 +32,7 @@
     "frimousse": "^0.4.0",
     "lucide-react": "^1.48.0",
     "radix-ui": "^1.6.7",
+    "recharts": "^3.10.1",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {

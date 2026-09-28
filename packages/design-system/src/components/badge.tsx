@@ -2,14 +2,9 @@
  * Badge (rótulo de estado em pílula), Counter (contagem, Figma 1:3214 e 1:6598) e HealthBadge
  * (saúde do projeto, Figma 1:5143). Cor nunca é o único indicador: sempre há texto e/ou ícone.
  */
-import {
-  CircleAlert,
-  CircleDashed,
-  CircleCheck,
-  TriangleAlert,
-  type LucideIcon,
-} from "lucide-react";
+import { CircleDashed, type LucideIcon } from "lucide-react";
 import type { HTMLAttributes, ReactNode } from "react";
+import { HealthTrendIcon, type HealthTrend } from "../icons/HealthTrendIcon";
 import { Icon } from "../icons/Icon";
 import { cn } from "../lib/cn";
 
@@ -73,11 +68,23 @@ export function Counter({ count, tone = "neutral", max = 99, className, ...rest 
 
 export type Health = "on-track" | "at-risk" | "off-track" | "none";
 
-const health: Record<Health, { label: string; icon: LucideIcon; className: string }> = {
-  "on-track": { label: "On track", icon: CircleCheck, className: "text-success-strong" },
-  "at-risk": { label: "At risk", icon: TriangleAlert, className: "text-warning-strong" },
-  "off-track": { label: "Off track", icon: CircleAlert, className: "text-danger-strong" },
-  none: { label: "No updates", icon: CircleDashed, className: "text-secondary" },
+/**
+ * "none": CircleDashed (lucide), já bate com o disco tracejado do Figma (1:5142). Os demais usam
+ * o glifo de tendência (HealthTrendIcon): disco a 25% + seta, conferido contra 1:5177 (off-track)
+ * e 25:5384 (on-track) — diferença perceptível do TriangleAlert/CircleCheck genéricos que estavam
+ * aqui antes; "at-risk" segue a mesma família (sem frame no Figma, ver .figma/01-design-tokens.md).
+ */
+const health: Record<Health, { label: string; className: string }> = {
+  "on-track": { label: "On track", className: "text-success-strong" },
+  "at-risk": { label: "At risk", className: "text-warning-strong" },
+  "off-track": { label: "Off track", className: "text-danger-strong" },
+  none: { label: "No updates", className: "text-secondary" },
+};
+
+const trendByHealth: Record<Exclude<Health, "none">, HealthTrend> = {
+  "on-track": "up",
+  "at-risk": "flat",
+  "off-track": "down",
 };
 
 export type HealthBadgeProps = HTMLAttributes<HTMLSpanElement> & {
@@ -98,7 +105,7 @@ export function HealthBadge({ health: h, className, children, ...rest }: HealthB
       )}
       {...rest}
     >
-      <Icon icon={item.icon} />
+      {h === "none" ? <Icon icon={CircleDashed} /> : <HealthTrendIcon trend={trendByHealth[h]} />}
       {children ?? item.label}
     </span>
   );

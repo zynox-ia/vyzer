@@ -283,15 +283,134 @@ export const sections: DocSection[] = [
       },
     ],
   },
-  { slug: "ai", title: "AI", plannedIn: "Fase 7 (AI)", items: [] },
-  { slug: "app-shell", title: "App Shell", plannedIn: "Fase 8 (App Shell)", items: [] },
+  {
+    slug: "ai",
+    title: "AI",
+    items: [
+      {
+        slug: "suggestions",
+        title: "Sugestões",
+        Page: page(() => import("./pages/ai/suggestions")),
+      },
+      { slug: "composer", title: "Composer", Page: page(() => import("./pages/ai/composer")) },
+      { slug: "messages", title: "Mensagens", Page: page(() => import("./pages/ai/messages")) },
+      {
+        slug: "conversation",
+        title: "Cabeçalho, painel e histórico",
+        Page: page(() => import("./pages/ai/conversation")),
+      },
+      {
+        slug: "personalization",
+        title: "Agent personalization",
+        Page: page(() => import("./pages/ai/personalization")),
+      },
+      {
+        slug: "activity",
+        title: "Sessão na Activity",
+        Page: page(() => import("./pages/ai/activity")),
+      },
+    ],
+  },
+  {
+    slug: "app-shell",
+    title: "App Shell",
+    items: [
+      { slug: "sidebar", title: "Sidebar", Page: page(() => import("./pages/app-shell/sidebar")) },
+      { slug: "top-bar", title: "Top bar", Page: page(() => import("./pages/app-shell/top-bar")) },
+      {
+        slug: "right-panel",
+        title: "Painel de detalhes",
+        Page: page(() => import("./pages/app-shell/right-panel")),
+      },
+      {
+        slug: "settings",
+        title: "Settings",
+        Page: page(() => import("./pages/app-shell/settings")),
+      },
+    ],
+  },
   {
     slug: "data-visualization",
     title: "Data Visualization",
-    plannedIn: "Fase 9 (Data Visualization)",
-    items: [],
+    items: [
+      {
+        slug: "categorical-palette",
+        title: "Categorical palette",
+        Page: page(() => import("./pages/data-visualization/categorical-palette")),
+      },
+      {
+        slug: "burn-up-chart",
+        title: "Burn Up Chart",
+        Page: page(() => import("./pages/data-visualization/burn-up-chart")),
+      },
+      {
+        slug: "sparkline",
+        title: "Sparkline",
+        Page: page(() => import("./pages/data-visualization/sparkline")),
+      },
+      {
+        slug: "stacked-bar-chart",
+        title: "Stacked Bar Chart",
+        Page: page(() => import("./pages/data-visualization/stacked-bar-chart")),
+      },
+      {
+        slug: "line-chart",
+        title: "Line Chart",
+        Page: page(() => import("./pages/data-visualization/line-chart")),
+      },
+      {
+        slug: "chart-tooltip",
+        title: "Chart Tooltip",
+        Page: page(() => import("./pages/data-visualization/chart-tooltip")),
+      },
+    ],
   },
-  { slug: "patterns", title: "Patterns", plannedIn: "Fase 10 (Patterns)", items: [] },
+  {
+    slug: "patterns",
+    title: "Patterns",
+    items: [
+      {
+        slug: "settings-form",
+        title: "Settings Form",
+        Page: page(() => import("./pages/patterns/settings-form")),
+      },
+      {
+        slug: "inline-editing",
+        title: "Inline Editing",
+        Page: page(() => import("./pages/patterns/inline-editing")),
+      },
+      {
+        slug: "issue-detail",
+        title: "Issue Detail",
+        Page: page(() => import("./pages/patterns/issue-detail")),
+      },
+      {
+        slug: "milestones",
+        title: "Milestones",
+        Page: page(() => import("./pages/patterns/milestones")),
+      },
+      {
+        slug: "milestone-detail",
+        title: "Milestone Detail",
+        Page: page(() => import("./pages/patterns/milestone-detail")),
+      },
+      {
+        slug: "bulk-selection",
+        title: "Bulk Selection",
+        Page: page(() => import("./pages/patterns/bulk-selection")),
+      },
+      {
+        slug: "project-update",
+        title: "Project Update",
+        Page: page(() => import("./pages/patterns/project-update")),
+      },
+      {
+        slug: "activity-comments",
+        title: "Activity & Comments",
+        Page: page(() => import("./pages/patterns/activity-comments")),
+      },
+    ],
+  },
   {
     slug: "qa",
     title: "QA",

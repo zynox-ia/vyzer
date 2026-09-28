@@ -52,6 +52,19 @@
   --vz-lime-light: oklch(0.55 0.135 125);
   --vz-indigo-light: oklch(0.55 0.15 275);
 
+  /* Paleta categórica de dados (VYZ-36), só escuro: mesma matiz e croma dos -dark acima, L
+   * rebaixado de 0,72 para 0,66 para entrar na faixa recomendada de paleta categórica no escuro
+   * (0,48–0,67, skill dataviz) — status e labels ficam em 0,72 porque são cor única de
+   * significado fixo, não uma série entre várias. Claro reaproveita --hue-*-light sem alteração. */
+  --vz-indigo-chart-dark: oklch(0.66 0.145 275);
+  --vz-amber-chart-dark: oklch(0.66 0.15 75);
+  --vz-pink-chart-dark: oklch(0.66 0.15 350);
+  --vz-lime-chart-dark: oklch(0.66 0.15 125);
+  --vz-blue-chart-dark: oklch(0.66 0.15 245);
+  --vz-green-chart-dark: oklch(0.66 0.15 150);
+  --vz-purple-chart-dark: oklch(0.66 0.15 305);
+  --vz-orange-chart-dark: oklch(0.66 0.15 50);
+
   /* Texto de badge no claro: mesmo matiz, L menor até 4,5:1 sobre o fundo a 15% */
   --vz-green-light-text: oklch(0.435 0.12 150);
   --vz-blue-light-text: oklch(0.445 0.11 245);

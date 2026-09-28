@@ -131,6 +131,13 @@ export const TEAMS: ListOption[] = [
     hint: "ZYN",
     icon: <ProjectIcon value={{ kind: "icon", name: "Navigation", color: "cyan" }} />,
   },
+  // Fase 10 (Patterns): time do Vyzer no submenu "Team" do detalhe de issue (Figma 27:18970).
+  {
+    value: "vyzer",
+    label: "Vyzer",
+    hint: "VYZ",
+    icon: <ProjectIcon value={{ kind: "icon", name: "Boxes", color: "amber" }} />,
+  },
 ];
 
 export const INITIAL_LABELS: LabelItem[] = [
