@@ -44,6 +44,14 @@ export type TextInputProps = BaseInputProps & {
   icon?: LucideIcon;
   /** Conteúdo à direita (ex.: botão, atalho). */
   trailing?: ReactNode;
+  /**
+   * default: campo com borda. plain: sem borda nem fundo, texto 13 px com 6 px de padding, para
+   * dentro de um contêiner que já é o campo (Composer de criação, Figma 26:6870 e 26:6881); o
+   * contêiner mostra o foco (focus-ring-within). No plain, size, icon e trailing não se aplicam.
+   */
+  variant?: "default" | "plain";
+  /** Só no plain: texto de título, 16 px/500 (Figma 26:6871: 15 px/500, degrau mais próximo). */
+  heading?: boolean;
 };
 
 /** Campo de uma linha. Com ícone ou conteúdo à direita, vira um InputGroup. */
@@ -52,11 +60,27 @@ export function TextInput({
   icon,
   trailing,
   invalid,
+  variant = "default",
+  heading = false,
   className,
   ...rest
 }: TextInputProps) {
   const control = useFieldControl({ ...rest, invalid });
   const { invalid: _invalid, ...a11y } = control;
+  if (variant === "plain") {
+    return (
+      <input
+        className={cn(
+          field,
+          "block w-full px-1.5 disabled:opacity-disabled",
+          heading ? "h-control-sm type-heading-3" : "h-control-lg text-body-md",
+          className,
+        )}
+        {...rest}
+        {...a11y}
+      />
+    );
+  }
   return (
     <InputGroup size={size} className={className} invalid={control.invalid}>
       {icon && (
@@ -128,11 +152,21 @@ export function InputGroupInput({ invalid, className, ...rest }: InputGroupInput
 export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   invalid?: boolean;
   /**
-   * default: campo com borda. plain: sem borda nem fundo, texto 16 px, para dentro de um
-   * contêiner que já é o campo (Composer, Figma 1:6383); o contêiner mostra o foco
-   * (focus-ring-within).
+   * default: campo com borda. plain: sem borda nem fundo, para dentro de um contêiner que já é o
+   * campo (Composer, Figma 1:6383; Composer de criação, 26:6881); o contêiner mostra o foco
+   * (focus-ring-within). O tamanho do texto vem de size.
    */
   variant?: "default" | "plain";
+  /**
+   * Só no plain. lg: 16 px com 16 × 4 px de padding (Composer, Figma 1:6383). md: 13 px com 6 px
+   * de padding, alinhado ao TextInput plain (Composer de criação, Figma 26:6881).
+   */
+  size?: "md" | "lg";
+  /**
+   * Cresce com o texto (field-sizing: content) até 288 px e depois rola; sem ele, a altura vem
+   * de rows. Onde o navegador não tem field-sizing, fica na altura de rows e rola.
+   */
+  autoGrow?: boolean;
   ref?: Ref<HTMLTextAreaElement>;
 };
 
@@ -140,6 +174,8 @@ export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 export function TextArea({
   invalid,
   variant = "default",
+  size = "lg",
+  autoGrow = false,
   rows = 3,
   className,
   ...rest
@@ -152,8 +188,12 @@ export function TextArea({
         field,
         variant === "default"
           ? cn(box, "block w-full resize-y px-3 py-1.5 focus-field disabled:opacity-disabled")
-          : "block w-full resize-none bg-transparent px-4 py-1 text-body-lg disabled:opacity-disabled",
+          : cn(
+              "block w-full resize-none bg-transparent disabled:opacity-disabled",
+              size === "md" ? "p-1.5 text-body-md" : "px-4 py-1 text-body-lg",
+            ),
         variant === "default" && isInvalid && "border-field-danger",
+        autoGrow && "field-sizing-content max-h-72 resize-none overflow-y-auto",
         className,
       )}
       {...rest}

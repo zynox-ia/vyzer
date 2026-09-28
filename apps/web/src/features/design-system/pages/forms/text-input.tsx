@@ -200,6 +200,19 @@ export function Page() {
             description: "Erro fora de um Field; dentro dele vem do error.",
           },
           {
+            name: "variant",
+            type: '"default" | "plain"',
+            default: '"default"',
+            description:
+              "plain: sem borda nem fundo, 13 px com 6 px de padding, dentro de um contêiner que mostra o foco (Creation Composer). size, icon e trailing não se aplicam.",
+          },
+          {
+            name: "heading",
+            type: "boolean",
+            default: "false",
+            description: "Só no plain: texto de título, 16 px/500 (nome no Creation Composer).",
+          },
+          {
             name: "…",
             type: "InputHTMLAttributes",
             description: "value, onChange, placeholder, readOnly etc.",

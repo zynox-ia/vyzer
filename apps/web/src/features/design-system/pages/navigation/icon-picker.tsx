@@ -106,7 +106,18 @@ export function Page() {
             description:
               "Emojis frequentes ({ emoji, label }), mostrados acima da lista sem busca. O histórico vem de quem usa o picker.",
           },
-          { name: "children", type: "ReactElement", description: "Gatilho." },
+          {
+            name: "children",
+            type: "ReactElement",
+            description:
+              "Gatilho. Sem ele, o botão de ícone padrão: quadrado de 28 px, raio 4, fundo bg-pressed e o valor atual (Figma 26:6865).",
+          },
+          {
+            name: "triggerLabel",
+            type: "string",
+            default: '"Choose icon"',
+            description: "Nome acessível do botão de ícone padrão.",
+          },
           {
             name: "ProjectIcon",
             type: "componente",

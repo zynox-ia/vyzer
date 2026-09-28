@@ -412,12 +412,27 @@ function ProjectLineIcon({
 }
 
 export type IconPickerProps = Omit<IconPickerPanelProps, "onDone"> & {
-  children: ReactElement;
+  /** Gatilho. Sem ele, o botão de ícone padrão mostra o valor atual. */
+  children?: ReactElement;
+  /** Nome acessível do botão de ícone padrão (sem children). */
+  triggerLabel?: string;
   portal?: boolean;
 };
 
+/**
+ * Botão de ícone padrão (Figma 26:6865, "Choose icon"): quadrado de 28 px, raio 4, fundo
+ * translúcido (bg-pressed) e o ícone ou emoji atual; o hover só soma a camada bg-hover.
+ */
+const iconTrigger =
+  "inline-flex size-control-md shrink-0 items-center justify-center rounded-xs bg-pressed transition-[background-image] duration-fast ease-standard select-none focus-line hovered:[background-image:linear-gradient(var(--bg-hover),var(--bg-hover))]";
+
 /** Abre o IconPickerPanel num Popover; trocar a cor não fecha, escolher um ícone ou emoji fecha. */
-export function IconPicker({ children, portal = true, ...panel }: IconPickerProps) {
+export function IconPicker({
+  children,
+  triggerLabel = "Choose icon",
+  portal = true,
+  ...panel
+}: IconPickerProps) {
   const [open, setOpen] = useState(false);
   const content = (
     <Popover.Content
@@ -431,7 +446,13 @@ export function IconPicker({ children, portal = true, ...panel }: IconPickerProp
   );
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger asChild>{children}</Popover.Trigger>
+      <Popover.Trigger asChild>
+        {children ?? (
+          <button type="button" aria-label={triggerLabel} className={iconTrigger}>
+            {panel.value && <ProjectIcon value={panel.value} />}
+          </button>
+        )}
+      </Popover.Trigger>
       {portal ? <Popover.Portal>{content}</Popover.Portal> : content}
     </Popover.Root>
   );

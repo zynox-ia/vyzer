@@ -150,6 +150,27 @@ export function Page() {
           { name: "rows", type: "number", default: "3", description: "Altura inicial em linhas." },
           { name: "invalid", type: "boolean", description: "Erro fora de um Field." },
           {
+            name: "variant",
+            type: '"default" | "plain"',
+            default: '"default"',
+            description:
+              "plain: sem borda nem fundo, dentro de um contêiner que mostra o foco (Composer, Creation Composer).",
+          },
+          {
+            name: "size",
+            type: '"md" | "lg"',
+            default: '"lg"',
+            description:
+              "Só no plain. lg: 16 px, 16 × 4 px de padding (Composer). md: 13 px, 6 px de padding (Creation Composer).",
+          },
+          {
+            name: "autoGrow",
+            type: "boolean",
+            default: "false",
+            description:
+              "Cresce com o texto (field-sizing: content) até 288 px e depois rola. No Firefox, que não tem field-sizing, fica na altura de rows.",
+          },
+          {
             name: "…",
             type: "TextareaHTMLAttributes",
             description: "value, onChange, placeholder etc.",

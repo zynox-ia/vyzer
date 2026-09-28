@@ -119,6 +119,20 @@ export const FREQUENT_EMOJIS: FrequentEmoji[] = [
   { emoji: "❓", label: "Red question mark" },
 ];
 
+/**
+ * Times (o "Zynox" do breadcrumb de 1:7477, chave ZYN no New issue, 27:19386). O logo próprio do
+ * Zynox (arco com seta) vira o ícone lucide Navigation em ciano, como nos ícones de projeto; o
+ * gatilho mostra a chave (hint).
+ */
+export const TEAMS: ListOption[] = [
+  {
+    value: "zynox",
+    label: "Zynox",
+    hint: "ZYN",
+    icon: <ProjectIcon value={{ kind: "icon", name: "Navigation", color: "cyan" }} />,
+  },
+];
+
 export const INITIAL_LABELS: LabelItem[] = [
   { value: "bug", label: "Bug", color: "red" },
   { value: "feature", label: "Feature", color: "purple" },

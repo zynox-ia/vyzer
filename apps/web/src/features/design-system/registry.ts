@@ -148,6 +148,11 @@ export const sections: DocSection[] = [
         Page: page(() => import("./pages/forms/toggle-group")),
       },
       { slug: "composer", title: "Composer", Page: page(() => import("./pages/forms/composer")) },
+      {
+        slug: "creation-composer",
+        title: "Creation Composer",
+        Page: page(() => import("./pages/forms/creation-composer")),
+      },
     ],
   },
   {
