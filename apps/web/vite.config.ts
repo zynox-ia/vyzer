@@ -1,10 +1,12 @@
 import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
+import { emojibaseData } from "@vyzer/design-system/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  // emojibaseData: dados do Emoji Picker servidos pelo próprio app (sem CDN externo)
+  plugins: [react(), tailwindcss(), emojibaseData()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },

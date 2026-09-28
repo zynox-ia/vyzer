@@ -14,7 +14,11 @@
     "./icons": "./src/icons/index.ts",
     "./font-coverage": "./src/lib/font-coverage.ts",
     "./components": "./src/components/index.ts",
-    "./date": "./src/lib/date-value.ts"
+    "./date": "./src/lib/date-value.ts",
+    "./vite": {
+      "types": "./vite-plugin.d.ts",
+      "default": "./vite-plugin.js"
+    }
   },
   "scripts": {
     "build": "tsc -b --noEmit",
@@ -23,6 +27,8 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "emojibase-data": "^17.0.0",
+    "frimousse": "^0.4.0",
     "lucide-react": "^1.48.0",
     "radix-ui": "^1.6.7",
     "tailwind-merge": "^3.7.0"

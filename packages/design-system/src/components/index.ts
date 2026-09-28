@@ -2,7 +2,6 @@ export {
   Button,
   IconButton,
   type ButtonProps,
-  type ButtonSize,
   type ButtonVariant,
   type IconButtonProps,
   type IconButtonSize,
@@ -105,12 +104,20 @@ export {
   IconPicker,
   IconPickerPanel,
   ProjectIcon,
+  type FrequentEmoji,
   type IconColor,
   type IconPickerPanelProps,
   type IconPickerProps,
   type ProjectIconValue,
 } from "./icon-picker";
-export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
+export {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  type TabsListProps,
+  type TabsVariant,
+} from "./tabs";
 export {
   LabelPicker,
   LabelPickerPanel,
@@ -119,3 +126,29 @@ export {
   type LabelPickerProps,
 } from "./label-picker";
 export { ColorArea, HueSlider, type ColorAreaProps, type HueSliderProps } from "./custom-color";
+export {
+  FilterMenu,
+  FilterSearch,
+  type FilterCategory,
+  type FilterMenuProps,
+  type FilterValue,
+} from "./filter-menu";
+export {
+  DisplayOptions,
+  DisplayOptionsFooter,
+  DisplayOptionsHeading,
+  DisplayOptionsPanel,
+  DisplayOptionsRow,
+  DisplayOptionsSection,
+  DisplayProperties,
+  type DisplayOptionsProps,
+  type DisplayPropertiesProps,
+  type DisplayProperty,
+} from "./display-options";
+export {
+  FilterBreakdown,
+  type BreakdownGroup,
+  type BreakdownItem,
+  type FilterBreakdownProps,
+} from "./filter-breakdown";
+export { Avatar, type AvatarProps, type AvatarSize } from "./avatar";

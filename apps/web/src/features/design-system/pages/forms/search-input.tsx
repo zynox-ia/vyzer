@@ -5,7 +5,7 @@ import { Field, Segmented } from "../../kit/controls";
 import { StatesGrid } from "../../kit/states";
 
 function usePlayground() {
-  const [size, setSize] = useState<InputSize>("md");
+  const [size, setSize] = useState<InputSize>("lg");
   return {
     preview: (
       <div className="w-72">
@@ -23,7 +23,7 @@ function usePlayground() {
           label="size"
           value={size}
           onChange={setSize}
-          options={(["sm", "md", "lg", "xl"] as InputSize[]).map((s) => ({ value: s, label: s }))}
+          options={(["lg", "xl"] as InputSize[]).map((s) => ({ value: s, label: s }))}
         />
       </Field>
     ),
@@ -42,7 +42,7 @@ export function Page() {
         playground,
         showcase: (
           <div className="flex max-w-72 flex-col gap-3">
-            {(["sm", "md", "lg", "xl"] as InputSize[]).map((s) => (
+            {(["lg", "xl"] as InputSize[]).map((s) => (
               <SearchInput
                 key={s}
                 aria-label={`Search ${s}`}
@@ -108,13 +108,16 @@ export function Page() {
           {
             name: "size",
             type: "InputSize",
-            default: '"md"',
-            description: "24 · 28 · 32 · 40 px.",
+            default: '"lg"',
+            description: "32 · 40 px.",
           },
           { name: "…", type: "TextInputProps", description: "Exceto icon, trailing e type." },
         ],
         decisions: [
-          { decision: "Busca de 28 px com raio 8", rule: "Figma: busca da sidebar 28 × r8" },
+          {
+            decision: "Busca de 32 px com raio 8",
+            rule: "Padding de campo do Figma 13:2010 (a busca da sidebar tem 28 × r8)",
+          },
           { decision: "Esc limpa", rule: "§7 lei de Jakob (padrão do Linear)" },
           { decision: "Botão de limpar só com texto", rule: "§7 divulgação progressiva" },
         ],

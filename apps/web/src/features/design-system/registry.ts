@@ -65,6 +65,11 @@ export const sections: DocSection[] = [
         Page: page(() => import("./pages/visual-assets/status-icon")),
       },
       {
+        slug: "project-status-icon",
+        title: "Project status icon",
+        Page: page(() => import("./pages/visual-assets/project-status-icon")),
+      },
+      {
         slug: "priority-icon",
         title: "Priority icon",
         Page: page(() => import("./pages/visual-assets/priority-icon")),
@@ -75,6 +80,7 @@ export const sections: DocSection[] = [
     slug: "components",
     title: "Components",
     items: [
+      { slug: "avatar", title: "Avatar", Page: page(() => import("./pages/components/avatar")) },
       { slug: "button", title: "Button", Page: page(() => import("./pages/components/button")) },
       {
         slug: "icon-button",
@@ -164,6 +170,21 @@ export const sections: DocSection[] = [
         Page: page(() => import("./pages/navigation/icon-picker")),
       },
       { slug: "tabs", title: "Tabs", Page: page(() => import("./pages/navigation/tabs")) },
+      {
+        slug: "filter-menu",
+        title: "Filter Menu",
+        Page: page(() => import("./pages/navigation/filter-menu")),
+      },
+      {
+        slug: "display-options",
+        title: "Display Options",
+        Page: page(() => import("./pages/navigation/display-options")),
+      },
+      {
+        slug: "filter-breakdown",
+        title: "Filter Breakdown",
+        Page: page(() => import("./pages/navigation/filter-breakdown")),
+      },
     ],
   },
   { slug: "feedback", title: "Feedback", plannedIn: "Fase 4 (Feedback)", items: [] },

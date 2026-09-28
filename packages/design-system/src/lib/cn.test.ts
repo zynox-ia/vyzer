@@ -56,10 +56,14 @@ describe("cn", () => {
 
   it("mantém cor de fundo e degradê juntos (botão primário)", () => {
     const gradient = "[background-image:linear-gradient(180deg,var(--a),var(--b))]";
-    expect(cn("bg-inverse", gradient, "shadow-glow")).toBe(`bg-inverse ${gradient} shadow-glow`);
-    expect(cn("shadow-sm", "shadow-glow")).toBe("shadow-glow");
-    expect(cn("hovered:shadow-glow", "hovered:shadow-glow-danger")).toBe(
-      "hovered:shadow-glow-danger",
+    expect(cn("bg-inverse", gradient, "shadow-raised")).toBe(
+      `bg-inverse ${gradient} shadow-raised`,
+    );
+    expect(cn("shadow-sm", "shadow-raised")).toBe("shadow-raised");
+    // Primário chapado: a cor do botão e a do hover são tokens próprios.
+    expect(cn("bg-inverse", "bg-primary-button")).toBe("bg-primary-button");
+    expect(cn("bg-primary-button", "hovered:bg-primary-button-hover")).toBe(
+      "bg-primary-button hovered:bg-primary-button-hover",
     );
   });
 

@@ -128,8 +128,12 @@ export function Page() {
           },
           { decision: "Rótulo 12 px Regular", rule: "Figma 1:3297 (12 Regular #e4e5e7)" },
           {
-            decision: "Mesmo hover do Button (1 px + brilho)",
+            decision: "Mesmo hover do Button: só o fundo muda (bg-hover), como no Linear",
             rule: "§11 similaridade: mesma função, mesma aparência",
+          },
+          {
+            decision: "Foco por teclado igual ao hover, sem terracota nem halo",
+            rule: "Pedido do responsável (mesmo padrão dos campos e do Select)",
           },
         ],
       }}

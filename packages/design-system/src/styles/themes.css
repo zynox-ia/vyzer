@@ -4,7 +4,6 @@
  *
  * Atributos no <html> (ou em qualquer contêiner):
  *   data-theme     = dark (padrão) | light
- *   data-focus     = b (padrão) | a          indicador de foco (ADR-0013)
  *   data-selection = beige (padrão) | neutral  tom de seleção do tema claro (decisão pendente)
  *   data-density   = comfortable (padrão) | compact
  */
@@ -30,23 +29,20 @@
   --bg-inverse-pressed: var(--vz-warm-250);
   --bg-scrim: rgb(var(--vz-shadow-ink) / 0.7);
 
-  /* Botão primário: degradê vertical de 3 tons, do claro ao cinza (luz vem de cima, §9) */
-  --primary-stop-1: var(--vz-warm-50);
-  --primary-stop-2: var(--vz-warm-150);
-  --primary-stop-3: var(--vz-warm-250);
-  /* Brilho por trás do primário no hover: halo claro no escuro */
-  --glow: 0 4px 16px rgb(var(--vz-overlay-light) / 0.22);
+  /* Botão primário chapado (pedido do responsável: #f0eee6); hover um degrau abaixo */
+  --bg-primary-button: var(--vz-warm-100);
+  --bg-primary-button-hover: var(--vz-warm-150);
   /* Relevo (Figma 1:6366, 1:6404): anel de 1 px a 9% + contato curto. Borda de chips e botões */
   --raised:
     0 0 0 1px rgb(var(--vz-overlay-light) / 0.09), 0 0.5px 1px 1px rgb(var(--vz-shadow-black) / 0.3);
-  /* Secondary: relevo + metade da opacidade do brilho; danger: brilho na própria cor */
-  --glow-secondary: var(--raised), 0 4px 16px rgb(var(--vz-overlay-light) / 0.11);
-  --glow-danger: 0 4px 16px color-mix(in srgb, var(--st-danger) 40%, transparent);
 
   /* Estados como camadas translúcidas: funcionam sobre qualquer superfície (skill §12) */
   --bg-hover: rgb(var(--vz-overlay-light) / 0.04);
   --bg-selected: rgb(var(--vz-overlay-light) / 0.07);
   --bg-pressed: rgb(var(--vz-overlay-light) / 0.1);
+  /* Barra de rolagem dos componentes: discreta, um pouco mais visível no hover */
+  --scrollbar-thumb: rgb(var(--vz-overlay-light) / 0.12);
+  --scrollbar-thumb-hover: rgb(var(--vz-overlay-light) / 0.2);
 
   /* Texto e ícones */
   --fg-primary: var(--vz-warm-50);
@@ -65,6 +61,8 @@
   --line-control: var(--vz-warm-550);
   /* Hover de controle: um degrau mais forte que a borda de controle */
   --line-control-hover: var(--vz-warm-500);
+  /* Borda de campo de texto (input, text area, select): Figma 13:2010, #2f3033 em 1 px */
+  --line-field: var(--vz-warm-800);
 
   /* Acento terracota: foco, indicador ativo da sidebar, contadores de destaque */
   --accent: var(--vz-terracotta-dark);
@@ -117,19 +115,16 @@
   --bg-inverse-pressed: var(--vz-warm-600);
   --bg-scrim: rgb(var(--vz-shadow-ink) / 0.25);
 
-  /* No claro o primário é escuro: grafite no topo até o quase preto */
-  --primary-stop-1: var(--vz-warm-750);
-  --primary-stop-2: var(--vz-warm-850);
-  --primary-stop-3: var(--vz-warm-950);
-  /* No claro o brilho vira uma sombra suave do próprio botão */
-  --glow: 0 4px 16px rgb(var(--vz-overlay-ink) / 0.28);
+  /* No claro, o creme some no fundo: o primário fica no grafite invertido, também chapado */
+  --bg-primary-button: var(--vz-warm-950);
+  --bg-primary-button-hover: var(--vz-warm-750);
   --raised:
     0 0 0 1px rgb(var(--vz-overlay-ink) / 0.1), 0 0.5px 1px 1px rgb(var(--vz-overlay-ink) / 0.08);
-  --glow-secondary: var(--raised), 0 4px 16px rgb(var(--vz-overlay-ink) / 0.14);
-  --glow-danger: 0 4px 16px color-mix(in srgb, var(--st-danger) 40%, transparent);
 
   --bg-hover: rgb(var(--vz-overlay-ink) / 0.04);
   --bg-pressed: rgb(var(--vz-overlay-ink) / 0.1);
+  --scrollbar-thumb: rgb(var(--vz-overlay-ink) / 0.15);
+  --scrollbar-thumb-hover: rgb(var(--vz-overlay-ink) / 0.25);
 
   --fg-primary: var(--vz-warm-950);
   --fg-secondary: var(--vz-warm-600);
@@ -143,6 +138,8 @@
   --line-strong: var(--vz-warm-300);
   --line-control: var(--vz-warm-550);
   --line-control-hover: var(--vz-warm-600);
+  /* Espelho do escuro: um degrau de hairline forte */
+  --line-field: var(--vz-warm-300);
 
   --accent: var(--vz-terracotta-light);
   --accent-text: var(--vz-terracotta-light-text);
@@ -171,6 +168,14 @@
   --shadow-alpha: 0.1;
 }
 
+/* Hover e foco de campo (iguais, pedido do responsável): a borda de campo 10% mais clara. Anda em
+ * direção ao texto, então no claro fica 10% mais escura. Declarado em cada tema para usar a
+ * borda e o texto do tema mais próximo. */
+:root,
+[data-theme] {
+  --line-field-active: color-mix(in srgb, var(--line-field), var(--fg-primary) 10%);
+}
+
 /* Seleção no claro: bege (atual, padrão até a decisão na página QA) ou neutro quente */
 [data-theme="light"],
 [data-theme="light"] [data-selection="beige"],
@@ -182,23 +187,6 @@
 [data-theme="light"] [data-selection="neutral"],
 [data-theme="light"][data-selection="neutral"] {
   --bg-selected: rgb(var(--vz-overlay-ink) / 0.08);
-}
-
-/* ---------- Foco (ADR-0013): B é o padrão; A só para comparação ----------
- * Só parâmetros aqui; a cor é calculada no próprio elemento (base.css, focus-ring), para
- * seguir o --accent do tema mais próximo (temas aninhados). */
-
-:root,
-[data-focus="b"] {
-  /* Borda de 1 px no terracota cheio + halo externo de 2 px a 25% */
-  --focus-alpha: 100%;
-  --focus-halo-size: 2px;
-}
-
-[data-focus="a"] {
-  /* Só a borda de 1 px, no terracota a 25% (medido em Foundations → Colors: não atinge 3:1) */
-  --focus-alpha: 25%;
-  --focus-halo-size: 0px;
 }
 
 /* ---------- Densidade (skill §13: muda espaço, não fonte) ---------- */
@@ -222,6 +210,14 @@
   --density-cell-x: 8px;
 }
 
+/* ---------- Barra de rolagem (pedido do responsável: minimalista) ---------- */
+
+:root {
+  --scrollbar-size: 5px;
+  /* Recuo do trilho no topo e na base: encurta a barra (o polegar segue a proporção do trilho) */
+  --scrollbar-inset: 64px;
+}
+
 /* ---------- Movimento (skill §8) ---------- */
 
 :root {
@@ -233,8 +229,6 @@
   --motion-slow-exit: 180ms;
   --motion-shift: 4px;
   --motion-scale: 0.97;
-  /* Subida do botão primário no hover (pedido do responsável: 1 px, ajuste óptico da §1) */
-  --motion-lift: 1px;
   --tooltip-delay: 500ms;
 }
 
@@ -248,6 +242,5 @@
     --motion-slow-exit: 100ms;
     --motion-shift: 0px;
     --motion-scale: 1;
-    --motion-lift: 0px;
   }
 }

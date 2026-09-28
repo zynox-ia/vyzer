@@ -1,5 +1,6 @@
 import { Field as FormField, Select, type ListOption } from "@vyzer/design-system/components";
 import { PriorityIcon } from "@vyzer/design-system/icons";
+import { CalendarRange } from "lucide-react";
 import { ComponentPage } from "../../kit/component-page";
 import { StatesGrid } from "../../kit/states";
 
@@ -13,10 +14,12 @@ const priorities: ListOption<P>[] = [
   { value: "low", label: "Low", icon: <PriorityIcon priority="low" /> },
 ];
 
+const cycleIcon = <CalendarRange className="size-4 text-secondary" />;
+
 const cycles: ListOption[] = [
-  { value: "1", label: "1 week" },
-  { value: "2", label: "2 weeks" },
-  { value: "3", label: "3 weeks" },
+  { value: "1", label: "1 week", icon: cycleIcon },
+  { value: "2", label: "2 weeks", icon: cycleIcon },
+  { value: "3", label: "3 weeks", icon: cycleIcon },
 ];
 
 export function Page() {
@@ -62,6 +65,13 @@ export function Page() {
               options={priorities}
               defaultValue="urgent"
             />
+            <Select
+              trigger="button"
+              aria-label="Cycle button"
+              className="w-30"
+              options={cycles}
+              defaultValue="2"
+            />
           </div>
         ),
         states: (
@@ -97,8 +107,9 @@ export function Page() {
         ),
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
-            Gatilho field: caixa de 28 px como o Text Input, com chevron. Gatilho chip: Property
-            Button. Popover de raio 12 com linhas de 32 px, destaque de raio 8 e marcação à direita.
+            Gatilho field: caixa de 32 px como o Text Input, na largura do conteúdo, com chevron.
+            Gatilho chip: Property Button. Popover de raio 12 com linhas de 32 px, destaque de raio
+            8 e marcação à direita.
           </p>
         ),
         keyboard: [
@@ -127,9 +138,10 @@ export function Page() {
           { name: "onValueChange", type: "(value) => void", description: "Mudança." },
           {
             name: "trigger",
-            type: '"field" | "chip"',
+            type: '"field" | "chip" | "button"',
             default: '"field"',
-            description: "Aparência do gatilho.",
+            description:
+              "Aparência do gatilho. button: 24 px, raio 8, com chevron, para Display Options.",
           },
           { name: "placeholder", type: "string", default: '"Select…"', description: "Sem valor." },
           {
@@ -159,6 +171,35 @@ export function Page() {
           {
             decision: "Gatilho field com as mesmas alturas do Text Input",
             rule: "§6 alturas iguais entre equivalentes",
+          },
+          {
+            decision: "Gatilho field: borda border-field, padding 12 px, foco sem acento",
+            rule: "Figma 13:2010 (#2f3033, pl 12); foco pedido pelo responsável",
+          },
+          {
+            decision: "Gatilho field e chip na largura do conteúdo",
+            rule: "Pedido do responsável; §14 a largura sugere o tamanho do conteúdo",
+          },
+          {
+            decision: "Lista e opções sem o halo de foco; o destaque é só o fundo bg-selected",
+            rule: "Pedido do responsável: o halo terracota poluía a lista",
+          },
+          {
+            decision: "Foco do chip igual ao hover (fundo de hover), sem terracota nem halo",
+            rule: "Pedido do responsável (mesmo padrão do Property Button)",
+          },
+          {
+            decision: "Gatilho chip com padding 8 px à esquerda e 10 px à direita",
+            rule: "Pedido do responsável: +2 px sobre o Figma (6 / 8) para dar respiro",
+          },
+          {
+            decision:
+              "Gatilho button: 24 px, raio 8, relevo, 12 px Regular, chevron de 12 e foco em linha de 1 px",
+            rule: "Figma 18:757 (Display Options); foco do sistema (focus-ring)",
+          },
+          {
+            decision: "Slot de ícone de 16 px só quando alguma opção da lista tem ícone",
+            rule: "Pedido do responsável: lista só de texto sem recuo vazio (vale também para o Combobox)",
           },
         ],
       }}

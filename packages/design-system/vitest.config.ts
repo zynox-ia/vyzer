@@ -3,12 +3,13 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
+import { emojibaseData } from "./vite-plugin.js";
 
 /** Componentes do design system num Chromium real (Playwright): interação e acessibilidade. */
 export default defineConfig({
   // Raiz no pacote: dependências resolvem a partir daqui, não da raiz do monorepo.
   root: fileURLToPath(new URL(".", import.meta.url)),
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), emojibaseData()],
   // Pré-otimiza tudo que os testes importam: sem isso o Vite recarrega no meio da execução.
   optimizeDeps: {
     include: [
@@ -21,6 +22,7 @@ export default defineConfig({
       "vitest-browser-react",
       "clsx",
       "tailwind-merge",
+      "frimousse",
     ],
   },
   test: {

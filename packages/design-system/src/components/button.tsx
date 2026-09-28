@@ -1,5 +1,6 @@
 /**
- * Button e IconButton (Figma: pílulas de 24 e 28 px, label 12 px Medium, padding 8–10 px).
+ * Button e IconButton (Figma: pílulas de 28 px, label 12 px Medium, padding 10 px). O Button
+ * tem um só tamanho: 28 px com 12 px de padding (pedido do responsável, como nas pílulas).
  * Primário invertido (ADR-0011), secundário em superfície de controle com hairline, ghost
  * transparente e danger. Hover e pressionado como camadas translúcidas (skill §12).
  */
@@ -10,63 +11,46 @@ import { Icon } from "../icons/Icon";
 import { cn } from "../lib/cn";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-export type ButtonSize = "sm" | "md" | "lg" | "xl";
+
+/*
+ * Foco por teclado (focus-line): o mesmo dos campos, 1 px por dentro no tom de hover de campo,
+ * sem acento nem halo (pedido do responsável). No primário fica por fora (focus-ring-outside):
+ * por dentro, a linha some sobre o fundo claro do botão.
+ */
 
 /** Camadas de hover e pressionado sobre qualquer fundo (a cor do fundo não muda). */
 const layers =
   "hovered:[background-image:linear-gradient(var(--bg-hover),var(--bg-hover))] pressed:[background-image:linear-gradient(var(--bg-pressed),var(--bg-pressed))]";
 
 /*
- * Hover de todas as variantes do Button: sobe 1 px com brilho por trás e volta ao pressionar.
- * O ::after cobre o espaço deixado embaixo, para o hover não piscar ao subir.
- * O Icon Button não sobe (fica em barras de ferramentas densas).
+ * Hover como no Linear: só o fundo muda, sem subir nem brilhar. Transição curta de cor
+ * (duration-fast), a mesma em todas as variantes e no Icon Button.
  */
-const lift = cn(
-  "transition-[color,background-color,translate,box-shadow] duration-fast ease-standard",
-  "hovered:-translate-y-(--motion-lift) hovered:shadow-glow pressed:translate-y-0 pressed:shadow-none",
-  "after:absolute after:inset-x-0 after:top-full after:h-(--motion-lift) after:content-['']",
-);
+const hover = "transition-[color,background-color,background-image] duration-fast ease-standard";
 
 const variantClass: Record<ButtonVariant, string> = {
-  /* Degradê de 3 tons, o mais claro no topo. */
-  primary:
-    "bg-inverse [background-image:linear-gradient(180deg,var(--primary-stop-1),var(--primary-stop-2),var(--primary-stop-3))] text-inverse focus-ring-outside",
+  // Chapado (#f0eee6 no escuro, grafite no claro); o hover desce um degrau.
+  primary: "bg-primary-button text-inverse focus-ring-outside hovered:bg-primary-button-hover",
   // Figma: fundo de controle com relevo (anel de 1 px + contato), sem borda sólida.
-  secondary: cn(
-    "bg-control-strong text-primary shadow-raised hovered:shadow-glow-secondary pressed:shadow-raised",
-    layers,
-  ),
+  secondary: cn("bg-control-strong text-primary shadow-raised", layers),
   ghost: cn("text-primary", layers),
-  danger: cn("bg-danger-subtle text-danger-strong hovered:shadow-glow-danger", layers),
+  danger: cn("bg-danger-subtle text-danger-strong", layers),
 };
 
 /**
- * Alturas da escala compartilhada (§6). Padding horizontal 10 · 12 · 16 · 20 px: o Figma usa
- * 8 e 10, aumentados a pedido do responsável (≥ +2 px) para dar mais respiro ao rótulo.
+ * Tamanho único: 28 px (h-control-md), padding horizontal de 12 px (o Figma usa 10; +2 px a
+ * pedido do responsável, como nas pílulas), rótulo de 12 px/500 e ícone de 16 px.
  */
-const sizeClass: Record<ButtonSize, string> = {
-  sm: "h-control-sm gap-1 px-2.5 text-label-sm",
-  md: "h-control-md gap-1.5 px-3 text-label-sm",
-  lg: "h-control-lg gap-1.5 px-4 text-label-md",
-  xl: "h-control-xl gap-2 px-5 text-label-md",
-};
+const sizeClass = "h-control-md gap-1.5 px-3 text-label-sm";
 
 /** Com ícone à esquerda, o lado do ícone perde 2 px (Figma: 0/8/0/6). */
-const leadingPad: Record<ButtonSize, string> = {
-  sm: "pl-2",
-  md: "pl-2.5",
-  lg: "pl-3.5",
-  xl: "pl-4.5",
-};
-
-const iconSize = { sm: "xs", md: "sm", lg: "sm", xl: "md" } as const;
+const leadingPad = "pl-2.5";
 
 const base =
-  "relative inline-flex shrink-0 items-center justify-center rounded-full border border-transparent whitespace-nowrap no-underline transition-colors select-none focus-ring disabled:cursor-not-allowed disabled:opacity-disabled aria-disabled:cursor-not-allowed aria-disabled:opacity-disabled";
+  "relative inline-flex shrink-0 items-center justify-center rounded-full border border-transparent whitespace-nowrap no-underline transition-colors select-none focus-line disabled:cursor-not-allowed disabled:opacity-disabled aria-disabled:cursor-not-allowed aria-disabled:opacity-disabled";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
-  size?: ButtonSize;
   /** Ícone à esquerda do rótulo. */
   icon?: LucideIcon;
   /** Ícone à direita (ex.: seta de menu). */
@@ -80,7 +64,6 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({
   variant = "secondary",
-  size = "md",
   icon,
   trailingIcon,
   loading = false,
@@ -98,23 +81,17 @@ export function Button({
   const content: ReactNode = (
     <>
       {leading && (
-        <Icon
-          icon={leading}
-          size={iconSize[size]}
-          className={loading ? "animate-spin" : undefined}
-        />
+        <Icon icon={leading} size="sm" className={loading ? "animate-spin" : undefined} />
       )}
       <span className={spinnerOverLabel ? "opacity-0" : undefined}>{children}</span>
       {trailingIcon && (
         <Icon
           icon={trailingIcon}
-          size={iconSize[size]}
+          size="sm"
           className={spinnerOverLabel ? "opacity-0" : undefined}
         />
       )}
-      {spinnerOverLabel && (
-        <Icon icon={LoaderCircle} size={iconSize[size]} className="absolute animate-spin" />
-      )}
+      {spinnerOverLabel && <Icon icon={LoaderCircle} size="sm" className="absolute animate-spin" />}
     </>
   );
   if (asChild) {
@@ -123,7 +100,7 @@ export function Button({
     return (
       <Slot.Root
         aria-disabled={disabled || undefined}
-        className={cn(base, lift, variantClass[variant], sizeClass[size], className)}
+        className={cn(base, hover, variantClass[variant], sizeClass, className)}
         {...rest}
       >
         {children}
@@ -132,10 +109,10 @@ export function Button({
   }
   const classes = cn(
     base,
-    lift,
+    hover,
     variantClass[variant],
-    sizeClass[size],
-    leading && leadingPad[size],
+    sizeClass,
+    leading && leadingPad,
     className,
   );
   return (

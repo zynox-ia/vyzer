@@ -6,8 +6,8 @@ import { Field, Segmented } from "../../kit/controls";
 import { Code, DocTable } from "../../kit/doc";
 import { StatesGrid } from "../../kit/states";
 
-const SIZES: InputSize[] = ["sm", "md", "lg", "xl"];
-const SIZE_PX: Record<InputSize, number> = { sm: 24, md: 28, lg: 32, xl: 40 };
+const SIZES: InputSize[] = ["lg", "xl"];
+const SIZE_PX: Record<InputSize, number> = { lg: 32, xl: 40 };
 
 function usePlayground() {
   const [size, setSize] = useState<InputSize>("lg");
@@ -157,9 +157,9 @@ export function Page() {
         ),
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
-            Caixa com borda de controle (3:1), fundo de campo, texto 13 px e placeholder em
-            text-placeholder. Ícone opcional à esquerda e conteúdo à direita (botão, atalho), que
-            transformam o campo num Input Group.
+            Caixa com borda de campo (border-field, 1 px), fundo de campo, texto 13 px a 12 px da
+            borda e placeholder em text-placeholder. Ícone opcional à esquerda e conteúdo à direita
+            (botão, atalho), que transformam o campo num Input Group.
           </p>
         ),
         keyboard: [
@@ -184,9 +184,9 @@ export function Page() {
         props: [
           {
             name: "size",
-            type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md"',
-            description: "24 · 28 · 32 · 40 px.",
+            type: '"lg" | "xl"',
+            default: '"lg"',
+            description: "32 · 40 px.",
           },
           { name: "icon", type: "LucideIcon", description: "Ícone à esquerda." },
           {
@@ -212,16 +212,27 @@ export function Page() {
           },
           { decision: "Mesmas alturas do Button", rule: "§6 alturas iguais entre equivalentes" },
           {
-            decision: "Texto 13 px, padding horizontal 8 px",
-            rule: "Figma 13 Regular (p-6 em inputs sem borda); com borda, 8 px pela §1 (8–12 px em controles de 28–32)",
-          },
-          { decision: "Borda border-control (≥ 3:1)", rule: "§3 componentes não textuais" },
-          {
-            decision: "Hover sobe para border-control-hover (um degrau mais forte)",
-            rule: "§12 estados; §4 o estado ativo ganha contraste",
+            decision: "Só lg (32 px, padrão) e xl (40 px); sem sm e md",
+            rule: "Figma 13:2010: texto de 20 px + 6 px em cima e embaixo pede 32 px; decisão do responsável",
           },
           {
-            decision: "Erro: borda danger + mensagem com ícone",
+            decision: "Texto 13 px, padding 12 px à esquerda; 8 px à direita do botão interno",
+            rule: "Figma 13:2010 (pl 12, pr 8, py 3 em volta do botão de 24: altura 32 = size lg)",
+          },
+          {
+            decision: "Borda border-field de 1 px (warm-800 no escuro)",
+            rule: "Figma 13:2010 (#2f3033, 1 px); abaixo de 3:1 da §3 por pedido do responsável",
+          },
+          {
+            decision: "Foco sem acento nem halo, no mesmo tom do hover (borda 10% mais clara)",
+            rule: "Pedido do responsável; substitui o foco B da ADR-0013 nos campos",
+          },
+          {
+            decision: "Hover em border-field-hover (borda de campo 10% mais clara)",
+            rule: "Pedido do responsável: o hover anterior chamava atenção demais",
+          },
+          {
+            decision: "Erro: borda field-danger (danger a 50% sobre a borda) + mensagem com ícone",
             rule: "§3 cor nunca é o único indicador; §14",
           },
           {

@@ -10,6 +10,7 @@ import { Field, Segmented } from "../../kit/controls";
 import { Code, DocTable } from "../../kit/doc";
 
 const TYPES: { value: StatusType; label: string; example: string }[] = [
+  { value: "triage", label: "Triage", example: "Triage" },
   { value: "backlog", label: "Backlog", example: "Backlog" },
   { value: "unstarted", label: "Unstarted", example: "Todo" },
   { value: "started", label: "Started", example: "In Progress" },
@@ -134,7 +135,8 @@ export function Page() {
           <p className="max-w-prose text-body-md text-secondary">
             Desenho de 14 px centralizado num quadro de 16 px (como no Figma). Anel de 1,5 px para
             unstarted e started; setor preenchido a partir das 12 h para o progresso; círculo cheio
-            com marca para completed, canceled e duplicate; anel tracejado para backlog.
+            com marca para triage, completed, canceled e duplicate; anel tracejado para backlog.
+            Status de projeto usa outro ícone (Project status icon).
           </p>
         ),
         keyboard: ["Não recebe foco."],
@@ -181,7 +183,7 @@ export function Page() {
           { name: "label", type: "string", description: "Rótulo acessível. Sem ele, decorativo." },
         ],
         decisions: [
-          { decision: "Desenhos exatos do Figma", rule: "Figma nó 6:1543" },
+          { decision: "Desenhos exatos do Figma", rule: "Figma nó 6:1543; triage em 22:1954" },
           { decision: "Uma forma por tipo", rule: "§3 cor nunca é o único indicador (WCAG 1.4.1)" },
           {
             decision: "16 px ao lado de texto de 13 px, gap 6 px",

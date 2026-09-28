@@ -8,6 +8,7 @@ import {
 } from "@vyzer/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
+import { FREQUENT_EMOJIS } from "../../kit/project-data";
 
 function LiveIconPicker() {
   const [value, setValue] = useState<ProjectIconValue>({
@@ -16,7 +17,7 @@ function LiveIconPicker() {
     color: "grey",
   });
   return (
-    <IconPicker value={value} onValueChange={setValue}>
+    <IconPicker value={value} onValueChange={setValue} frequentEmojis={FREQUENT_EMOJIS}>
       <PropertyButton leading={<ProjectIcon value={value} />}>Icon</PropertyButton>
     </IconPicker>
   );
@@ -27,7 +28,7 @@ function StaticPanel({ initial }: { initial: ProjectIconValue }) {
   const [value, setValue] = useState(initial);
   return (
     <PopoverSurface className="rounded-control">
-      <IconPickerPanel value={value} onValueChange={setValue} />
+      <IconPickerPanel value={value} onValueChange={setValue} frequentEmojis={FREQUENT_EMOJIS} />
     </PopoverSurface>
   );
 }
@@ -99,6 +100,12 @@ export function Page() {
             type: "(value: ProjectIconValue) => void",
             description: "Escolha (fecha o popover).",
           },
+          {
+            name: "frequentEmojis",
+            type: "FrequentEmoji[]",
+            description:
+              "Emojis frequentes ({ emoji, label }), mostrados acima da lista sem busca. O histórico vem de quem usa o picker.",
+          },
           { name: "children", type: "ReactElement", description: "Gatilho." },
           {
             name: "ProjectIcon",
@@ -109,12 +116,22 @@ export function Page() {
         decisions: [
           { decision: "Abas Icons e Emojis", rule: "Figma 1:1401; componente Tabs" },
           {
+            decision:
+              "Emojis: Frequently used acima da lista e seletor de tom de pele ao lado da busca",
+            rule: "Figma 1:1401 (seção Frequently used); tom de pele pelo Frimousse, pedido do responsável",
+          },
+          {
             decision: "Nove cores de ícone, as mesmas dos labels",
             rule: "Figma 1:1401 (amostras de 22 px); ColorDot lg",
           },
           {
-            decision: "Ícones lucide e emojis Unicode nativos",
-            rule: "ADR-0013 (lucide é a biblioteca de ícones); divergência registrada em .figma/",
+            decision:
+              "Todos os ~1.850 ícones lucide: 371 curados em 15 categorias e os demais em More icons, carregados sob demanda",
+            rule: "ADR-0013 (lucide é a biblioteca de ícones); curadoria ampliada pedida pelo responsável",
+          },
+          {
+            decision: "Emojis: conjunto Unicode completo pelo Frimousse, com lista virtualizada",
+            rule: "Dependência aprovada pelo responsável; dados Emojibase servidos pelo próprio app (sem CDN)",
           },
           {
             decision:

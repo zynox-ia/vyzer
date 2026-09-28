@@ -41,6 +41,7 @@ import {
   LEADS,
   PRIORITIES,
   PROJECT_OPTIONS,
+  FREQUENT_EMOJIS,
   PROJECT_STATUSES,
   type Priority,
   type ProjectStatus,
@@ -95,7 +96,7 @@ function PropertyRow() {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <IconPicker value={icon} onValueChange={setIcon}>
+      <IconPicker value={icon} onValueChange={setIcon} frequentEmojis={FREQUENT_EMOJIS}>
         <PropertyButton leading={<ProjectIcon value={icon} />}>Icon</PropertyButton>
       </IconPicker>
       <Combobox
@@ -103,7 +104,8 @@ function PropertyRow() {
         value={status}
         onValueChange={setStatus}
         options={PROJECT_STATUSES}
-        searchPlaceholder="Change project status…"
+        searchPlaceholder="Change status…"
+        shortcut={["S"]}
         width="sm"
       >
         <PropertyButton leading={currentStatus?.icon}>{currentStatus?.label}</PropertyButton>
@@ -126,7 +128,7 @@ function PropertyRow() {
         value={lead}
         onValueChange={setLead}
         options={LEADS}
-        searchPlaceholder="Assign lead…"
+        searchable={false}
         numberFrom={0}
       >
         <PropertyButton leading={<UserRound />} empty={lead === "none"}>
@@ -185,7 +187,8 @@ function StatusPanel() {
         value={value}
         onValueChange={setValue}
         options={PROJECT_STATUSES}
-        searchPlaceholder="Change project status…"
+        searchPlaceholder="Change status…"
+        shortcut={["S"]}
       />
     </PopoverSurface>
   );
@@ -217,7 +220,7 @@ function LeadPanel() {
         value={value}
         onValueChange={setValue}
         options={LEADS}
-        searchPlaceholder="Assign lead…"
+        searchable={false}
         numberFrom={0}
       />
     </PopoverSurface>

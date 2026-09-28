@@ -183,6 +183,10 @@ export function Page() {
             decision: "Badge em pílula com texto -strong",
             rule: "§3 texto ≥ 4,5:1; Figma pílulas r100",
           },
+          {
+            decision: "Padding de 10 px de cada lado",
+            rule: "Pedido do responsável: +2 px, como o chip do Select",
+          },
           { decision: "Algarismos tabulares no Counter", rule: "§2 números alinhados em listas" },
         ],
       }}

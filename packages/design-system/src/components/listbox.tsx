@@ -6,6 +6,7 @@
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import { Icon } from "../icons/Icon";
+import { cn } from "../lib/cn";
 
 export type ListOption<T extends string = string> = {
   value: T;
@@ -17,6 +18,10 @@ export type ListOption<T extends string = string> = {
   /** Grupo com rótulo (ex.: "Users from the project team"). */
   group?: string;
   disabled?: boolean;
+  /** Etiqueta curta logo depois do rótulo (ex.: "Agent", Figma 22:1752). */
+  tag?: string;
+  /** Texto secundário à direita (ex.: "14 issues", Figma 22:1249). */
+  hint?: string;
 };
 
 /** Superfície do popover (Figma: r12, borda #323336, sombra de 3 camadas → shadow-md). */
@@ -34,15 +39,26 @@ export const groupHeading = "px-2 pt-2 pb-1 text-label-sm text-secondary";
  * Checkbox visual de uma linha de multisseleção (Figma 1:1241: 14 px, raio 3 → 4). Não é
  * interativo: a linha inteira é a opção.
  */
-export function CheckBox({ checked }: { checked: boolean }) {
+/**
+ * Caixa de marcação de uma linha. revealOnHighlight: desmarcada, só aparece na linha em destaque
+ * (a linha precisa da classe group); o espaço fica reservado (Figma 22:2039).
+ */
+export function CheckBox({
+  checked,
+  revealOnHighlight = false,
+}: {
+  checked: boolean;
+  revealOnHighlight?: boolean;
+}) {
   return (
     <span
       aria-hidden
-      className={
+      className={cn(
         checked
           ? "flex size-3.5 shrink-0 items-center justify-center rounded-inline border border-checked bg-checked text-on-checked"
-          : "flex size-3.5 shrink-0 items-center justify-center rounded-inline border border-control"
-      }
+          : "flex size-3.5 shrink-0 items-center justify-center rounded-inline border border-control",
+        !checked && revealOnHighlight && "invisible group-data-[selected=true]:visible",
+      )}
     >
       {checked && <Icon icon={Check} className="size-2.5" />}
     </span>
@@ -54,16 +70,34 @@ export function OptionContent({
   option,
   selected,
   index,
+  iconSlot = true,
 }: {
   option: ListOption;
   selected: boolean;
   /** Número do atalho (0–9); omitido não mostra número. */
   index?: number;
+  /** Reserva o slot de 16 px do ícone. Desligue quando nenhuma opção da lista tem ícone. */
+  iconSlot?: boolean;
 }) {
   return (
     <>
-      <span className="flex size-4 shrink-0 items-center justify-center">{option.icon}</span>
-      <span className="min-w-0 flex-1 truncate">{option.label}</span>
+      {iconSlot && (
+        <span className="flex size-4 shrink-0 items-center justify-center">{option.icon}</span>
+      )}
+      {option.tag ? (
+        // Etiqueta colada ao rótulo; o espaço que sobra vai depois dela.
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="min-w-0 truncate">{option.label}</span>
+          <span className="inline-flex h-4 shrink-0 items-center rounded-sm border border-strong px-1.5 text-label-sm leading-none text-secondary">
+            {option.tag}
+          </span>
+        </span>
+      ) : (
+        <span className="min-w-0 flex-1 truncate">{option.label}</span>
+      )}
+      {option.hint && (
+        <span className="shrink-0 text-body-sm text-secondary tabular-nums">{option.hint}</span>
+      )}
       {selected && <Icon icon={Check} className="text-secondary" />}
       {index !== undefined && index <= 9 && (
         <span aria-hidden className="w-3 text-right text-label-sm text-secondary tabular-nums">

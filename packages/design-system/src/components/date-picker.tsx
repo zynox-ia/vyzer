@@ -335,7 +335,8 @@ function PeriodGrid({
         aria-pressed={selected}
         onClick={() => onSelect(v)}
         className={cn(
-          "flex h-control-sm items-center justify-center rounded-full border px-2 text-label-sm transition-colors focus-ring",
+          // shrink-0: na coluna de anos (com rolagem) o flex encolhia as pílulas abaixo de 24 px
+          "flex h-control-sm shrink-0 items-center justify-center rounded-full border px-2 text-label-sm transition-colors focus-ring",
           selected
             ? "border-transparent bg-inverse text-inverse hovered:bg-inverse-hover"
             : "border-strong text-primary hovered:bg-hover",
@@ -347,8 +348,9 @@ function PeriodGrid({
   };
 
   if (granularity === "year") {
+    // Passo de 36 px entre anos (Figma 1:874–1:901: linhas de 36 com a pílula de 24).
     return (
-      <div className="flex max-h-72 flex-col gap-2 overflow-y-auto px-4 pt-2 pb-4">
+      <div className="flex max-h-72 flex-col gap-3 overflow-y-auto px-4 pt-2 pb-4">
         {list.map((y) => pill({ kind: "year", year: y }, String(y)))}
       </div>
     );

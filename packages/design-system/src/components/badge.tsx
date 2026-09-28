@@ -35,7 +35,7 @@ export function Badge({ tone = "neutral", icon, className, children, ...rest }: 
   return (
     <span
       className={cn(
-        "inline-flex h-control-xs shrink-0 items-center gap-1 rounded-full px-2 text-label-sm whitespace-nowrap",
+        "inline-flex h-control-xs shrink-0 items-center gap-1 rounded-full px-2.5 text-label-sm whitespace-nowrap",
         toneClass[tone],
         className,
       )}

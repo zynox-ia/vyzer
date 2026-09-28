@@ -186,10 +186,84 @@ describe("IconPickerPanel", () => {
     expect(await violations(screen.container)).toEqual([]);
 
     await screen.getByRole("tab", { name: "Emojis" }).click();
+    await expect.element(screen.getByText("Smileys & Emotion")).toBeVisible();
     await screen.getByPlaceholder("Search emoji…").fill("fire");
-    await screen.getByRole("button", { name: "fire" }).click();
+    await screen.getByRole("gridcell", { name: "Fire", exact: true }).click();
     expect(onChange).toHaveBeenLastCalledWith({ kind: "emoji", emoji: "🔥" });
     expect(await violations(screen.container)).toEqual([]);
+  });
+
+  it("busca ícones por categoria e mostra estado sem resultados", async () => {
+    const screen = await render(
+      <IconPickerPanel
+        value={{ kind: "icon", name: "Box", color: "grey" }}
+        onValueChange={vi.fn()}
+      />,
+    );
+    const search = screen.getByPlaceholder("Search icons…");
+    await search.fill("finance");
+    await expect.element(screen.getByRole("group", { name: "Business & finance" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Wallet" })).toBeVisible();
+
+    await search.fill("zzzz");
+    await expect.element(screen.getByText("No icons found")).toBeVisible();
+  });
+
+  it("carrega os emojis pelo servidor local e mostra as categorias", async () => {
+    const screen = await render(
+      <IconPickerPanel
+        value={{ kind: "icon", name: "Box", color: "grey" }}
+        onValueChange={vi.fn()}
+      />,
+    );
+    await screen.getByRole("tab", { name: "Emojis" }).click();
+    await expect.element(screen.getByText("Smileys & Emotion")).toBeVisible();
+    await expect.element(screen.getByText("People & Body")).toBeVisible();
+
+    const resourceNames = performance.getEntriesByType("resource").map((entry) => entry.name);
+    expect(resourceNames.some((name) => name.includes("/emojibase-data/en/data.json"))).toBe(true);
+    expect(resourceNames.some((name) => name.includes("/emojibase-data/en/messages.json"))).toBe(
+      true,
+    );
+  });
+
+  it("começa os índices ARIA do Frimousse em 1", async () => {
+    const screen = await render(
+      <IconPickerPanel
+        value={{ kind: "icon", name: "Box", color: "grey" }}
+        onValueChange={vi.fn()}
+      />,
+    );
+    await screen.getByRole("tab", { name: "Emojis" }).click();
+    await expect.element(screen.getByText("Smileys & Emotion")).toBeVisible();
+
+    const firstRow = screen.container.querySelector("[frimousse-row][aria-rowindex]");
+    const firstEmoji = screen.container.querySelector("button[frimousse-emoji][aria-colindex]");
+    if (!firstRow || !firstEmoji) throw new Error("Frimousse não renderizou a primeira linha");
+    expect(firstRow.getAttribute("aria-rowindex")).toBe("1");
+    expect(firstEmoji.getAttribute("aria-colindex")).toBe("1");
+  });
+});
+
+describe("Foco global", () => {
+  it("usa outline de 1 px com a linha ativa e sem halo ao focar por teclado", async () => {
+    const screen = await render(<button type="button">Focus target</button>);
+    await userEvent.tab();
+    const target = screen.getByRole("button", { name: "Focus target" });
+    await expect.element(target).toHaveFocus();
+
+    const element = target.element();
+    const expected = document.createElement("span");
+    expected.style.color = "var(--line-field-active)";
+    document.body.append(expected);
+    const expectedColor = getComputedStyle(expected).color;
+    expected.remove();
+
+    const styles = getComputedStyle(element);
+    expect(styles.outlineWidth).toBe("1px");
+    expect(styles.outlineColor).toBe(expectedColor);
+    expect(styles.outlineOffset).toBe("-1px");
+    expect(styles.boxShadow).toBe("none");
   });
 });
 

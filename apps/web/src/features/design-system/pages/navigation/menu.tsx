@@ -195,6 +195,11 @@ export function Page() {
         ],
         decisions: [
           {
+            decision:
+              "Abre sempre para baixo; sem espaço, rola por dentro (8 px de folga até a borda)",
+            rule: "Pedido do responsável: o Radix virava o menu para cima quando faltava espaço",
+          },
+          {
             decision: "Popover de raio 10, borda forte, sombra md",
             rule: "Figma 1:4653 (r10, borda #3a3c3f, 3 camadas → 2 camadas §9)",
           },

@@ -1,7 +1,8 @@
 /**
  * Campos de texto: TextInput, TextArea, InputGroup, SearchInput e PasswordInput.
- * Figma: raio 8, fundo de campo, texto 13 px Regular, padding 6–8 px (busca 28 × r8).
- * Alturas da escala compartilhada com Button (§6). Foco B sobre a borda (ADR-0013).
+ * Figma 13:2010: raio 8, fundo de campo, borda de 1 px (#2f3033), texto 13 px Regular, padding
+ * de 12 px à esquerda e 8 px à direita do botão interno. Alturas da escala compartilhada com
+ * Button (§6), só lg e xl: o padding aprovado não cabe em 24 e 28 px. Hover e foco sem acento: a borda fica 10% mais clara (pedido do responsável).
  */
 import { Eye, EyeOff, Search, X, type LucideIcon } from "lucide-react";
 import {
@@ -17,18 +18,16 @@ import { cn } from "../lib/cn";
 import { IconButton } from "./button";
 import { useFieldControl } from "./field";
 
-export type InputSize = "sm" | "md" | "lg" | "xl";
+export type InputSize = "lg" | "xl";
 
 const heightClass: Record<InputSize, string> = {
-  sm: "h-control-sm",
-  md: "h-control-md",
   lg: "h-control-lg",
   xl: "h-control-xl",
 };
 
-/** Caixa do campo: borda de controle (3:1), erro em danger, desabilitado e somente leitura. */
+/** Caixa do campo: borda de campo (Figma 13:2010), erro em danger, desabilitado e somente leitura. */
 const box =
-  "rounded-control border border-control bg-input text-body-md text-primary transition-colors hovered:border-control-hover has-[[data-preview~=hover]]:border-control-hover aria-invalid:border-danger has-[[aria-invalid=true]]:border-danger has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-disabled";
+  "rounded-control border border-field outline-field bg-input text-body-md text-primary transition-colors hovered:border-field-hover has-[[data-preview~=hover]]:border-field-hover aria-invalid:border-field-danger has-[[aria-invalid=true]]:border-field-danger has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-disabled";
 
 const field =
   "min-w-0 flex-1 bg-transparent text-primary outline-none placeholder:text-placeholder disabled:cursor-not-allowed read-only:text-secondary";
@@ -49,7 +48,7 @@ export type TextInputProps = BaseInputProps & {
 
 /** Campo de uma linha. Com ícone ou conteúdo à direita, vira um InputGroup. */
 export function TextInput({
-  size = "md",
+  size = "lg",
   icon,
   trailing,
   invalid,
@@ -65,8 +64,8 @@ export function TextInput({
           <Icon icon={icon} />
         </InputGroupAddon>
       )}
-      <input className={cn(field, "h-full px-2")} {...rest} {...a11y} />
-      {trailing && <InputGroupAddon className="pr-1">{trailing}</InputGroupAddon>}
+      <input className={cn(field, "h-full px-3")} {...rest} {...a11y} />
+      {trailing && <InputGroupAddon className="pr-2 pl-0">{trailing}</InputGroupAddon>}
     </InputGroup>
   );
 }
@@ -82,13 +81,13 @@ export type InputGroupProps = {
  * Contêiner que carrega a borda, o foco e o erro de um campo com complementos (ícone, prefixo,
  * botão). O input interno não tem borda própria.
  */
-export function InputGroup({ size = "md", invalid, className, children }: InputGroupProps) {
+export function InputGroup({ size = "lg", invalid, className, children }: InputGroupProps) {
   return (
     <div
       data-invalid={invalid || undefined}
       className={cn(
         box,
-        "flex items-center focus-ring-within data-invalid:border-danger",
+        "flex items-center focus-field-within data-invalid:border-field-danger",
         heightClass[size],
         className,
       )}
@@ -108,7 +107,7 @@ export function InputGroupAddon({
 }) {
   return (
     <span
-      className={cn("flex shrink-0 items-center pl-2 text-secondary [&+input]:pl-1.5", className)}
+      className={cn("flex shrink-0 items-center pl-3 text-secondary [&+input]:pl-1.5", className)}
     >
       {children}
     </span>
@@ -123,7 +122,7 @@ export type InputGroupInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "
 /** Input sem borda para dentro de um InputGroup; recebe rótulo, ajuda e erro do Field. */
 export function InputGroupInput({ invalid, className, ...rest }: InputGroupInputProps) {
   const { invalid: _i, ...a11y } = useFieldControl({ ...rest, invalid });
-  return <input className={cn(field, "h-full px-2", className)} {...rest} {...a11y} />;
+  return <input className={cn(field, "h-full px-3", className)} {...rest} {...a11y} />;
 }
 
 export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
@@ -152,9 +151,9 @@ export function TextArea({
       className={cn(
         field,
         variant === "default"
-          ? cn(box, "block w-full resize-y px-2 py-1.5 focus-ring disabled:opacity-disabled")
+          ? cn(box, "block w-full resize-y px-3 py-1.5 focus-field disabled:opacity-disabled")
           : "block w-full resize-none bg-transparent px-4 py-1 text-body-lg disabled:opacity-disabled",
-        variant === "default" && isInvalid && "border-danger",
+        variant === "default" && isInvalid && "border-field-danger",
         className,
       )}
       {...rest}
@@ -162,9 +161,6 @@ export function TextArea({
     />
   );
 }
-
-/** Botão interno cabe no campo: 20 px nos campos de 24 px, 24 px nos demais. */
-const innerButton: Record<InputSize, "xs" | "sm"> = { sm: "xs", md: "sm", lg: "sm", xl: "sm" };
 
 /** Muda o valor como se a pessoa tivesse digitado, para o onChange do React disparar. */
 function setNativeValue(input: HTMLInputElement, value: string) {
@@ -187,7 +183,7 @@ export function SearchInput({
   onChange,
   ref,
   className,
-  size = "md",
+  size = "lg",
   ...rest
 }: SearchInputProps) {
   const inner = useRef<HTMLInputElement>(null);
@@ -224,9 +220,7 @@ export function SearchInput({
         onKeyDown?.(e);
       }}
       trailing={
-        current ? (
-          <IconButton icon={X} label="Clear search" size={innerButton[size]} onClick={clear} />
-        ) : undefined
+        current ? <IconButton icon={X} label="Clear search" size="sm" onClick={clear} /> : undefined
       }
       className={cn("[&_input::-webkit-search-cancel-button]:appearance-none", className)}
     />
@@ -236,7 +230,7 @@ export function SearchInput({
 export type PasswordInputProps = Omit<TextInputProps, "type" | "trailing">;
 
 /** Senha com botão de mostrar/ocultar (aria-pressed indica o estado). */
-export function PasswordInput({ size = "md", ...props }: PasswordInputProps) {
+export function PasswordInput({ size = "lg", ...props }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
   return (
     <TextInput
@@ -249,7 +243,7 @@ export function PasswordInput({ size = "md", ...props }: PasswordInputProps) {
           icon={visible ? EyeOff : Eye}
           label={visible ? "Hide password" : "Show password"}
           aria-pressed={visible}
-          size={innerButton[size]}
+          size="sm"
           onClick={() => setVisible((v) => !v)}
         />
       }

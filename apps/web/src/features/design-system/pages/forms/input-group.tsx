@@ -43,8 +43,8 @@ export function Page() {
                   <span className="text-body-md text-secondary">vyzer.app/</span>
                 </InputGroupAddon>
                 <InputGroupInput defaultValue="zynox" className="pl-0" />
-                <InputGroupAddon className="pr-1">
-                  <Button size="sm" variant="ghost" icon={Copy}>
+                <InputGroupAddon className="pr-2 pl-0">
+                  <Button variant="ghost" icon={Copy}>
                     Copy
                   </Button>
                 </InputGroupAddon>
@@ -58,7 +58,7 @@ export function Page() {
         showcase: (
           <div className="flex flex-col gap-3">
             <Url />
-            <InputGroup size="md" className="w-80">
+            <InputGroup size="lg" className="w-80">
               <InputGroupAddon>
                 <Icon icon={Link} />
               </InputGroupAddon>
@@ -78,8 +78,9 @@ export function Page() {
         themes: () => <Url />,
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
-            Contêiner com a caixa do campo (borda, raio 8, fundo) e foco via focus-ring-within;
-            complementos em text-secondary; input sem borda ocupando o espaço restante.
+            Contêiner com a caixa do campo (borda, raio 8, fundo) e foco via focus-field-within; 12
+            px da borda até o primeiro conteúdo e 8 px até o botão à direita; complementos em
+            text-secondary; input sem borda ocupando o espaço restante.
           </p>
         ),
         keyboard: ["Tab passa pelo input e pelos botões do grupo, na ordem visual."],
@@ -99,7 +100,7 @@ export function Page() {
   </InputGroup>
 </Field>`,
         props: [
-          { name: "size", type: "InputSize", default: '"md"', description: "Altura do grupo." },
+          { name: "size", type: "InputSize", default: '"lg"', description: "Altura do grupo." },
           { name: "invalid", type: "boolean", description: "Borda de erro." },
           {
             name: "InputGroupAddon",
@@ -109,8 +110,12 @@ export function Page() {
         ],
         decisions: [
           {
-            decision: "O grupo carrega borda e foco (focus-ring-within)",
+            decision: "O grupo carrega borda e foco (focus-field-within)",
             rule: "§11 região comum; §12 foco visível",
+          },
+          {
+            decision: "Padding 12 px à esquerda, 8 px à direita do botão",
+            rule: "Figma 13:2010 (pl 12, pr 8)",
           },
           { decision: "Complementos em text-secondary", rule: "§4 rebaixar o que é contexto" },
         ],

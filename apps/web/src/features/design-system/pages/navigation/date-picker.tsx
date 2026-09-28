@@ -154,6 +154,10 @@ import { formatDateValue } from "@vyzer/design-system/date";
         decisions: [
           { decision: "Popover de raio 8, 304 px", rule: "Figma 1:3 (r8, w 300 → 304, grid de 4)" },
           {
+            decision: "Anos um por linha, pílulas de 24 px com passo de 36 px (12 px entre elas)",
+            rule: "Figma 1:874–1:901 (linhas de 36 px); §11 similaridade entre as granularidades",
+          },
+          {
             decision: "Granularidade em pílulas separadas",
             rule: "Figma 1:3; Segmented Control variant pills",
           },

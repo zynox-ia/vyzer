@@ -23,7 +23,7 @@ import { cn } from "../lib/cn";
  */
 export const menuStyles = {
   content:
-    "z-dropdown min-w-56 overflow-hidden rounded-container border border-strong bg-popover p-1 text-primary shadow-md outline-none",
+    "z-dropdown min-w-56 overflow-x-hidden overflow-y-auto rounded-container border border-strong bg-popover p-1 text-primary shadow-md outline-none",
   motion:
     "origin-(--radix-dropdown-menu-content-transform-origin) data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
   item: "flex h-command-item cursor-default items-center gap-2 rounded-sm px-2.5 text-body-md text-primary outline-none select-none data-highlighted:bg-selected data-disabled:cursor-not-allowed data-disabled:opacity-disabled",
@@ -39,7 +39,7 @@ export const menuStyles = {
  */
 export const dropdownMenuStyles = {
   content:
-    "z-dropdown min-w-44 overflow-hidden rounded-xl border border-strong bg-popover p-1.5 text-primary shadow-md outline-none",
+    "z-dropdown min-w-44 overflow-x-hidden overflow-y-auto rounded-xl border border-strong bg-popover p-1.5 text-primary shadow-md outline-none",
   item: "flex h-menu-item cursor-default items-center gap-2 rounded-control px-2 text-body-md text-primary outline-none select-none data-highlighted:bg-selected data-disabled:cursor-not-allowed data-disabled:opacity-disabled",
   iconSlot: "flex w-4 shrink-0 justify-center text-secondary",
   separator: "-mx-1.5 my-1.5 border-t border-strong",
@@ -66,20 +66,36 @@ export type MenuContentProps = ComponentProps<typeof DropdownMenu.Content> & {
   variant?: MenuVariant;
 };
 
+/**
+ * Abre sempre para baixo (pedido do responsável): sem a virada automática do Radix, que jogava o
+ * menu para cima quando faltava espaço. A altura fica limitada ao espaço disponível abaixo do
+ * gatilho (com 8 px de folga até a borda da janela), com rolagem interna.
+ */
 export function MenuContent({
   portal = true,
   variant = "command",
+  side = "bottom",
   sideOffset = 4,
   align = "start",
+  avoidCollisions = false,
+  collisionPadding = 8,
   className,
   ...rest
 }: MenuContentProps) {
   const content = (
     <VariantContext value={variant}>
       <DropdownMenu.Content
+        side={side}
         sideOffset={sideOffset}
         align={align}
-        className={cn(styles(variant).content, menuStyles.motion, className)}
+        avoidCollisions={avoidCollisions}
+        collisionPadding={collisionPadding}
+        className={cn(
+          styles(variant).content,
+          "max-h-(--radix-dropdown-menu-content-available-height)",
+          menuStyles.motion,
+          className,
+        )}
         {...rest}
       />
     </VariantContext>

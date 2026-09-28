@@ -41,6 +41,8 @@
   --background-color-inverse: var(--bg-inverse);
   --background-color-inverse-hover: var(--bg-inverse-hover);
   --background-color-inverse-pressed: var(--bg-inverse-pressed);
+  --background-color-primary-button: var(--bg-primary-button);
+  --background-color-primary-button-hover: var(--bg-primary-button-hover);
   --background-color-scrim: var(--bg-scrim);
   --background-color-checked: var(--fg-primary);
   --background-color-accent: var(--accent);
@@ -102,14 +104,25 @@
   --border-color-strong: var(--line-strong);
   --border-color-control: var(--line-control);
   --border-color-control-hover: var(--line-control-hover);
+  --border-color-field: var(--line-field);
+  /* Hover e foco de campo usam o mesmo tom (themes.css) */
+  --border-color-field-hover: var(--line-field-active);
+  --border-color-field-focus: var(--line-field-active);
+  /* Erro de campo: metade do vermelho de status sobre a borda de campo (pedido do responsável:
+   * o danger cheio pesava demais). O erro continua dito pela mensagem com ícone (§3) */
+  --border-color-field-danger: color-mix(in srgb, var(--st-danger) 50%, var(--line-field));
   --border-color-checked: var(--fg-primary);
   --border-color-danger: var(--st-danger);
-  --border-color-focus: color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+  /* Foco: o mesmo tom de hover e foco de campo, sem acento (pedido do responsável) */
+  --border-color-focus: var(--line-field-active);
 
-  /* Foco: outline de 1 px sobre a borda (outline-focus); calculado no elemento */
-  --outline-color-focus: color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+  /* Foco: outline de 1 px sobre a borda (outline-focus) */
+  --outline-color-focus: var(--line-field-active);
   /* Anel de estado ligado (botão de cor personalizada pressionado) */
   --outline-color-strong: var(--line-strong);
+  /* Cor do outline de campo já em repouso (outline-field): sem ela, o transition-colors anima o
+   * foco a partir do currentColor (texto claro) e uma linha branca pisca ao clicar */
+  --outline-color-field: var(--line-field-active);
 
   /* Cursor de texto, sublinhado, controles nativos marcados */
   --caret-color-primary: var(--fg-primary);
@@ -255,12 +268,12 @@
   --shadow-lg:
     0 4px 8px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 0.6)),
     0 16px 32px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 0.4));
-  /* Brilho do botão primário no hover (themes.css define por tema) */
+  /* Relevo de chips e botões (themes.css define por tema) */
   --shadow-raised: var(--raised);
-  --shadow-glow: var(--glow);
-  --shadow-glow-secondary: var(--glow-secondary);
-  --shadow-glow-danger: var(--glow-danger);
-  --shadow-focus: 0 0 0 var(--focus-halo-size) color-mix(in srgb, var(--accent) 25%, transparent);
+  /* Sublinhado da aba ativa: linha de 1 px na cor do texto (Figma 1:1404, neutro pela ADR-0013) */
+  --shadow-underline: inset 0 -1px 0 var(--fg-primary);
+  /* Foco sem halo (pedido do responsável) */
+  --shadow-focus: 0 0 #0000;
 
   /* ---------- Opacidade, blur ---------- */
   --opacity-disabled: 50%;
@@ -390,42 +403,85 @@
 }
 
 /*
- * Foco (ADR-0013): indicador só na navegação por teclado. Outline de 1 px sobre a borda do
- * componente (offset -1 px), sem anel grosso; na variante B, halo externo de 2 px a 25%.
- * O halo entra pela variável de ring do Tailwind, então soma com a sombra do componente.
- * Componentes sem borda própria ganham a mesma linha de 1 px no foco.
+ * Foco (pedido do responsável, substitui o foco terracota da ADR-0013 em todo o sistema): o
+ * mesmo dos campos. Linha de 1 px por dentro (offset -1 px) no tom de hover de campo
+ * (--line-field-active), sem acento nem halo; só na navegação por teclado. Todos os utilitários
+ * de foco abaixo e o :focus-visible global (base.css) usam esta regra.
  */
 @utility focus-ring {
   &:focus-visible,
   &[data-preview~="focus"] {
-    outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+    outline: 1px solid var(--line-field-active);
     outline-offset: -1px;
-    --tw-ring-shadow: 0 0 0 var(--focus-halo-size)
-      color-mix(in srgb, var(--accent) 25%, transparent);
-    box-shadow:
-      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+    --tw-ring-shadow: 0 0 #0000;
   }
 }
 
-/* Mesmo foco num contêiner cujo controle interno recebe o foco (InputGroup) */
+/* Mesmo foco num contêiner cujo controle interno recebe o foco */
 @utility focus-ring-within {
   &:has(input:focus-visible, textarea:focus-visible),
   &:has([data-preview~="focus"]),
   &[data-preview~="focus"] {
-    outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+    outline: 1px solid var(--line-field-active);
     outline-offset: -1px;
-    --tw-ring-shadow: 0 0 0 var(--focus-halo-size)
-      color-mix(in srgb, var(--accent) 25%, transparent);
-    box-shadow:
-      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+  & :is(input, textarea):focus-visible {
+    --tw-ring-shadow: 0 0 #0000;
+  }
+}
+
+/*
+ * Foco de campo de texto (input, text area, select): sem acento nem halo, no mesmo tom do hover
+ * (border-field-focus), desenhado como outline de 1 px sobre a borda para ficar acima do erro.
+ * Zera o halo que o :focus-visible global (base.css) aplica.
+ */
+@utility focus-field {
+  &:focus-visible,
+  &[data-preview~="focus"] {
+    outline: 1px solid var(--line-field-active);
+    outline-offset: -1px;
+    --tw-ring-shadow: 0 0 #0000;
+  }
+}
+
+/* Foco de botão: o mesmo foco de campo (1 px por dentro, sem acento nem halo) */
+@utility focus-line {
+  &:focus-visible,
+  &[data-preview~="focus"] {
+    outline: 1px solid var(--line-field-active);
+    outline-offset: -1px;
+    --tw-ring-shadow: 0 0 #0000;
+  }
+}
+
+/* Mesmo foco num contêiner cujo controle interno recebe o foco (InputGroup) */
+@utility focus-field-within {
+  &:has(input:focus-visible, textarea:focus-visible),
+  &:has([data-preview~="focus"]),
+  &[data-preview~="focus"] {
+    outline: 1px solid var(--line-field-active);
+    outline-offset: -1px;
+  }
+  /* O input interno não mostra foco próprio: nem outline nem o halo do base.css */
+  & :is(input, textarea):focus-visible {
+    --tw-ring-shadow: 0 0 #0000;
+  }
+}
+
+/*
+ * Sem o halo do :focus-visible global (base.css), para quem já mostra o destaque de outra forma:
+ * lista e opções do Select (o destaque é o fundo bg-selected) e Property Button e chip do Select
+ * (foco = hover). Pedido do responsável.
+ */
+@utility focus-halo-none {
+  &:focus-visible {
+    --tw-ring-shadow: 0 0 #0000;
   }
 }
 
 /*
  * Foco por fora do componente (offset +1 px): para superfícies claras cheias (botão primário
- * no escuro), onde o terracota sobre o próprio fundo fica abaixo de 3:1 (2,96:1 medido).
+ * no escuro), onde a linha por dentro some sobre o próprio fundo.
  */
 @utility focus-ring-outside {
   &:focus-visible,
@@ -436,12 +492,8 @@
 
 /* Foco sempre visível: só para documentar estados em /design-system, nunca em produto */
 @utility focus-ring-shown {
-  outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+  outline: 1px solid var(--line-field-active);
   outline-offset: -1px;
-  --tw-ring-shadow: 0 0 0 var(--focus-halo-size) color-mix(in srgb, var(--accent) 25%, transparent);
-  box-shadow:
-    var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
 /*
@@ -499,6 +551,15 @@
     }
   }
   &[data-preview~="hover"] {
+    @slot;
+  }
+}
+/* Foco por teclado, reproduzível na documentação com data-preview="focus" */
+@custom-variant focused {
+  &:focus-visible {
+    @slot;
+  }
+  &[data-preview~="focus"] {
     @slot;
   }
 }

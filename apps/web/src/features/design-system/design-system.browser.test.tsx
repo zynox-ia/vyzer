@@ -54,10 +54,4 @@ describe("navegação", () => {
     const screen = await renderAt("/design-system/ai");
     await expect.element(screen.getByText(/Fase 7/)).toBeVisible();
   });
-
-  it("aplica a variante de foco da URL no documento", async () => {
-    const screen = await renderAt("/design-system/foundations/colors?focus=a");
-    await expect.element(screen.getByRole("heading", { level: 1 })).toBeVisible();
-    expect(document.documentElement.dataset.focus).toBe("a");
-  });
 });

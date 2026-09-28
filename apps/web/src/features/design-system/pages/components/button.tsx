@@ -1,9 +1,4 @@
-import {
-  Button,
-  TextInput,
-  type ButtonSize,
-  type ButtonVariant,
-} from "@vyzer/design-system/components";
+import { Button, TextInput, type ButtonVariant } from "@vyzer/design-system/components";
 import { ChevronDown, Plus } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -12,12 +7,9 @@ import { Code, DocTable } from "../../kit/doc";
 import { StatesGrid } from "../../kit/states";
 
 const VARIANTS: ButtonVariant[] = ["primary", "secondary", "ghost", "danger"];
-const SIZES: ButtonSize[] = ["sm", "md", "lg", "xl"];
-const SIZE_PX: Record<ButtonSize, number> = { sm: 24, md: 28, lg: 32, xl: 40 };
 
 function usePlayground() {
   const [variant, setVariant] = useState<ButtonVariant>("primary");
-  const [size, setSize] = useState<ButtonSize>("md");
   const [icon, setIcon] = useState<"none" | "leading" | "trailing">("leading");
   const [state, setState] = useState<"default" | "loading" | "disabled">("default");
   const [label, setLabel] = useState("Create issue");
@@ -25,7 +17,6 @@ function usePlayground() {
     preview: (
       <Button
         variant={variant}
-        size={size}
         icon={icon === "leading" ? Plus : undefined}
         trailingIcon={icon === "trailing" ? ChevronDown : undefined}
         loading={state === "loading"}
@@ -42,14 +33,6 @@ function usePlayground() {
             value={variant}
             onChange={setVariant}
             options={VARIANTS.map((v) => ({ value: v, label: v }))}
-          />
-        </Field>
-        <Field label="size">
-          <Segmented
-            label="size"
-            value={size}
-            onChange={setSize}
-            options={SIZES.map((s) => ({ value: s, label: s }))}
           />
         </Field>
         <Field label="ícone">
@@ -79,7 +62,6 @@ function usePlayground() {
         <Field label="rótulo">
           <TextInput
             aria-label="Rótulo do botão"
-            size="sm"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
           />
@@ -146,7 +128,7 @@ export function Page() {
       doc={{
         title: "Button",
         description:
-          "Dispara uma ação. Pílula, como no Figma. O primário é um degradê de 3 tons (claro ao cinza no escuro, grafite ao quase preto no claro) e todas as variantes sobem 1 px com um brilho por trás no hover.",
+          "Dispara uma ação. Pílula, como no Figma. O primário é chapado (#f0eee6 no escuro, grafite no claro) e o hover segue o Linear: só o fundo muda, sem subir nem brilhar.",
         whenToUse: [
           "Ações de formulário e de diálogo (Create issue, Save changes, Cancel)",
           "Ações de cabeçalho de página (New project)",
@@ -159,15 +141,19 @@ export function Page() {
         playground,
         showcase: (
           <DocTable
-            caption="Variantes por tamanho"
-            columns={["Variante", ...SIZES.map((s) => `${s} · ${SIZE_PX[s]}`)]}
+            caption="Variantes (tamanho único: 28 px)"
+            columns={["Variante", "Só rótulo", "Com ícone", "Com ícone à direita"]}
             rows={VARIANTS.map((v) => [
               <Code key="v">{v}</Code>,
-              ...SIZES.map((s) => (
-                <Button key={s} variant={v} size={s} icon={Plus}>
-                  New project
-                </Button>
-              )),
+              <Button key="l" variant={v}>
+                Save changes
+              </Button>,
+              <Button key="i" variant={v} icon={Plus}>
+                New project
+              </Button>,
+              <Button key="t" variant={v} trailingIcon={ChevronDown}>
+                Status
+              </Button>,
             ])}
           />
         ),
@@ -197,16 +183,16 @@ export function Page() {
           <p className="max-w-prose text-body-md text-secondary">
             Contêiner em pílula com borda de 1 px (transparente, exceto no secundário, que reserva o
             tamanho como no Figma), ícone opcional à esquerda ou à direita e rótulo. No carregamento
-            o spinner ocupa o lugar do ícone e a largura não muda. No primário, uma área invisível
-            de 1 px embaixo mantém o hover enquanto o botão está levantado.
+            o spinner ocupa o lugar do ícone e a largura não muda. Tamanho único: 28 px de altura,
+            12 px de padding (10 px do lado do ícone), rótulo de 12 px/500 e ícone de 16 px.
           </p>
         ),
         keyboard: ["Tab foca; Enter e Espaço acionam.", "Desabilitado sai da ordem de Tab."],
         accessibility: [
           'É um <button type="button"> por padrão; em formulário, passe type="submit".',
           'Carregando: aria-busy="true" e cliques ignorados; o rótulo continua lido.',
-          "Foco B nos dois temas; no primário o contorno fica por fora (offset +1 px), porque o terracota sobre o fundo claro do botão no escuro dá 2,96:1.",
-          "Rótulo e fundo: primário 18,3:1 (text-inverse sobre bg-inverse, Foundations → Colors); danger usa o texto -strong sobre a cor a 15% (≥ 4,5:1).",
+          "Foco por teclado com a espessura dos campos (1 px, sem halo) na cor de foco do sistema. Por dentro da borda; no primário, por fora (offset +1 px), porque o acento sobre o fundo claro do botão no escuro dá 2,96:1.",
+          "Rótulo e fundo: primário ≥ 4,5:1 (text-inverse sobre bg-primary-button e o hover, medido em Foundations → Colors); danger usa o texto -strong sobre a cor a 15% (≥ 4,5:1).",
         ],
         content: [
           'Verbo + objeto, sentence case, sem ponto final: "Create issue", "Save changes".',
@@ -227,12 +213,6 @@ import { Plus } from "lucide-react";
             default: '"secondary"',
             description: "Peso visual.",
           },
-          {
-            name: "size",
-            type: '"sm" | "md" | "lg" | "xl"',
-            default: '"md"',
-            description: "24 · 28 · 32 · 40 px.",
-          },
           { name: "icon", type: "LucideIcon", description: "Ícone à esquerda." },
           { name: "trailingIcon", type: "LucideIcon", description: "Ícone à direita (ex.: menu)." },
           {
@@ -252,36 +232,37 @@ import { Plus } from "lucide-react";
         decisions: [
           { decision: "Pílula (rounded-full)", rule: "Figma: botões em 9999 (1:12645, 1:3200)" },
           {
-            decision: "Alturas 24 · 28 · 32 · 40, padrão 28",
-            rule: "§6 escala compartilhada; Figma 24 e 28",
+            decision: "Tamanho único: 28 px (h-control-md), sem variação",
+            rule: 'Pedido do responsável; Figma 28 nos botões de formulário ("Save changes")',
           },
           {
-            decision: "Rótulo 12 px/500 em sm e md; 13 px/500 em lg e xl",
-            rule: "Figma 12 Medium nos botões de 24–28; 13 Medium no login",
+            decision: "Rótulo 12 px/500",
+            rule: "Figma 12 Medium nos botões de 24–28",
           },
           {
-            decision: "Padding 10 · 12 · 16 · 20 px; lado do ícone −2 px",
-            rule: "Figma 0/8 e 0/10 + 2 px ou mais a pedido do responsável; §1 horizontal ≥ vertical",
+            decision: "Padding 12 px; lado do ícone 10 px",
+            rule: "Figma 0/10 + 2 px a pedido do responsável, como nas pílulas; §1 horizontal ≥ vertical",
           },
           { decision: "Gap ícone–texto 4–6 px", rule: "§10 0,4–0,6 × o tamanho do texto" },
           { decision: "Hover 4% e pressionado 10% como camadas", rule: "§12 estados translúcidos" },
           { decision: "Primário invertido, sem acento", rule: "ADR-0011; §3 orçamento de ênfase" },
           {
-            decision: "Degradê vertical de 3 tons, o mais claro no topo",
-            rule: "Pedido do responsável (máx. 3 cores); §9 luz vem de cima",
+            decision: "Primário chapado: #f0eee6 (warm-100) no escuro, grafite (warm-950) no claro",
+            rule: "Pedido do responsável (sem degradê); no claro o creme some no fundo #faf9f5 (1,06:1)",
           },
           {
-            decision: "Rótulo ≥ 4,5:1 contra cada tom do degradê",
+            decision: "Rótulo ≥ 4,5:1 contra o fundo e o hover do primário",
             rule: "§3 texto normal (medido em Foundations → Colors, text-inverse)",
           },
           {
             decision:
-              "Hover em todas as variantes: sobe 1 px + brilho 0 4 16; pressionado volta a 0",
-            rule: "Pedido do responsável (1 px, abaixo dos 4–8 px da §8: o brilho carrega o efeito); 120 ms; reduced motion zera a subida",
+              "Hover como no Linear: só o fundo muda (camada bg-hover; no primário, bg-primary-button-hover), sem subir nem brilhar",
+            rule: "Pedido do responsável (padrão do Linear, §7 Jakob); 120 ms de cor (§8)",
           },
           {
-            decision: "Foco por fora no primário",
-            rule: "§12 foco ≥ 3:1 (medido 2,96:1 por dentro)",
+            decision:
+              "Foco com a espessura dos campos (1 px, sem halo) na cor de acento (focus-line); por fora no primário",
+            rule: "Pedido do responsável; §12 foco ≥ 3:1 (por dentro, no primário, mediu 2,96:1)",
           },
           { decision: "Transição de cor 120 ms", rule: "§8 micro-interações 100–150 ms" },
         ],

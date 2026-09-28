@@ -1,42 +1,15 @@
 /**
- * Moldura da área /design-system: toolbar fixa (tema e variante de foco), barra de seções
- * e sidebar com os itens da seção ativa. A variante de foco fica na URL (?focus=a).
+ * Moldura da área /design-system: toolbar fixa (tema), barra de seções e sidebar com os itens
+ * da seção ativa. O foco não tem mais variantes: é a linha de foco de campo em todo o sistema.
  */
 import {
   setThemePreference,
   useThemePreference,
   type ThemePreference,
 } from "@vyzer/design-system/theme";
-import { useEffect } from "react";
-import { NavLink, Outlet, useLocation, useSearchParams } from "react-router";
+import { NavLink, Outlet, useLocation } from "react-router";
 import { Segmented } from "./kit/controls";
 import { sections } from "./registry";
-
-type FocusVariant = "a" | "b";
-
-function useFocusVariant(): [FocusVariant, (v: FocusVariant) => void] {
-  const [params, setParams] = useSearchParams();
-  const value: FocusVariant = params.get("focus") === "a" ? "a" : "b";
-  const set = (v: FocusVariant) =>
-    setParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (v === "b") next.delete("focus");
-        else next.set("focus", v);
-        return next;
-      },
-      { replace: true },
-    );
-  // B é o padrão do produto; A existe só para comparação nesta área.
-  useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.focus = value;
-    return () => {
-      delete root.dataset.focus;
-    };
-  }, [value]);
-  return [value, set];
-}
 
 const navItem =
   "inline-flex h-nav-item items-center rounded-control px-2 text-label-md whitespace-nowrap text-secondary no-underline transition-colors hover:bg-hover hover:text-primary aria-[current=page]:bg-selected aria-[current=page]:text-primary";
@@ -44,7 +17,6 @@ const navItem =
 export function DesignSystemLayout() {
   const { pathname, search } = useLocation();
   const theme = useThemePreference();
-  const [focus, setFocus] = useFocusVariant();
   const activeSlug = pathname.split("/")[2] ?? "foundations";
   const active = sections.find((s) => s.slug === activeSlug);
 
@@ -62,15 +34,6 @@ export function DesignSystemLayout() {
                 { value: "dark", label: "Escuro" },
                 { value: "light", label: "Claro" },
                 { value: "system", label: "Sistema" },
-              ]}
-            />
-            <Segmented<FocusVariant>
-              label="Variante de foco"
-              value={focus}
-              onChange={setFocus}
-              options={[
-                { value: "b", label: "Foco B" },
-                { value: "a", label: "Foco A" },
               ]}
             />
           </div>

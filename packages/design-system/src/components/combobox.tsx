@@ -31,6 +31,11 @@ export type ComboboxPanelProps<T extends string> = (Single<T> | Multiple<T>) & {
   options: ListOption<T>[];
   /** Placeholder da busca (ex.: "Change priority…"). */
   searchPlaceholder?: string;
+  /**
+   * Mostra o campo de busca no topo (padrão). false: lista curta sem busca (ex.: Lead); a
+   * própria lista recebe o foco e as setas, o Enter e os números continuam funcionando.
+   */
+  searchable?: boolean;
   /** Atalho de teclado que abre este seletor, mostrado no topo (ex.: ["P", "P"]). */
   shortcut?: string[];
   /** Mostra números e aceita a tecla do número para escolher (só na seleção única). */
@@ -56,6 +61,7 @@ export function ComboboxPanel<T extends string>(props: ComboboxPanelProps<T>) {
     label,
     options,
     searchPlaceholder = "Search…",
+    searchable = true,
     shortcut,
     numbered = !props.multiple,
     numberFrom = 1,
@@ -69,9 +75,10 @@ export function ComboboxPanel<T extends string>(props: ComboboxPanelProps<T>) {
   } = props;
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (autoFocusSearch) inputRef.current?.focus();
-  }, [autoFocusSearch]);
+    if (autoFocusSearch) (searchable ? inputRef.current : rootRef.current)?.focus();
+  }, [autoFocusSearch, searchable]);
 
   const isSelected = (v: T) => (props.multiple ? props.value.includes(v) : props.value === v);
   const choose = (v: T) => {
@@ -93,12 +100,17 @@ export function ComboboxPanel<T extends string>(props: ComboboxPanelProps<T>) {
     query !== "" &&
     !options.some((o) => o.label.toLowerCase() === query.toLowerCase());
   const showNumbers = numbered && !props.multiple && search === "";
+  // Slot de ícone só quando alguma opção tem ícone: lista só de texto não fica com o recuo vazio.
+  const hasIcons = options.some((o) => o.icon);
 
   return (
     <Command
+      ref={rootRef}
       label={label}
       loop
-      className={className}
+      // Sem busca, a lista é o alvo do foco (o destaque bg-selected mostra a posição).
+      tabIndex={searchable ? undefined : -1}
+      className={cn(!searchable && "outline-none", className)}
       onKeyDown={(e) => {
         if (!showNumbers || e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
         const n = Number(e.key);
@@ -110,16 +122,20 @@ export function ComboboxPanel<T extends string>(props: ComboboxPanelProps<T>) {
         }
       }}
     >
-      <div className="flex h-9 items-center gap-2 border-b border-subtle pr-3 pl-3.5">
-        <Command.Input
-          ref={inputRef}
-          value={search}
-          onValueChange={setSearch}
-          placeholder={searchPlaceholder}
-          className="h-full min-w-0 flex-1 bg-transparent text-body-md text-primary outline-none placeholder:text-placeholder"
-        />
-        {shortcut && <KbdSequence keys={shortcut} />}
-      </div>
+      {searchable && (
+        // Hairline #292a2d (Figma 22:1219): border-default; border-subtle tem a cor do popover no
+        // escuro e sumia.
+        <div className="flex h-9 items-center gap-2 border-b border-default pr-3 pl-3.5">
+          <Command.Input
+            ref={inputRef}
+            value={search}
+            onValueChange={setSearch}
+            placeholder={searchPlaceholder}
+            className="h-full min-w-0 flex-1 bg-transparent text-body-md text-primary outline-none placeholder:text-placeholder"
+          />
+          {shortcut && <KbdSequence keys={shortcut} />}
+        </div>
+      )}
       <Command.List className="max-h-80 overflow-y-auto p-1.5">
         {options.length > 0 && !canCreate && (
           <Command.Empty className="px-2 py-2 text-body-sm text-secondary">
@@ -152,14 +168,15 @@ export function ComboboxPanel<T extends string>(props: ComboboxPanelProps<T>) {
                 onSelect={() => choose(o.value)}
                 className={cn(
                   optionRow,
-                  "data-[disabled=true]:opacity-disabled data-[selected=true]:bg-selected",
+                  "group data-[disabled=true]:opacity-disabled data-[selected=true]:bg-selected",
                 )}
               >
-                {props.multiple && <CheckBox checked={isSelected(o.value)} />}
+                {props.multiple && <CheckBox checked={isSelected(o.value)} revealOnHighlight />}
                 <OptionContent
                   option={o}
                   selected={!props.multiple && isSelected(o.value)}
                   index={showNumbers ? ordered.indexOf(o) + numberFrom : undefined}
+                  iconSlot={hasIcons}
                 />
               </Command.Item>
             ))}

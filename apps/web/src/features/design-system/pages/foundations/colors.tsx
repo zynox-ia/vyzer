@@ -10,9 +10,12 @@ const surfaces: Swatch[] = [
   { token: "bg-popover", cssVar: "--bg-popover", usage: "menus, popovers" },
   { token: "bg-input", cssVar: "--bg-input", usage: "campos" },
   { token: "bg-inverse", cssVar: "--bg-inverse", usage: "base do botão primário" },
-  { token: "primary-stop-1", cssVar: "--primary-stop-1", usage: "degradê do primário (topo)" },
-  { token: "primary-stop-2", cssVar: "--primary-stop-2", usage: "degradê do primário (meio)" },
-  { token: "primary-stop-3", cssVar: "--primary-stop-3", usage: "degradê do primário (base)" },
+  { token: "bg-primary-button", cssVar: "--bg-primary-button", usage: "botão primário (chapado)" },
+  {
+    token: "bg-primary-button-hover",
+    cssVar: "--bg-primary-button-hover",
+    usage: "hover do botão primário",
+  },
 ];
 
 const states: Swatch[] = [
@@ -33,9 +36,15 @@ const borders: Swatch[] = [
   { token: "border-subtle", cssVar: "--line-subtle", usage: "divisórias" },
   { token: "border-default", cssVar: "--line-default", usage: "cards, modal" },
   { token: "border-strong", cssVar: "--line-strong", usage: "popovers" },
-  { token: "border-control", cssVar: "--line-control", usage: "campos e controles" },
+  { token: "border-control", cssVar: "--line-control", usage: "checkbox, radio, switch" },
   { token: "border-control-hover", cssVar: "--line-control-hover", usage: "hover de controles" },
-  { token: "accent (foco)", cssVar: "--accent", usage: "foco, item ativo" },
+  { token: "border-field", cssVar: "--line-field", usage: "input, text area, select" },
+  {
+    token: "border-field-hover · -focus",
+    cssVar: "--line-field-active",
+    usage: "hover e foco de campos",
+  },
+  { token: "accent", cssVar: "--accent", usage: "item ativo da sidebar, contadores" },
 ];
 
 const status: Swatch[] = ["success", "info", "warning", "danger"].map((s) => ({
@@ -80,16 +89,16 @@ const textChecks: ContrastCheck[] = [
     fg: "--fg-inverse",
     target: 4.5,
     apca: 75,
-    on: ["--bg-inverse", "--primary-stop-1", "--primary-stop-2", "--primary-stop-3"],
+    on: ["--bg-inverse", "--bg-primary-button", "--bg-primary-button-hover"],
   },
 ];
 
 const indicatorChecks: ContrastCheck[] = [
-  { label: "Foco B (padrão): terracota 100%", fg: "--accent", target: 3 },
-  { label: "Foco A: terracota 25%", fg: "--accent", fgAlpha: 0.25, target: 3 },
-  { label: "Foco B sobre o botão primário", fg: "--accent", target: 3, on: ["--bg-inverse"] },
   { label: "border-control", fg: "--line-control", target: 3 },
   { label: "border-control-hover", fg: "--line-control-hover", target: 3 },
+  { label: "border-field (Figma 13:2010)", fg: "--line-field", target: 3 },
+  // Foco de todo o sistema (decisão do responsável) = hover e foco de campo
+  { label: "foco e hover de campo", fg: "--line-field-active", target: 3 },
   {
     label: "border-default (hairline)",
     fg: "--line-default",
@@ -164,10 +173,10 @@ export function Page() {
         title="Foco e controles"
         description={
           <>
-            Indicadores e bordas de controle precisam de 3:1. O foco A (borda a 25%) é medido para
-            comparação: se não atingir 3:1, o padrão é o B. A hairline é decorativa; a meta dela é
-            só ser percebida (APCA ≥ 15). Troque a variante na toolbar e navegue com{" "}
-            <Code>Tab</Code>.
+            Indicadores e bordas de controle precisam de 3:1. O foco é a linha de campo em todo o
+            sistema, por decisão do responsável, e fica abaixo dessa meta: a medição fica aqui para
+            acompanhar. A hairline é decorativa; a meta dela é só ser percebida (APCA ≥ 15). Navegue
+            com <Code>Tab</Code> para ver o foco.
           </>
         }
       >

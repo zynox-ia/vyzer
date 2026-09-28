@@ -226,6 +226,12 @@ export function Page() {
             description: "Texto da busca.",
           },
           {
+            name: "searchable",
+            type: "boolean",
+            default: "true",
+            description: "false: lista curta sem busca (Lead); a lista recebe o foco e o teclado.",
+          },
+          {
             name: "shortcut",
             type: "string[]",
             description: "Atalho que abre o seletor (Kbd no topo).",
@@ -252,6 +258,11 @@ export function Page() {
           },
         ],
         decisions: [
+          {
+            decision:
+              "Multisseleção: a caixa desmarcada só aparece na linha em destaque; o espaço fica reservado",
+            rule: "Figma 22:2039 (submenus de filtro)",
+          },
           {
             decision: "Cabeçalho de busca de 36 px com hairline embaixo",
             rule: "Figma 1:936 (h 36, borda #292a2d)",

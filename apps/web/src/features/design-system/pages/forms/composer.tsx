@@ -23,7 +23,7 @@ function Composer() {
           ]}
         />
         {mode === "update" && (
-          <Button size="sm" icon={Activity} className="text-success-strong">
+          <Button icon={Activity} className="text-success-strong">
             On track
           </Button>
         )}
@@ -42,14 +42,10 @@ function Composer() {
         </div>
       )}
       <div className="flex items-center justify-between px-3 py-3">
-        <Button size="sm" icon={ListChecks}>
-          Write with Agent
-        </Button>
+        <Button icon={ListChecks}>Write with Agent</Button>
         <div className="flex items-center gap-3">
           <IconButton icon={Paperclip} label="Attach images, files, or videos" size="md" />
-          <Button size="sm" type="submit">
-            Post update
-          </Button>
+          <Button type="submit">Post update</Button>
         </div>
       </div>
     </form>

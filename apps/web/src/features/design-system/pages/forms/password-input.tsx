@@ -26,7 +26,6 @@ export function Page() {
         },
         showcase: (
           <div className="flex max-w-72 flex-col gap-3">
-            <PasswordInput aria-label="Password md" />
             <PasswordInput aria-label="Password lg" size="lg" />
             <PasswordInput aria-label="Password xl" size="xl" />
           </div>

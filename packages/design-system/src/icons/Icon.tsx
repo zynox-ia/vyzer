@@ -13,8 +13,11 @@ export const iconSizeClass: Record<IconSize, string> = {
   xl: "size-icon-xl",
 };
 
-/** Traço padrão dos ícones de linha (lucide), próximo do peso dos ícones do Figma. */
-export const ICON_STROKE = 1.5;
+/**
+ * Traço padrão dos ícones de linha (lucide), em px reais (absoluteStrokeWidth). Era 1,5 px (peso
+ * do Figma); o responsável pediu +1 px em todo o sistema.
+ */
+export const ICON_STROKE = 2.5;
 
 export type IconProps = Omit<SVGProps<SVGSVGElement>, "ref"> & {
   icon: LucideIcon;

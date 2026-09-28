@@ -1,6 +1,28 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@vyzer/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 
+/** Variante pills (Figma 18:1132, painel Filter Breakdown). */
+function PillsExample() {
+  return (
+    <Tabs defaultValue="projects" className="w-96">
+      <TabsList variant="pills" aria-label="Breakdown">
+        <TabsTrigger value="assignees">Assignees</TabsTrigger>
+        <TabsTrigger value="labels">Labels</TabsTrigger>
+        <TabsTrigger value="projects">Projects</TabsTrigger>
+      </TabsList>
+      <TabsContent value="assignees" className="p-4 text-body-md text-secondary">
+        Issues per assignee.
+      </TabsContent>
+      <TabsContent value="labels" className="p-4 text-body-md text-secondary">
+        Issues per label.
+      </TabsContent>
+      <TabsContent value="projects" className="p-4 text-body-md text-secondary">
+        Issues per project.
+      </TabsContent>
+    </Tabs>
+  );
+}
+
 function Example({ defaultValue = "overview" }: { defaultValue?: string }) {
   return (
     <Tabs defaultValue={defaultValue} className="w-96">
@@ -49,12 +71,18 @@ export function Page() {
           <div className="flex flex-wrap items-start gap-8">
             <Example />
             <Example defaultValue="updates" />
+            <PillsExample />
           </div>
         ),
         states: null,
         statesNote:
-          "Ativa: texto primário e sublinhado de 1 px em fg-primary. Inativa: texto secundário. Hover: texto primário. Foco: anel de foco em volta da aba.",
-        themes: () => <Example />,
+          "Ativa: texto primário e sublinhado de 1 px em fg-primary. Inativa: texto secundário. Hover: texto primário. Foco: anel de foco em volta da aba. Pills: todas em relevo; a ativa ganha a camada de pressionado e o texto primário; hover só no fundo das inativas.",
+        themes: () => (
+          <div className="flex flex-col gap-4">
+            <Example />
+            <PillsExample />
+          </div>
+        ),
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
             Lista com hairline embaixo e 8 px de folga lateral; abas de 32 px de altura, rótulo de
@@ -91,6 +119,12 @@ export function Page() {
             description: "Aba ativa (controlada ou não).",
           },
           { name: "Tabs.onValueChange", type: "(value: string) => void", description: "Troca." },
+          {
+            name: "TabsList.variant",
+            type: '"underline" | "pills"',
+            default: '"underline"',
+            description: "pills: pílulas de 28 px em relevo que dividem a largura.",
+          },
           { name: "TabsTrigger.value", type: "string", description: "Valor da aba." },
           { name: "TabsContent.value", type: "string", description: "Painel da aba." },
         ],
@@ -101,6 +135,11 @@ export function Page() {
           },
           { decision: "Hairline de largura total sob a lista", rule: "Figma 1:1404" },
           { decision: "Radix Tabs", rule: "AGENTS.md regra 6 (Radix para primitivos)" },
+          {
+            decision:
+              "Variante pills: 28 px, 12 px/500, relevo; ativa com camada de pressionado e texto primário",
+            rule: "Figma 18:729 e 18:1132 (List / Board, Assignees / … / Projects); mesmo padrão do Segmented Control em pílulas",
+          },
         ],
       }}
     />

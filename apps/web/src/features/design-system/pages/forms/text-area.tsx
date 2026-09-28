@@ -158,12 +158,16 @@ export function Page() {
         decisions: [
           { decision: "Linha de 20 px no corpo de 13 px", rule: "§2 1,45× arredondado a 4" },
           {
-            decision: "Padding 6 px × 8 px",
-            rule: "Figma date input 6/12; §1 horizontal ≥ vertical",
+            decision: "Padding 6 px × 12 px",
+            rule: "Figma 13:2010 (12 px à esquerda); §1 horizontal ≥ vertical",
           },
           {
             decision: "Mesma borda, raio e estados do Text Input",
             rule: "§11 similaridade: mesma função, mesma aparência",
+          },
+          {
+            decision: "Borda border-field; foco sem acento (border-field-focus)",
+            rule: "Figma 13:2010 (#2f3033, 1 px); foco pedido pelo responsável",
           },
         ],
       }}

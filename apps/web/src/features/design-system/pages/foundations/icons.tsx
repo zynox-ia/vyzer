@@ -114,7 +114,7 @@ export function Page() {
           },
           {
             decision: `Traço único de ${ICON_STROKE} px (absoluteStrokeWidth)`,
-            rule: "§10 mesmo stroke em todo o sistema",
+            rule: "§10 mesmo stroke em todo o sistema; 1,5 → 2,5 px a pedido do responsável",
           },
           { decision: "Cor por currentColor", rule: "§10 ícones herdam cor" },
           {

@@ -3,42 +3,68 @@
  * Textos reais do produto; valores fixos só para a documentação.
  */
 import {
-  ColorDot,
+  Avatar,
   ProjectIcon,
-  type LabelColor,
+  type FrequentEmoji,
   type LabelItem,
   type ListOption,
   type ProjectIconValue,
 } from "@vyzer/design-system/components";
-import { PriorityIcon } from "@vyzer/design-system/icons";
+import { PriorityIcon, StatusIcon } from "@vyzer/design-system/icons";
 import { UserRound } from "lucide-react";
 
 export type ProjectStatus =
   | "backlog"
-  | "planned"
   | "ready"
+  | "ready-started"
   | "in-progress"
-  | "completed"
-  | "canceled";
+  | "in-review"
+  | "verifying"
+  | "blocked"
+  | "done"
+  | "canceled"
+  | "duplicate";
 
-const status = (
-  value: ProjectStatus,
-  label: string,
-  color: LabelColor,
-): ListOption<ProjectStatus> => ({
-  value,
-  label,
-  icon: <ColorDot color={color} size="md" />,
-});
-
-/** Status de projeto (Figma 1:1013): bolinhas de 14 px na cor do estado. */
+/**
+ * Status (Figma 18:152, menu "Change status"): ícones de status de workflow (StatusIcon, 6:1543)
+ * na cor do estado; os de andamento enchem o setor de 1/6 a 5/6. Os dois "Ready" seguem o Figma.
+ */
 export const PROJECT_STATUSES: ListOption<ProjectStatus>[] = [
-  status("backlog", "Backlog", "orange"),
-  status("planned", "Planned", "grey"),
-  status("ready", "Ready", "amber"),
-  status("in-progress", "In Progress", "amber"),
-  status("completed", "Completed", "purple"),
-  status("canceled", "Canceled", "slate"),
+  { value: "backlog", label: "Backlog", icon: <StatusIcon type="backlog" /> },
+  // Os dois "Ready" do Figma: o ícone com nome acessível distingue as opções no leitor de tela.
+  {
+    value: "ready",
+    label: "Ready",
+    icon: <StatusIcon type="unstarted" tone="info" label="Not started" />,
+  },
+  {
+    value: "ready-started",
+    label: "Ready",
+    icon: <StatusIcon type="started" progress={1 / 6} tone="neutral" label="Started" />,
+  },
+  {
+    value: "in-progress",
+    label: "In Progress",
+    icon: <StatusIcon type="started" progress={1 / 3} />,
+  },
+  {
+    value: "in-review",
+    label: "In Review",
+    icon: <StatusIcon type="started" progress={1 / 2} tone="success" />,
+  },
+  {
+    value: "verifying",
+    label: "Verifying",
+    icon: <StatusIcon type="started" progress={2 / 3} className="text-orange" />,
+  },
+  {
+    value: "blocked",
+    label: "Blocked",
+    icon: <StatusIcon type="started" progress={5 / 6} tone="danger" />,
+  },
+  { value: "done", label: "Done", icon: <StatusIcon type="completed" /> },
+  { value: "canceled", label: "Canceled", icon: <StatusIcon type="canceled" /> },
+  { value: "duplicate", label: "Duplicate", icon: <StatusIcon type="duplicate" /> },
 ];
 
 export type Priority = "none" | "urgent" | "high" | "medium" | "low";
@@ -53,8 +79,44 @@ export const PRIORITIES: ListOption<Priority>[] = [
 
 export const LEADS: ListOption[] = [
   { value: "none", label: "No lead", icon: <UserRound className="size-4 text-secondary" /> },
-  { value: "andre", label: "André Júnio", group: "Users from the project team" },
-  { value: "marina", label: "Marina Costa", group: "Users from the project team" },
+  // Figma 1:931: avatar de 16 px ao lado do nome (aqui sem foto: ícone de pessoa)
+  {
+    value: "andre",
+    label: "André Júnio",
+    group: "Users from the project team",
+    icon: <Avatar name="André Júnio" size="sm" />,
+  },
+  {
+    value: "marina",
+    label: "Marina Costa",
+    group: "Users from the project team",
+    icon: <Avatar name="Marina Costa" size="sm" />,
+  },
+];
+
+/**
+ * Emojis frequentes de exemplo (seção "Frequently used" do Figma 1:1401). No produto, o histórico
+ * vem do usuário.
+ */
+export const FREQUENT_EMOJIS: FrequentEmoji[] = [
+  { emoji: "👍", label: "Thumbs up" },
+  { emoji: "✌️", label: "Victory hand" },
+  { emoji: "🙏", label: "Folded hands" },
+  { emoji: "😂", label: "Face with tears of joy" },
+  { emoji: "❤️", label: "Red heart" },
+  { emoji: "👀", label: "Eyes" },
+  { emoji: "✅", label: "Check mark button" },
+  { emoji: "😀", label: "Grinning face" },
+  { emoji: "😅", label: "Grinning face with sweat" },
+  { emoji: "🎉", label: "Party popper" },
+  { emoji: "🚀", label: "Rocket" },
+  { emoji: "⚠️", label: "Warning" },
+  { emoji: "❌", label: "Cross mark" },
+  { emoji: "🙌", label: "Raising hands" },
+  { emoji: "🔥", label: "Fire" },
+  { emoji: "💡", label: "Light bulb" },
+  { emoji: "👋", label: "Waving hand" },
+  { emoji: "❓", label: "Red question mark" },
 ];
 
 export const INITIAL_LABELS: LabelItem[] = [

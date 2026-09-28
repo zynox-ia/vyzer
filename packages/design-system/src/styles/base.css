@@ -4,15 +4,52 @@
     @apply bg-app font-sans text-body-md text-primary antialiased;
   }
 
-  /* Foco padrão para qualquer elemento focável (mesma regra do utilitário focus-ring) */
+  /* Foco padrão para qualquer elemento focável (mesma regra do utilitário focus-ring): linha de
+   * 1 px no tom de hover de campo, sem acento nem halo (pedido do responsável) */
   :focus-visible {
-    outline: 1px solid color-mix(in srgb, var(--accent) var(--focus-alpha), transparent);
+    outline: 1px solid var(--line-field-active);
     outline-offset: -1px;
-    --tw-ring-shadow: 0 0 0 var(--focus-halo-size)
-      color-mix(in srgb, var(--accent) 25%, transparent);
-    box-shadow:
-      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
-      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+
+  /* Barra de rolagem (pedido do responsável): oculta na página; nos componentes com rolagem
+   * (listas, popovers), fina e translúcida, mais visível no hover. A rolagem continua por roda,
+   * toque e teclado. O Chromium ignora os pseudo-elementos quando scrollbar-width está
+   * definido, por isso a regra padrão só entra onde eles não existem (Firefox). */
+  html {
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+  *::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-track:vertical {
+    margin-block: var(--scrollbar-inset);
+  }
+  *::-webkit-scrollbar-track:horizontal {
+    margin-inline: var(--scrollbar-inset);
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+    background: var(--scrollbar-thumb);
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
+    html {
+      scrollbar-width: none;
+    }
   }
 
   a {
