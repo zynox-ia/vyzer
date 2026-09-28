@@ -16,7 +16,7 @@
 
   /* Superfícies opacas: elevação = superfície mais clara (skill §3) */
   --bg-app: var(--vz-warm-990);
-  --bg-sidebar: var(--vz-warm-950);
+  --bg-sidebar: var(--vz-warm-975);
   --bg-panel: var(--vz-warm-950);
   --bg-surface: var(--vz-warm-925);
   --bg-subtle: var(--vz-warm-925);
@@ -32,9 +32,12 @@
   /* Botão primário chapado (pedido do responsável: #f0eee6); hover um degrau abaixo */
   --bg-primary-button: var(--vz-warm-100);
   --bg-primary-button-hover: var(--vz-warm-150);
+  /* Sombra de contato só (sem anel): painel de conteúdo do shell (aprovado pelo responsável,
+   * 28/09, medido ao vivo no Linear — o painel dele não tem o anel claro). É a mesma camada de
+   * baixo do --raised; --raised compõe esta variável em vez de repetir o valor. */
+  --contact: 0 0.5px 1px 1px rgb(var(--vz-shadow-black) / 0.3);
   /* Relevo (Figma 1:6366, 1:6404): anel de 1 px a 9% + contato curto. Borda de chips e botões */
-  --raised:
-    0 0 0 1px rgb(var(--vz-overlay-light) / 0.09), 0 0.5px 1px 1px rgb(var(--vz-shadow-black) / 0.3);
+  --raised: 0 0 0 1px rgb(var(--vz-overlay-light) / 0.09), var(--contact);
 
   /* Estados como camadas translúcidas: funcionam sobre qualquer superfície (skill §12) */
   --bg-hover: rgb(var(--vz-overlay-light) / 0.04);
@@ -48,6 +51,11 @@
   --fg-primary: var(--vz-warm-50);
   --fg-secondary: var(--vz-warm-400);
   --fg-tertiary: var(--vz-warm-500);
+  /* Texto/ícone dos itens não selecionados da sidebar — cinza quase neutro (não vem da escala
+   * warm, croma perto de zero), um degrau mais claro que fg-secondary. Aprovado pelo responsável
+   * em 28/09, medido ao vivo contra o Linear (ele usa lch(60,6 1,2 272) ali). ≥ 4,5:1 sobre
+   * bg-app confirmado (10,21:1). Só na sidebar — fg-secondary global não muda. */
+  --fg-nav: #bababa;
   /* Placeholder: ≥ 4,5:1 nas superfícies onde há campos (WCAG 1.4.3 vale para placeholder) */
   --fg-placeholder: var(--vz-warm-500);
   --fg-inverse: var(--vz-warm-975);
@@ -118,8 +126,8 @@
   /* No claro, o creme some no fundo: o primário fica no grafite invertido, também chapado */
   --bg-primary-button: var(--vz-warm-950);
   --bg-primary-button-hover: var(--vz-warm-750);
-  --raised:
-    0 0 0 1px rgb(var(--vz-overlay-ink) / 0.1), 0 0.5px 1px 1px rgb(var(--vz-overlay-ink) / 0.08);
+  --contact: 0 0.5px 1px 1px rgb(var(--vz-overlay-ink) / 0.08);
+  --raised: 0 0 0 1px rgb(var(--vz-overlay-ink) / 0.1), var(--contact);
 
   --bg-hover: rgb(var(--vz-overlay-ink) / 0.04);
   --bg-pressed: rgb(var(--vz-overlay-ink) / 0.1);
@@ -129,6 +137,9 @@
   --fg-primary: var(--vz-warm-950);
   --fg-secondary: var(--vz-warm-600);
   --fg-tertiary: var(--vz-warm-500);
+  /* Equivalente claro do fg-nav do escuro — cinza quase neutro, aprovado pelo responsável em
+   * 28/09, ≥ 4,5:1 sobre bg-app (4,84:1 confirmado). Só na sidebar. */
+  --fg-nav: #6e6e6e;
   --fg-placeholder: var(--vz-warm-580);
   --fg-inverse: var(--vz-warm-50);
 

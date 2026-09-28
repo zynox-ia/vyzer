@@ -5,6 +5,7 @@ export {
   type ButtonVariant,
   type IconButtonProps,
   type IconButtonSize,
+  type IconButtonTone,
 } from "./button";
 export {
   Checkbox,

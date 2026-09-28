@@ -2,6 +2,7 @@ import {
   IconButton,
   type ButtonVariant,
   type IconButtonSize,
+  type IconButtonTone,
 } from "@vyzer/design-system/components";
 import { Ellipsis, ListFilter, Plus, Search, SlidersHorizontal, SquarePen } from "lucide-react";
 import { useState } from "react";
@@ -14,9 +15,12 @@ const VARIANTS: ButtonVariant[] = ["ghost", "secondary", "primary", "danger"];
 const SIZES: IconButtonSize[] = ["sm", "md", "lg"];
 const SIZE_PX: Record<IconButtonSize, number> = { xs: 20, sm: 24, md: 28, lg: 32 };
 
+const TONES: IconButtonTone[] = ["default", "subtle"];
+
 function usePlayground() {
   const [variant, setVariant] = useState<ButtonVariant>("secondary");
   const [size, setSize] = useState<IconButtonSize>("md");
+  const [tone, setTone] = useState<IconButtonTone>("default");
   const [disabled, setDisabled] = useState<"no" | "yes">("no");
   return {
     preview: (
@@ -25,6 +29,7 @@ function usePlayground() {
         label="Create new issue"
         variant={variant}
         size={size}
+        tone={tone}
         disabled={disabled === "yes"}
       />
     ),
@@ -44,6 +49,14 @@ function usePlayground() {
             value={size}
             onChange={setSize}
             options={SIZES.map((s) => ({ value: s, label: s }))}
+          />
+        </Field>
+        <Field label="tone">
+          <Segmented
+            label="tone"
+            value={tone}
+            onChange={setTone}
+            options={TONES.map((t) => ({ value: t, label: t }))}
           />
         </Field>
         <Field label="disabled">
@@ -108,6 +121,10 @@ export function Page() {
                 node: <IconButton icon={Search} label="Search" data-preview="hover active" />,
               },
               { label: "disabled", node: <IconButton icon={Search} label="Search" disabled /> },
+              {
+                label: "tone subtle",
+                node: <IconButton icon={Plus} label="Add view" tone="subtle" />,
+              },
             ]}
           />
         ),
@@ -118,12 +135,16 @@ export function Page() {
             <IconButton icon={ListFilter} label="Filter" variant="secondary" />
             <IconButton icon={SlidersHorizontal} label="Display options" variant="secondary" />
             <IconButton icon={Ellipsis} label="More actions" />
+            <IconButton icon={Plus} label="Add view" tone="subtle" />
           </div>
         ),
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
-            Círculo do tamanho do controle com ícone de 16 px no centro. Ghost usa o ícone em
-            text-secondary e passa a text-primary no hover.
+            Círculo do tamanho do controle com ícone de 14 px no centro (md) ou 16 px (demais
+            tamanhos). Secondary e ghost usam o ícone em text-secondary e passam a text-primary no
+            hover; secondary fica só com o preenchimento sutil de <Code>bg-control</Code>, sem anel
+            nem sombra (o Button com texto mantém o relevo "raised"). <Code>tone="subtle"</Code>{" "}
+            parte de text-tertiary para ações de menor destaque, como o "+" de Add view.
           </p>
         ),
         keyboard: ["Tab foca; Enter e Espaço acionam."],
@@ -132,7 +153,8 @@ export function Page() {
             <Code>label</Code> é obrigatório e vira o nome acessível (aria-label).
           </>,
           "Alvo mínimo de 24 px mesmo no tamanho sm.",
-          "Ícone ghost em text-secondary: ≥ 3:1 em todas as superfícies (Foundations → Colors).",
+          "Ícone secondary/ghost em text-secondary: ≥ 3:1 em todas as superfícies (Foundations → Colors).",
+          'tone="subtle" (text-tertiary): ≥ 3:1 mesmo sobre bg-control/bg-surface no tema claro (medido: 3,15:1, o mais apertado do sistema).',
         ],
         content: ['O label descreve a ação, não o ícone: "Create new issue", não "Pencil".'],
         dos: ["Use o mesmo ícone para a mesma ação em todo o produto"],
@@ -142,13 +164,17 @@ import { SquarePen } from "lucide-react";
 
 <IconButton icon={SquarePen} label="Create new issue" variant="secondary" />`,
         props: [
-          { name: "icon", type: "LucideIcon", description: "Ícone (16 px)." },
+          {
+            name: "icon",
+            type: "LucideIcon",
+            description: "Ícone (14 px no md, 16 px nos demais tamanhos).",
+          },
           { name: "label", type: "string", description: "Nome acessível, obrigatório." },
           {
             name: "variant",
             type: "ButtonVariant",
             default: '"ghost"',
-            description: "Mesmas variantes do Button.",
+            description: "Mesmas variantes do Button, com cor e fundo próprios (mais discretos).",
           },
           {
             name: "size",
@@ -156,19 +182,33 @@ import { SquarePen } from "lucide-react";
             default: '"md"',
             description: "20 · 24 · 28 · 32 px (xs só dentro de campos de 24 px).",
           },
+          {
+            name: "tone",
+            type: "IconButtonTone",
+            default: '"default"',
+            description: '"subtle" usa text-tertiary (hover text-secondary), um degrau abaixo.',
+          },
         ],
         decisions: [
           {
-            decision: "Redondo, 28 px, ícone de 16 px",
-            rule: "Figma: botões redondos de 28 px (1:6778, 1:5074)",
+            decision: "Redondo, 28 px, ícone de 14 px (md)",
+            rule: "Linear medido pelo responsável em 28/09 (28 px, ícone 14 px)",
           },
           {
             decision: "Tamanhos 24 · 28 · 32 iguais aos do Button",
             rule: "§6 alturas iguais entre equivalentes",
           },
           {
-            decision: "Ghost em text-secondary, hover em text-primary",
-            rule: "§4 rebaixar é mais eficaz que destacar",
+            decision: "Secondary e ghost em text-secondary, hover em text-primary",
+            rule: "§4 rebaixar é mais eficaz que destacar; Linear usa o mesmo peso nos dois",
+          },
+          {
+            decision: 'Secondary sem "raised": só bg-control, sem anel nem sombra',
+            rule: "Linear medido pelo responsável em 28/09; ADR-0013 (exceção ao raised do Button)",
+          },
+          {
+            decision: 'tone="subtle" para ações de menor destaque',
+            rule: 'Linear usa um terceiro peso (text-tertiary) no "+" de Add view',
           },
           { decision: "label obrigatório", rule: "§12 e WCAG 4.1.2 (nome acessível)" },
         ],

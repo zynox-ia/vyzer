@@ -43,7 +43,7 @@ Monorepo pnpm (ADR-0003). Front (`apps/web`): Vite + React 19 + TypeScript (stri
 
 1. **Spec**: copie `docs/specs/TEMPLATE.md`, preencha com o link do nó do Figma e peça aprovação.
 2. **Implementar** conforme a spec aprovada.
-3. **Revisão em contexto limpo**: um revisor sem o histórico da implementação compara o resultado com o Figma (subagente `figma-fidelity-reviewer`) e classifica achados como bloqueante ou menor.
+3. **Revisão em contexto limpo**: um revisor sem o histórico da implementação (subagente `figma-fidelity-reviewer`) compara o resultado com o Figma **e com a tela real do Linear**, aberta lado a lado no browser da Traycer, sem alterar nada no Linear. Ele classifica os achados como bloqueante ou menor. Divergência visível do Linear sem registro em `.figma/` é bloqueante e volta para reimplementação.
 4. **Corrigir os bloqueantes.**
 5. **Validação do responsável** (humano) no navegador.
 6. **Commit** só depois da validação.

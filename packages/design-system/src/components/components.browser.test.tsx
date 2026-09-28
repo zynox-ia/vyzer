@@ -169,6 +169,85 @@ describe("Button", () => {
     const screen = await render(<IconButton icon={Plus} label="Add member" />);
     await expect.element(screen.getByRole("button", { name: "Add member" })).toBeVisible();
   });
+
+  it("IconButton usa ícone de 14 px no tamanho md e 16 px nos demais", async () => {
+    const screen = await render(
+      <>
+        <IconButton icon={Plus} label="xs" size="xs" data-testid="icon-xs" />
+        <IconButton icon={Plus} label="sm" size="sm" data-testid="icon-sm" />
+        <IconButton icon={Plus} label="md" size="md" data-testid="icon-md" />
+        <IconButton icon={Plus} label="lg" size="lg" data-testid="icon-lg" />
+      </>,
+    );
+    // A classe (não a largura do svg, que o lucide fixa em 24 por padrão) reflete o tamanho real.
+    const hasIconSizeClass = (testId: string, size: "14" | "sm") =>
+      screen
+        .getByTestId(testId)
+        .element()
+        .querySelector("svg")
+        ?.classList.contains(`size-icon-${size}`);
+    expect(hasIconSizeClass("icon-md", "14")).toBe(true);
+    expect(hasIconSizeClass("icon-xs", "sm")).toBe(true);
+    expect(hasIconSizeClass("icon-sm", "sm")).toBe(true);
+    expect(hasIconSizeClass("icon-lg", "sm")).toBe(true);
+  });
+
+  it("IconButton secondary perde o relevo raised; Button secondary mantém", async () => {
+    const screen = await render(
+      <>
+        <Button variant="secondary">Save changes</Button>
+        <IconButton icon={Plus} label="Add" variant="secondary" data-testid="icon-secondary" />
+      </>,
+    );
+    const button = screen.getByRole("button", { name: "Save changes" }).element();
+    const iconButton = screen.getByTestId("icon-secondary").element();
+    expect(getComputedStyle(button).boxShadow).not.toBe("none");
+    expect(getComputedStyle(iconButton).boxShadow).toBe("none");
+  });
+
+  it("IconButton secondary e ghost usam text-secondary e passam a text-primary no hover", async () => {
+    const screen = await render(
+      <>
+        <span data-testid="expected-secondary" className="text-secondary" />
+        <span data-testid="expected-primary" className="text-primary" />
+        <IconButton icon={Plus} label="Add" variant="secondary" data-testid="secondary" />
+        <IconButton
+          icon={Plus}
+          label="Add"
+          variant="secondary"
+          data-preview="hover"
+          data-testid="secondary-hover"
+        />
+        <IconButton icon={Plus} label="Add" variant="ghost" data-testid="ghost" />
+      </>,
+    );
+    const colorOf = (testId: string) =>
+      getComputedStyle(screen.getByTestId(testId).element()).color;
+    expect(colorOf("secondary")).toBe(colorOf("expected-secondary"));
+    expect(colorOf("ghost")).toBe(colorOf("expected-secondary"));
+    expect(colorOf("secondary-hover")).toBe(colorOf("expected-primary"));
+  });
+
+  it('IconButton tone="subtle" usa text-tertiary e passa a text-secondary no hover', async () => {
+    const screen = await render(
+      <>
+        <span data-testid="expected-tertiary" className="text-tertiary" />
+        <span data-testid="expected-secondary" className="text-secondary" />
+        <IconButton icon={Plus} label="Add view" tone="subtle" data-testid="subtle" />
+        <IconButton
+          icon={Plus}
+          label="Add view"
+          tone="subtle"
+          data-preview="hover"
+          data-testid="subtle-hover"
+        />
+      </>,
+    );
+    const colorOf = (testId: string) =>
+      getComputedStyle(screen.getByTestId(testId).element()).color;
+    expect(colorOf("subtle")).toBe(colorOf("expected-tertiary"));
+    expect(colorOf("subtle-hover")).toBe(colorOf("expected-secondary"));
+  });
 });
 
 describe("Checkbox, Switch e Radio", () => {

@@ -18,6 +18,7 @@ import { ThemePair } from "../../kit/theme-frame";
 
 const sizes: [IconSize, number, string][] = [
   ["xs", 12, "Dentro de chips e badges de 20 px"],
+  ["14", 14, "Icon Button de 28 px (md)"],
   ["sm", 16, "Padrão: ao lado de texto de 12–13 px"],
   ["md", 20, "Ao lado de texto de 16 px, botões xl"],
   ["lg", 24, "Estados vazios pequenos"],
@@ -114,12 +115,16 @@ export function Page() {
           },
           {
             decision: `Traço único de ${ICON_STROKE} px (absoluteStrokeWidth)`,
-            rule: "§10 mesmo stroke em todo o sistema; 1,5 → 2,5 px a pedido do responsável",
+            rule: "§10 mesmo stroke em todo o sistema; 2 px (1,5 do Figma + 0,5), decisão do responsável em 28/09 depois de testar 2,5 e 1,5",
           },
           { decision: "Cor por currentColor", rule: "§10 ícones herdam cor" },
           {
             decision: "Alvo de clique 24 px mesmo com ícone de 16 px",
             rule: "§6 padding invisível",
+          },
+          {
+            decision: 'Degrau "14" entre xs e sm',
+            rule: "Icon Button de 28 px medido contra o Linear (responsável, 28/09): nem 12 nem 16 batiam; nome literal em vez de 2xs/xs, que já ficam a meio caminho",
           },
         ]}
       />

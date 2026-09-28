@@ -377,7 +377,7 @@ const [filters, setFilters] = useState<FilterValue>({});
             rule: "Mesmo indicador do Submenu (Figma 1:1255); terciário não chega a 4,5:1 no claro",
           },
           {
-            decision: "Ícones do Figma trocados pelos equivalentes do lucide, traço 2,5 px",
+            decision: "Ícones do Figma trocados pelos equivalentes do lucide, traço 2 px",
             rule: "ADR-0013 (biblioteca única de ícones)",
           },
           {

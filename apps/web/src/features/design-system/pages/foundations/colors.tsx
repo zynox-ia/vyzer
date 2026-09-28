@@ -30,6 +30,7 @@ const text: Swatch[] = [
   { token: "text-tertiary", cssVar: "--fg-tertiary", usage: "desabilitado, decoração" },
   { token: "text-placeholder", cssVar: "--fg-placeholder", usage: "placeholder de campos" },
   { token: "text-accent", cssVar: "--accent-text", usage: "contadores de destaque" },
+  { token: "text-nav-idle", cssVar: "--fg-nav", usage: "item de nav não selecionado (sidebar)" },
 ];
 
 const borders: Swatch[] = [
@@ -83,7 +84,19 @@ const textChecks: ContrastCheck[] = [
     apca: 30,
     on: ["--bg-input", "--bg-panel", "--bg-surface", "--bg-sidebar", "--bg-hover"],
   },
-  { label: "text-accent (contador)", fg: "--accent-text", target: 4.5, apca: 60 },
+  {
+    label: "text-accent (contador, item ativo da sidebar)",
+    fg: "--accent-text",
+    target: 4.5,
+    apca: 60,
+  },
+  {
+    label: "text-nav-idle (item de nav não selecionado)",
+    fg: "--fg-nav",
+    target: 4.5,
+    apca: 60,
+    on: ["--bg-app"],
+  },
   {
     label: "text-inverse (botão primário)",
     fg: "--fg-inverse",
@@ -226,6 +239,16 @@ export function Page() {
           {
             decision: "Acento terracota só em foco, item ativo da sidebar e contadores",
             rule: "§3 orçamento de ênfase (< 5% da área); ADR-0012",
+          },
+          {
+            decision:
+              "Testado e revertido, 28/09: text-selected (bege) no item ativo da sidebar, no lugar do acento — o responsável decidiu manter o terracota",
+            rule: "ADR-0012, ADR-0013",
+          },
+          {
+            decision:
+              "Aprovado, 28/09: text-nav-idle (cinza quase neutro) nos itens de nav não selecionados da sidebar, no lugar do text-secondary global",
+            rule: "ADR-0013 (Nav idle color)",
           },
           {
             decision:

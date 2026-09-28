@@ -77,6 +77,10 @@
   --text-color-inverse: var(--fg-inverse);
   --text-color-on-checked: var(--fg-inverse);
   --text-color-accent: var(--accent-text);
+  /* Itens não selecionados da sidebar (texto e ícone): cinza quase neutro, aprovado pelo
+   * responsável em 28/09. Nome próprio ("nav-idle", não "nav") para não colidir com o tamanho
+   * de texto --text-sidebar-title. */
+  --text-color-nav-idle: var(--fg-nav);
   --text-color-success: var(--st-success);
   --text-color-info: var(--st-info);
   --text-color-warning: var(--st-warning);
@@ -216,6 +220,14 @@
   --text-label-md--line-height: 20px;
   --text-label-md--letter-spacing: 0em;
   --text-label-md--font-weight: 500;
+  /* Título da sidebar (nome do workspace): 1 px acima do texto dos itens de nav (13 px),
+   * aprovado pelo responsável em 28/09. Nasceu como teste de tamanho para os itens de nav
+   * (`text-nav`, 14 px) — os itens voltaram para 13 (`text-label-md`), e este degrau foi
+   * reaproveitado só para o título, não apagado. */
+  --text-sidebar-title: 14px;
+  --text-sidebar-title--line-height: 20px;
+  --text-sidebar-title--letter-spacing: 0em;
+  --text-sidebar-title--font-weight: 500;
   --text-label-sm: 12px;
   --text-label-sm--line-height: 16px;
   --text-label-sm--letter-spacing: 0.005em;
@@ -270,6 +282,9 @@
     0 16px 32px rgb(var(--shadow-base) / calc(var(--shadow-alpha) * 0.4));
   /* Relevo de chips e botões (themes.css define por tema) */
   --shadow-raised: var(--raised);
+  /* Só a camada de contato do --raised, sem o anel (themes.css define por tema): painel de
+   * conteúdo do shell (aprovado pelo responsável, 28/09) */
+  --shadow-contact: var(--contact);
   /* Sublinhado da aba ativa: linha de 1 px na cor do texto (Figma 1:1404, neutro pela ADR-0013) */
   --shadow-underline: inset 0 -1px 0 var(--fg-primary);
   /* Foco sem halo (pedido do responsável) */
@@ -313,6 +328,7 @@
   --spacing-control-lg: 32px;
   --spacing-control-xl: 40px;
   --spacing-icon-xs: 12px;
+  --spacing-icon-14: 14px;
   --spacing-icon-sm: 16px;
   --spacing-icon-md: 20px;
   --spacing-icon-lg: 24px;
