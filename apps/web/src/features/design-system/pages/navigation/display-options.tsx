@@ -408,7 +408,8 @@ export function Page() {
           {
             name: "DisplayProperties",
             type: "{ label; options; value; onValueChange }",
-            description: "Chips de propriedades visíveis (multisseleção).",
+            description:
+              "Chips de propriedades visíveis: o Toggle Group (Forms) com rótulo visível.",
           },
           {
             name: "DisplayOptionsFooter",

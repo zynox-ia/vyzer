@@ -2,9 +2,13 @@
  * Menu (Figma 1:4653, menu "/" do editor; 1:1256, "Add dependency"): popover com linhas de
  * ícone, rótulo e atalho, separadores, rótulos de seção e submenus. Radix DropdownMenu:
  * teclado, foco, typeahead e fechamento com Esc.
+ *
+ * Context Menu (sem desenho; segue o Linear): as mesmas peças abertas pelo clique direito, por
+ * Shift+F10 ou pela tecla de menu. Radix ContextMenu. Itens, separadores, rótulos e submenus
+ * são os do Menu: cada peça usa o primitivo da família em que está (KindContext).
  */
 import { ChevronRight, type LucideIcon } from "lucide-react";
-import { DropdownMenu } from "radix-ui";
+import { ContextMenu as ContextMenuPrimitive, DropdownMenu } from "radix-ui";
 import {
   createContext,
   use,
@@ -54,10 +58,32 @@ function styles(variant: MenuVariant) {
   return variant === "dropdown" ? { ...menuStyles, ...dropdownMenuStyles } : menuStyles;
 }
 
+/** Família do menu aberto: dropdown (Menu) ou contexto (Context Menu). */
+const KindContext = createContext<"dropdown" | "context">("dropdown");
+
+/**
+ * Primitivos Radix da família atual. Os dois montam o mesmo Menu do Radix por baixo e as peças
+ * internas (Item, Sub, SubTrigger, SubContent, Separator, Label, Group, Portal) têm as mesmas
+ * props; só o escopo muda, por isso a peça precisa ser a da família certa.
+ */
+function usePrimitive() {
+  return use(KindContext) === "context"
+    ? (ContextMenuPrimitive as unknown as typeof DropdownMenu)
+    : DropdownMenu;
+}
+
 export const Menu = DropdownMenu.Root;
 export const MenuTrigger = DropdownMenu.Trigger;
-export const MenuGroup = DropdownMenu.Group;
-export const MenuSub = DropdownMenu.Sub;
+
+export function MenuGroup(props: ComponentProps<typeof DropdownMenu.Group>) {
+  const P = usePrimitive();
+  return <P.Group {...props} />;
+}
+
+export function MenuSub(props: ComponentProps<typeof DropdownMenu.Sub>) {
+  const P = usePrimitive();
+  return <P.Sub {...props} />;
+}
 
 export type MenuContentProps = ComponentProps<typeof DropdownMenu.Content> & {
   /** Renderiza num portal no body (padrão). Sem portal, herda o tema do contêiner. */
@@ -113,12 +139,13 @@ export type MenuItemProps = ComponentProps<typeof DropdownMenu.Item> & {
 /** Linha do menu: slot de ícone de 20 px, rótulo de 13 px e atalho à direita. */
 export function MenuItem({ icon, shortcut, className, children, ...rest }: MenuItemProps) {
   const s = styles(use(VariantContext));
+  const P = usePrimitive();
   return (
-    <DropdownMenu.Item className={cn(s.item, className)} {...rest}>
+    <P.Item className={cn(s.item, className)} {...rest}>
       <MenuItemContent icon={icon} shortcut={shortcut}>
         {children}
       </MenuItemContent>
-    </DropdownMenu.Item>
+    </P.Item>
   );
 }
 
@@ -161,18 +188,16 @@ export type MenuSubTriggerProps = ComponentProps<typeof DropdownMenu.SubTrigger>
 /** Item que abre um submenu (Figma: "Blocked by… ▸"). → ou Enter abre; ← fecha. */
 export function MenuSubTrigger({ icon, className, children, ...rest }: MenuSubTriggerProps) {
   const s = styles(use(VariantContext));
+  const P = usePrimitive();
   return (
-    <DropdownMenu.SubTrigger
-      className={cn(s.item, "data-[state=open]:bg-selected", className)}
-      {...rest}
-    >
+    <P.SubTrigger className={cn(s.item, "data-[state=open]:bg-selected", className)} {...rest}>
       <MenuItemContent
         icon={icon}
         trailing={<Icon icon={ChevronRight} size="xs" className="text-secondary" />}
       >
         {children}
       </MenuItemContent>
-    </DropdownMenu.SubTrigger>
+    </P.SubTrigger>
   );
 }
 
@@ -193,8 +218,10 @@ export function MenuSubContent({
   ...rest
 }: MenuSubContentProps) {
   const s = styles(use(VariantContext));
+  const kind = use(KindContext);
+  const P = usePrimitive();
   const content = (
-    <DropdownMenu.SubContent
+    <P.SubContent
       sideOffset={sideOffset}
       {...(panelLabel && {
         role: "dialog",
@@ -203,13 +230,16 @@ export function MenuSubContent({
       })}
       className={cn(
         s.content,
-        "origin-(--radix-dropdown-menu-content-transform-origin) data-[state=open]:animate-scale-in",
+        kind === "context"
+          ? "origin-(--radix-context-menu-content-transform-origin)"
+          : "origin-(--radix-dropdown-menu-content-transform-origin)",
+        "data-[state=open]:animate-scale-in",
         className,
       )}
       {...rest}
     />
   );
-  return portal ? <DropdownMenu.Portal>{content}</DropdownMenu.Portal> : content;
+  return portal ? <P.Portal>{content}</P.Portal> : content;
 }
 
 /**
@@ -241,11 +271,58 @@ export function MenuSeparator({
   ...rest
 }: ComponentProps<typeof DropdownMenu.Separator>) {
   const s = styles(use(VariantContext));
-  return <DropdownMenu.Separator className={cn(s.separator, className)} {...rest} />;
+  const P = usePrimitive();
+  return <P.Separator className={cn(s.separator, className)} {...rest} />;
 }
 
 /** Rótulo de seção dentro do menu. */
 export function MenuLabel({ className, ...rest }: ComponentProps<typeof DropdownMenu.Label>) {
   const s = styles(use(VariantContext));
-  return <DropdownMenu.Label className={cn(s.label, className)} {...rest} />;
+  const P = usePrimitive();
+  return <P.Label className={cn(s.label, className)} {...rest} />;
+}
+
+export const ContextMenu = ContextMenuPrimitive.Root;
+/**
+ * Alvo do menu: passe um elemento focável com asChild (linha, cartão) para o menu abrir também
+ * pelo teclado (Shift+F10 ou tecla de menu), perto do elemento.
+ */
+export const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
+
+export type ContextMenuContentProps = ComponentProps<typeof ContextMenuPrimitive.Content> & {
+  /** Renderiza num portal no body (padrão). Sem portal, herda o tema do contêiner. */
+  portal?: boolean;
+  /** dropdown (padrão): raio 12, linhas de 32, como os menus de propriedade. command: raio 10, 36. */
+  variant?: MenuVariant;
+};
+
+/**
+ * Abre no ponteiro e segue para baixo e à direita. Perto da borda direita vira para a esquerda do
+ * ponteiro; perto da de baixo sobe só o necessário (sem virar), com 8 px de folga até a borda.
+ */
+export function ContextMenuContent({
+  portal = true,
+  variant = "dropdown",
+  avoidCollisions = true,
+  collisionPadding = 8,
+  className,
+  ...rest
+}: ContextMenuContentProps) {
+  const content = (
+    <KindContext value="context">
+      <VariantContext value={variant}>
+        <ContextMenuPrimitive.Content
+          avoidCollisions={avoidCollisions}
+          collisionPadding={collisionPadding}
+          className={cn(
+            styles(variant).content,
+            "max-h-(--radix-context-menu-content-available-height) origin-(--radix-context-menu-content-transform-origin) data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out",
+            className,
+          )}
+          {...rest}
+        />
+      </VariantContext>
+    </KindContext>
+  );
+  return portal ? <ContextMenuPrimitive.Portal>{content}</ContextMenuPrimitive.Portal> : content;
 }

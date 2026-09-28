@@ -152,3 +152,27 @@ export {
   type FilterBreakdownProps,
 } from "./filter-breakdown";
 export { Avatar, type AvatarProps, type AvatarSize } from "./avatar";
+export { Chip, chipStyles, type ChipProps, type ChipSize, type ChipVariant } from "./chip";
+export {
+  Popover,
+  PopoverAnchor,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+  type PopoverContentProps,
+} from "./popover";
+export { ToggleGroup, type ToggleGroupOption, type ToggleGroupProps } from "./toggle-group";
+export {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuTrigger,
+  type ContextMenuContentProps,
+} from "./menu";
+export {
+  Tooltip,
+  TooltipProvider,
+  TooltipSurface,
+  tooltipStyles,
+  type TooltipBodyProps,
+  type TooltipProps,
+} from "./tooltip";

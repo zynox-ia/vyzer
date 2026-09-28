@@ -93,7 +93,13 @@ export const sections: DocSection[] = [
         Page: page(() => import("./pages/components/property-button")),
       },
       { slug: "badge", title: "Badge", Page: page(() => import("./pages/components/badge")) },
+      { slug: "chip", title: "Chip", Page: page(() => import("./pages/components/chip")) },
       { slug: "kbd", title: "Kbd", Page: page(() => import("./pages/components/kbd")) },
+      {
+        slug: "tooltip",
+        title: "Tooltip",
+        Page: page(() => import("./pages/components/tooltip")),
+      },
     ],
   },
   {
@@ -136,6 +142,11 @@ export const sections: DocSection[] = [
         title: "Segmented Control",
         Page: page(() => import("./pages/forms/segmented-control")),
       },
+      {
+        slug: "toggle-group",
+        title: "Toggle Group",
+        Page: page(() => import("./pages/forms/toggle-group")),
+      },
       { slug: "composer", title: "Composer", Page: page(() => import("./pages/forms/composer")) },
     ],
   },
@@ -153,6 +164,16 @@ export const sections: DocSection[] = [
         slug: "submenu",
         title: "Submenu",
         Page: page(() => import("./pages/navigation/submenu")),
+      },
+      {
+        slug: "context-menu",
+        title: "Context Menu",
+        Page: page(() => import("./pages/navigation/context-menu")),
+      },
+      {
+        slug: "popover",
+        title: "Popover",
+        Page: page(() => import("./pages/navigation/popover")),
       },
       {
         slug: "date-picker",

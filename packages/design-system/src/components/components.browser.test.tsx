@@ -33,6 +33,8 @@ import {
 } from ".";
 
 async function violations(root: Element) {
+  // Espera a entrada (opacidade 0 → 1) terminar: no meio dela o axe mede contraste errado.
+  await Promise.all(root.getAnimations({ subtree: true }).map((a) => a.finished.catch(() => {})));
   const result = await axe.run(root, { resultTypes: ["violations"] });
   return result.violations.map(
     (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`,

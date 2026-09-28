@@ -7,10 +7,11 @@
  * DisplayOptions = Radix Popover + gatilho + DisplayOptionsPanel. O painel sozinho serve para
  * mostrar o popover aberto numa documentação ou embuti-lo numa tela.
  */
-import { Label, Popover, ToggleGroup } from "radix-ui";
+import { Label, Popover } from "radix-ui";
 import { useId, useState, type ReactElement, type ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { popoverSurface } from "./listbox";
+import { ToggleGroup } from "./toggle-group";
 
 /** Superfície do painel (Figma: 300 px, raio 12, borda #323336, 8 px de folga no topo). */
 const panelClass = cn(popoverSurface, "flex w-75 flex-col pt-2");
@@ -150,9 +151,8 @@ export type DisplayPropertiesProps = {
 };
 
 /**
- * Chips de propriedades visíveis (Figma 18:870): pílulas de 24 px, 12 px/500, que quebram linha.
- * Ligada: camada de pressionado e texto primário; desligada: relevo e texto secundário. Radix
- * ToggleGroup (multisseleção, aria-pressed).
+ * Chips de propriedades visíveis (Figma 18:870): o Toggle Group do design system, nomeado pelo
+ * rótulo visível acima dele.
  */
 export function DisplayProperties({
   label,
@@ -166,28 +166,12 @@ export function DisplayProperties({
       <span id={labelId} className="text-label-sm text-secondary">
         {label}
       </span>
-      <ToggleGroup.Root
-        type="multiple"
-        aria-labelledby={labelId}
+      <ToggleGroup
+        labelledBy={labelId}
         value={value}
         onValueChange={onValueChange}
-        className="flex flex-wrap gap-1.5"
-      >
-        {options.map((o) => (
-          <ToggleGroup.Item
-            key={o.value}
-            value={o.value}
-            className={cn(
-              "inline-flex h-control-sm items-center rounded-full border border-transparent bg-control-strong px-2 text-label-sm whitespace-nowrap text-secondary shadow-raised select-none focus-ring",
-              "transition-[color,background-color,background-image] duration-fast ease-standard",
-              "data-[state=off]:hovered:[background-image:linear-gradient(var(--bg-hover),var(--bg-hover))]",
-              "data-[state=on]:[background-image:linear-gradient(var(--bg-pressed),var(--bg-pressed))] data-[state=on]:text-primary",
-            )}
-          >
-            {o.label}
-          </ToggleGroup.Item>
-        ))}
-      </ToggleGroup.Root>
+        options={options}
+      />
     </div>
   );
 }

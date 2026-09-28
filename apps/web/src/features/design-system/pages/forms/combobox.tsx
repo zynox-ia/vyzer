@@ -125,7 +125,7 @@ function LeadPicker() {
       value={value}
       onValueChange={setValue}
       options={leads}
-      searchPlaceholder="Assign lead…"
+      searchable={false}
       numberFrom={0}
     >
       <PropertyButton leading={<UserRound />} empty={value === "none"}>
