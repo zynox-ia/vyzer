@@ -138,6 +138,22 @@ export const contract = {
         }),
       )
       .output(teamSchema),
+    /** Lê um Team pelo slug, somente dentro do Workspace resolvido. */
+    get: oc.input(z.object({ team: z.string().trim().min(1) })).output(teamSchema),
+    /** Atualiza os campos editáveis do Team; o slug não muda após criação. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().trim().min(1).optional(),
+          key: teamKeySchema.optional(),
+          icon: projectIconValueSchema.optional(),
+          description: z.string().trim().nullable().optional(),
+        }),
+      )
+      .output(teamSchema),
+    /** Lista Members vinculados a um Team do Workspace resolvido. */
+    members: oc.input(z.object({ id: z.string().uuid() })).output(z.array(memberSchema)),
     /** Exclui imediatamente um Team do Workspace resolvido. */
     delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
