@@ -1,5 +1,5 @@
 /** Acesso ao banco (Drizzle + postgres.js). Ver ADR-0005. */
-import { eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
@@ -59,6 +59,31 @@ export async function updateWorkspaceSettings(
     .returning();
 
   return updatedWorkspace ?? null;
+}
+
+/** List only the Members of the resolved Workspace in a stable name order. */
+export async function listWorkspaceMembers(db: Db, workspaceId: string) {
+  return db
+    .select()
+    .from(schema.member)
+    .where(eq(schema.member.workspaceId, workspaceId))
+    .orderBy(asc(schema.member.name));
+}
+
+/** Rename one Member only if it belongs to the resolved Workspace. */
+export async function updateWorkspaceMemberName(
+  db: Db,
+  workspaceId: string,
+  memberId: string,
+  name: string,
+) {
+  const [updatedMember] = await db
+    .update(schema.member)
+    .set({ name })
+    .where(and(eq(schema.member.id, memberId), eq(schema.member.workspaceId, workspaceId)))
+    .returning();
+
+  return updatedMember ?? null;
 }
 
 /** Faz uma consulta trivial; lança erro se o banco não responder. */

@@ -50,6 +50,7 @@ export function SettingsLayout({
    * uma moldura de exemplo por página não pode ter mais de um `main` nem `main` aninhado).
    */
   landmark = true,
+  contentWidth = "narrow",
   children,
 }: {
   backTo: string;
@@ -57,6 +58,8 @@ export function SettingsLayout({
   /** Nome acessível do `nav` (padrão "Settings"; útil quando há mais de um na página). */
   label?: string;
   landmark?: boolean;
+  /** Wider slot for Settings tables; narrow pages keep the 640 px form column. */
+  contentWidth?: "narrow" | "wide";
   children: ReactNode;
 }) {
   const Content = landmark ? "main" : "div";
@@ -84,7 +87,14 @@ export function SettingsLayout({
             não mostra esse cartão externo — divergência registrada em .figma/01-design-tokens.md,
             decisão do responsável de seguir o Linear aqui). */}
         <div className="min-h-full rounded-container border border-default bg-sidebar">
-          <div className="mx-auto flex max-w-160 flex-col px-10 py-8">{children}</div>
+          <div
+            className={cn(
+              "mx-auto flex flex-col px-10 py-8",
+              contentWidth === "wide" ? "max-w-content" : "max-w-160",
+            )}
+          >
+            {children}
+          </div>
         </div>
       </Content>
     </div>

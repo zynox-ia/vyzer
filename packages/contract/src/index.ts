@@ -26,6 +26,14 @@ const workspaceSchema = z.object({
   icon: projectIconValueSchema,
 });
 
+const memberSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  email: z.string().email(),
+  role: z.string(),
+  createdAt: z.iso.datetime(),
+});
+
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
   health: oc.output(
@@ -56,6 +64,19 @@ export const contract = {
         }),
       )
       .output(workspaceSchema),
+  },
+  member: {
+    /** Lista Members do Workspace resolvido pelo middleware. */
+    list: oc.output(z.array(memberSchema)),
+    /** Renomeia um Member do Workspace; exige Role admin no middleware. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().trim().min(1),
+        }),
+      )
+      .output(memberSchema),
   },
 };
 

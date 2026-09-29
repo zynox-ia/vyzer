@@ -1,5 +1,10 @@
 import { ORPCError } from "@orpc/server";
-import { checkConnection, updateWorkspaceSettings } from "@vyzer/db";
+import {
+  checkConnection,
+  listWorkspaceMembers,
+  updateWorkspaceMemberName,
+  updateWorkspaceSettings,
+} from "@vyzer/db";
 import {
   adminOnly,
   base,
@@ -46,6 +51,37 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         }
 
         return updatedWorkspace;
+      }),
+    },
+    member: {
+      list: middleware.workspaceScoped.member.list.handler(async ({ context }) =>
+        (await listWorkspaceMembers(context.db, context.workspace.id)).map((currentMember) => ({
+          id: currentMember.id,
+          name: currentMember.name,
+          email: currentMember.email,
+          role: currentMember.role,
+          createdAt: currentMember.createdAt.toISOString(),
+        })),
+      ),
+      update: middleware.adminOnly.member.update.handler(async ({ context, input }) => {
+        const updatedMember = await updateWorkspaceMemberName(
+          context.db,
+          context.workspace.id,
+          input.id,
+          input.name,
+        );
+
+        if (!updatedMember) {
+          throw new ORPCError("NOT_FOUND");
+        }
+
+        return {
+          id: updatedMember.id,
+          name: updatedMember.name,
+          email: updatedMember.email,
+          role: updatedMember.role,
+          createdAt: updatedMember.createdAt.toISOString(),
+        };
       }),
     },
   });

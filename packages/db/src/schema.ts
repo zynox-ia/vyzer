@@ -42,6 +42,7 @@ export const member = pgTable(
     name: text("name").notNull(),
     email: text("email").notNull(),
     role: text("role").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [uniqueIndex("member_workspace_email_unique").on(table.workspaceId, table.email)],
 );
