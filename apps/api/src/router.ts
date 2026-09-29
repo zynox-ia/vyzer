@@ -1,12 +1,17 @@
+import { createHash, randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import {
   checkConnection,
+  createWorkspaceApiKey,
   createTeamSlug,
   createWorkspaceTeam,
   deleteWorkspace,
   deleteWorkspaceTeam,
+  findWorkspaceApiKey,
   listWorkspaceTeams,
   listWorkspaceMembers,
+  listWorkspaceApiKeys,
+  revokeWorkspaceApiKey,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
   WORKSPACE_REGION,
@@ -16,16 +21,20 @@ import {
   base,
   createWorkspaceMiddleware,
   type WorkspaceContextResolver,
+  requireAdminOnly,
+  requireApiKeyPermission,
+  workspaceResolved,
+  writeScoped,
   workspaceScoped,
 } from "./orpc";
 
 export function createRouter(resolveContext?: WorkspaceContextResolver) {
   const middleware = resolveContext
     ? createWorkspaceMiddleware(resolveContext)
-    : { workspaceScoped, adminOnly };
+    : { workspaceResolved, workspaceScoped, writeScoped, adminOnly };
 
   return base.router({
-    health: base.health.handler(async ({ context }) => {
+    health: middleware.workspaceScoped.health.handler(async ({ context }) => {
       await checkConnection(context.db);
       return { status: "ok" as const, database: "ok" as const };
     }),
@@ -39,6 +48,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           region: WORKSPACE_REGION,
           logoUrl: context.workspace.logoUrl,
           icon: context.workspace.icon,
+          apiKeyPolicy: context.workspace.apiKeyPolicy,
         },
         member: {
           id: context.member.id,
@@ -68,6 +78,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           region: WORKSPACE_REGION,
           logoUrl: updatedWorkspace.logoUrl,
           icon: updatedWorkspace.icon,
+          apiKeyPolicy: updatedWorkspace.apiKeyPolicy,
         };
       }),
       delete: middleware.adminOnly.workspace.delete.handler(async ({ context }) => {
@@ -166,6 +177,92 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         if (!deletedTeam) {
           throw new ORPCError("NOT_FOUND");
         }
+      }),
+    },
+    apiKey: {
+      create: middleware.writeScoped.apiKey.create.handler(async ({ context, input }) => {
+        if (context.workspace.apiKeyPolicy === "admins" && context.member.role !== "admin") {
+          throw new ORPCError("FORBIDDEN");
+        }
+        if (
+          context.member.role !== "admin" &&
+          (input.permissions === "full" || input.permissions.includes("admin"))
+        ) {
+          throw new ORPCError("FORBIDDEN");
+        }
+
+        const token = `vyz_${randomBytes(32).toString("base64url")}`;
+        const createdKey = await createWorkspaceApiKey(
+          context.db,
+          context.workspace.id,
+          context.member.id,
+          {
+            name: input.name,
+            tokenPrefix: token.slice(0, 8),
+            tokenHash: createHash("sha256").update(token).digest("hex"),
+            permissions: input.permissions,
+          },
+        );
+
+        if (!createdKey) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "The API key could not be created.",
+          });
+        }
+
+        return {
+          key: {
+            id: createdKey.id,
+            memberId: context.member.id,
+            memberName: context.member.name,
+            memberEmail: context.member.email,
+            name: createdKey.name,
+            tokenPrefix: createdKey.tokenPrefix,
+            permissions: createdKey.permissions,
+            createdAt: createdKey.createdAt.toISOString(),
+            lastUsedAt: createdKey.lastUsedAt?.toISOString() ?? null,
+            revokedAt: createdKey.revokedAt?.toISOString() ?? null,
+          },
+          token,
+        };
+      }),
+      list: middleware.workspaceResolved.apiKey.list.handler(async ({ context, input }) => {
+        if (input.scope === "workspace") {
+          requireAdminOnly(context);
+        } else {
+          requireApiKeyPermission(context, "read");
+        }
+
+        const keys = await listWorkspaceApiKeys(
+          context.db,
+          context.workspace.id,
+          input.scope === "mine" ? context.member.id : undefined,
+        );
+
+        return keys.map((key) => ({
+          id: key.id,
+          memberId: key.memberId,
+          memberName: key.memberName,
+          memberEmail: key.memberEmail,
+          name: key.name,
+          tokenPrefix: key.tokenPrefix,
+          permissions: key.permissions,
+          createdAt: key.createdAt.toISOString(),
+          lastUsedAt: key.lastUsedAt?.toISOString() ?? null,
+          revokedAt: key.revokedAt?.toISOString() ?? null,
+        }));
+      }),
+      revoke: middleware.workspaceResolved.apiKey.revoke.handler(async ({ context, input }) => {
+        const key = await findWorkspaceApiKey(context.db, context.workspace.id, input.id);
+        if (!key) throw new ORPCError("NOT_FOUND");
+
+        if (key.memberId === context.member.id) {
+          requireApiKeyPermission(context, "write");
+        } else {
+          requireAdminOnly(context);
+        }
+
+        await revokeWorkspaceApiKey(context.db, context.workspace.id, input.id);
       }),
     },
   });

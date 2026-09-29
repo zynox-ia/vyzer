@@ -4,7 +4,12 @@ import { bodyLimit } from "hono/body-limit";
 import { Hono } from "hono";
 import type { Db } from "@vyzer/db";
 import { workspaceLogoUploadOutputSchema, workspaceLogoUrlSchema } from "@vyzer/contract";
-import { resolveSeededWorkspaceContext, type WorkspaceContextResolver } from "./orpc";
+import {
+  requireAdminOnly,
+  requireApiKeyPermission,
+  resolveSeededWorkspaceContext,
+  type WorkspaceContextResolver,
+} from "./orpc";
 import { createRouter } from "./router";
 import {
   MAX_WORKSPACE_LOGO_SIZE,
@@ -53,10 +58,10 @@ export function createApp({ db, logoStorage, resolveWorkspaceContext }: CreateAp
       onError: (c) => c.json({ error: "Workspace logo exceeds 5 MB." }, 413),
     }),
     async (c) => {
-      const context = await resolveContext(db);
+      const context = await resolveContext(db, c.req.raw.headers);
       if (!context)
         return c.json({ error: "Workspace/Member context could not be resolved." }, 500);
-      if (context.member.role !== "admin") return c.json({ error: "Forbidden." }, 403);
+      requireAdminOnly(context);
 
       if (!c.req.header("content-type")?.toLowerCase().startsWith("multipart/form-data;")) {
         return c.json({ error: "Upload one image in the file field." }, 400);
@@ -95,8 +100,9 @@ export function createApp({ db, logoStorage, resolveWorkspaceContext }: CreateAp
   );
 
   app.get("/api/workspace/logo/:fileName", async (c) => {
-    const context = await resolveContext(db);
+    const context = await resolveContext(db, c.req.raw.headers);
     if (!context) return c.json({ error: "Workspace/Member context could not be resolved." }, 500);
+    requireApiKeyPermission(context, "read");
 
     const fileName = c.req.param("fileName");
     if (!workspaceLogoUrlSchema.safeParse(workspaceLogoUrl(fileName)).success) {
@@ -116,6 +122,12 @@ export function createApp({ db, logoStorage, resolveWorkspaceContext }: CreateAp
   });
 
   app.onError((error, c) => {
+    if (error instanceof ORPCError && error.code === "UNAUTHORIZED") {
+      return c.json({ error: error.code }, 401);
+    }
+    if (error instanceof ORPCError && error.code === "FORBIDDEN") {
+      return c.json({ error: error.code }, 403);
+    }
     console.error(error);
     return c.json({ error: "Internal server error." }, 500);
   });

@@ -105,6 +105,7 @@ describe("Workspace/Member context middleware", () => {
         region: "United States",
         logoUrl: seedWorkspace?.logo_url ?? null,
         icon: { kind: "icon", name: "Zap", color: "red" },
+        apiKeyPolicy: "all_members",
       },
       member: {
         id: MEMBER_ID,
