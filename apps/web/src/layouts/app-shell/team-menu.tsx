@@ -45,7 +45,7 @@ export function TeamMenu({
           variant="ghost"
           size="sm"
           iconSize="14"
-          className="absolute top-px right-1 rounded-full opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 data-[state=open]:opacity-100"
+          className="absolute top-1/2 right-0.5 -translate-y-1/2 rounded-full opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100 data-[state=open]:opacity-100"
         />
       </MenuTrigger>
       <MenuContent variant="dropdown" align="start">

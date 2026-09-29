@@ -273,3 +273,8 @@ Settings → Administration → Workspace (1.1/1.1b), sem frame no Figma; refer�
 - **Region:** texto só leitura "United States" (constante da API); o link "Read more" da ajuda não existe (sem destino real).
 - **Danger zone:** "Delete workspace" é imediato e sem volta (sem "Schedule workspace to be permanently deleted"), mesma linguagem do ADR-0016; botão com a variante `danger` do design system.
 - **Save:** botão no rodapé dos dois primeiros cartões (spec D16); o Linear salva sozinho.
+
+Sidebar → menu "···" do Team (2.3), medido ao vivo no Linear (`zynox-dev`, 29/09):
+
+- **Chevron:** no Linear ele fica junto do nome e nunca some (a linha encolhe para abrir espaço ao "···"); aqui fica no fim da linha e some enquanto o "···" aparece (spec 2.3: sem dois controles empilhados).
+- **Itens:** só "Team settings" e "Copy URL", sem atalhos (D11); painel de 176 px em vez dos 248 px do Linear, que vêm dos itens adiados.
