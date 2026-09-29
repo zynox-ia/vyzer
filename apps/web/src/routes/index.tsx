@@ -8,6 +8,7 @@ import { PlaceholderPage } from "@/features/placeholder";
 import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "@/features/projects";
 import { MembersPage, PreferencesPage, SettingsRoute } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
+import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 
 /** Rotas só de desenvolvimento: ficam fora do build de produção. */
@@ -57,14 +58,11 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
   { path: "asks", title: "Asks" },
   { path: "emojis", title: "Emojis" },
   { path: "integrations", title: "Integrations" },
-  { path: "workspace", title: "Workspace" },
   { path: "teams", title: "Teams" },
   { path: "security-admin", title: "Security" },
   { path: "api", title: "API" },
   { path: "applications", title: "Applications" },
-  { path: "billing", title: "Billing" },
   { path: "usage", title: "Usage & limits" },
-  { path: "import-export", title: "Import & export" },
   { path: "teams/vyzer", title: "Vyzer" },
   { path: "teams/zynox", title: "Zynox" },
   { path: "teams/new", title: "Create a team" },
@@ -85,6 +83,7 @@ function WorkspaceAppShell() {
         currentWorkspace.data?.workspace.name ??
         (currentWorkspace.isError ? "Workspace unavailable" : "Workspace")
       }
+      workspaceIcon={currentWorkspace.data?.workspace.icon}
       workspaceStatus={workspaceStatus}
       onWorkspaceRetry={
         currentWorkspace.isError ? () => void currentWorkspace.refetch() : undefined
@@ -105,6 +104,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/settings/preferences" replace /> },
       { path: "preferences", Component: PreferencesPage },
       { path: "agent-personalization", Component: AgentPersonalizationPage },
+      { path: "workspace", Component: WorkspaceSettingsPage },
       { path: "members", Component: MembersPage },
       ...settingsPlaceholderPages.map(({ path, title }) => ({
         path,

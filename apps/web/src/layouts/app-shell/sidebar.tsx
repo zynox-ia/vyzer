@@ -25,7 +25,12 @@ import {
 } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { useRef, type PointerEvent as ReactPointerEvent } from "react";
-import { IconButton, ProjectIcon, dialogStyles } from "@vyzer/design-system/components";
+import {
+  IconButton,
+  ProjectIcon,
+  dialogStyles,
+  type ProjectIconValue,
+} from "@vyzer/design-system/components";
 import { Icon } from "@vyzer/design-system/icons";
 import { cn } from "@vyzer/design-system/cn";
 // TEAMS de `features/projects`: mesma fonte da lista de Projects do time e do breadcrumb, para
@@ -39,10 +44,12 @@ import { useAppShell } from "./use-app-shell";
 /** Exportado para a documentação mostrar a gaveta aberta de forma estática (sem Dialog modal). */
 export function SidebarContent({
   workspaceName = "Zynox",
+  workspaceIcon,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
   workspaceName?: string;
+  workspaceIcon?: ProjectIconValue;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 }) {
@@ -52,7 +59,7 @@ export function SidebarContent({
       {/* items-start + pt-4: medido ao vivo no Linear (x=12, y=16 até os botões do cabeçalho,
           contra x=8/y=10 daqui) — 16 px de topo, não centralização vertical num h-11. */}
       <div className="flex h-11 shrink-0 items-start gap-1 px-3 pt-4">
-        <WorkspaceMenu name={workspaceName} onRetry={onWorkspaceRetry} />
+        <WorkspaceMenu name={workspaceName} icon={workspaceIcon} onRetry={onWorkspaceRetry} />
         {workspaceStatus && (
           <output aria-live="polite" className="sr-only">
             {workspaceStatus}
@@ -223,11 +230,13 @@ function ResizeHandle() {
 export function Sidebar({
   label = "Sidebar do workspace",
   workspaceName = "Zynox",
+  workspaceIcon,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
   label?: string;
   workspaceName?: string;
+  workspaceIcon?: ProjectIconValue;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 }) {
@@ -248,6 +257,7 @@ export function Sidebar({
         >
           <SidebarContent
             workspaceName={workspaceName}
+            workspaceIcon={workspaceIcon}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
           />
@@ -286,6 +296,7 @@ export function Sidebar({
               <DialogPrimitive.Title className="sr-only">{label}</DialogPrimitive.Title>
               <SidebarContent
                 workspaceName={workspaceName}
+                workspaceIcon={workspaceIcon}
                 workspaceStatus={workspaceStatus}
                 onWorkspaceRetry={onWorkspaceRetry}
               />

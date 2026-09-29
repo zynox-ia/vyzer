@@ -13,6 +13,7 @@ import { AgentFloatingActions } from "@/features/agent/agent-floating-actions";
 import { useAgentChatStore } from "@/features/agent/agent-chat-store";
 import { FLOATING_SUGGESTIONS } from "@/features/agent/data";
 import { cn } from "@vyzer/design-system/cn";
+import type { ProjectIconValue } from "@vyzer/design-system/components";
 import { AppShellProvider } from "./context";
 import { CreateIssueDialog } from "./create-issue-dialog";
 import { writeLastShellPath } from "./lib/last-path";
@@ -105,10 +106,12 @@ function AgentFooter() {
 
 export function AppShell({
   workspaceName = "Zynox",
+  workspaceIcon,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
   workspaceName?: string;
+  workspaceIcon?: ProjectIconValue;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 } = {}) {
@@ -121,6 +124,7 @@ export function AppShell({
         <div className="flex h-dvh overflow-hidden bg-app text-primary">
           <Sidebar
             workspaceName={workspaceName}
+            workspaceIcon={workspaceIcon}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
           />
