@@ -5,3 +5,6 @@ export const currentWorkspaceQueryOptions = () => api.workspace.current.queryOpt
 
 /** Updates the current Workspace; callers invalidate currentWorkspaceQueryOptions after success. */
 export const updateWorkspaceMutationOptions = () => api.workspace.update.mutationOptions();
+
+/** Permanently deletes the current Workspace. */
+export const deleteWorkspaceMutationOptions = () => api.workspace.delete.mutationOptions();

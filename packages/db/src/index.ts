@@ -50,7 +50,9 @@ export async function resolveWorkspaceMember(
 export async function updateWorkspaceSettings(
   db: Db,
   workspaceId: string,
-  values: Partial<Pick<typeof schema.workspace.$inferInsert, "name" | "icon">>,
+  values: Partial<
+    Pick<typeof schema.workspace.$inferInsert, "name" | "slug" | "fiscalYearStartMonth" | "icon">
+  >,
 ) {
   const [updatedWorkspace] = await db
     .update(schema.workspace)
@@ -59,6 +61,11 @@ export async function updateWorkspaceSettings(
     .returning();
 
   return updatedWorkspace ?? null;
+}
+
+/** Permanently delete a Workspace; Member rows cascade through the foreign key. */
+export async function deleteWorkspace(db: Db, workspaceId: string): Promise<void> {
+  await db.delete(schema.workspace).where(eq(schema.workspace.id, workspaceId));
 }
 
 /** List only the Members of the resolved Workspace in a stable name order. */
@@ -91,5 +98,5 @@ export async function checkConnection(db: Db): Promise<void> {
   await db.execute(sql`select 1`);
 }
 
-export { MEMBER_ID, WORKSPACE_ID } from "./seed";
+export { MEMBER_ID, WORKSPACE_ID, WORKSPACE_REGION } from "./seed";
 export { member, workspace } from "./schema";

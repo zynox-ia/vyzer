@@ -1,9 +1,11 @@
 import { ORPCError } from "@orpc/server";
 import {
   checkConnection,
+  deleteWorkspace,
   listWorkspaceMembers,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
+  WORKSPACE_REGION,
 } from "@vyzer/db";
 import {
   adminOnly,
@@ -28,6 +30,9 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         workspace: {
           id: context.workspace.id,
           name: context.workspace.name,
+          slug: context.workspace.slug,
+          fiscalYearStartMonth: context.workspace.fiscalYearStartMonth,
+          region: WORKSPACE_REGION,
           icon: context.workspace.icon,
         },
         member: {
@@ -50,7 +55,17 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           });
         }
 
-        return updatedWorkspace;
+        return {
+          id: updatedWorkspace.id,
+          name: updatedWorkspace.name,
+          slug: updatedWorkspace.slug,
+          fiscalYearStartMonth: updatedWorkspace.fiscalYearStartMonth,
+          region: WORKSPACE_REGION,
+          icon: updatedWorkspace.icon,
+        };
+      }),
+      delete: middleware.adminOnly.workspace.delete.handler(async ({ context }) => {
+        await deleteWorkspace(context.db, context.workspace.id);
       }),
     },
     member: {

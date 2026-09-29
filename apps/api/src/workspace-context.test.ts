@@ -37,7 +37,12 @@ async function createForeignWorkspaceAndMember(role: "admin" | "member" = "membe
   const memberId = randomUUID();
   const suffix = randomUUID();
 
-  await db.insert(workspace).values({ id: workspaceId, name: `Unrelated Workspace ${suffix}` });
+  await db.insert(workspace).values({
+    id: workspaceId,
+    name: `Unrelated Workspace ${suffix}`,
+    slug: `unrelated-${suffix}`,
+    fiscalYearStartMonth: 1,
+  });
   foreignWorkspaceIds.push(workspaceId);
   await db.insert(member).values({
     id: memberId,
@@ -92,6 +97,9 @@ describe("Workspace/Member context middleware", () => {
       workspace: {
         id: WORKSPACE_ID,
         name: "Zynox",
+        slug: "zynox-dev",
+        fiscalYearStartMonth: 1,
+        region: "United States",
         icon: { kind: "icon", name: "Zap", color: "red" },
       },
       member: {
@@ -127,6 +135,30 @@ describe("Workspace/Member context middleware", () => {
     expect(foreignWorkspace?.name).toBe(updatedName);
   });
 
+  it("workspace.update persists slug and fiscalYearStartMonth", async () => {
+    const foreign = await createForeignWorkspaceAndMember("admin");
+    const foreignApi = createRouterClient(
+      createRouter((contextDb) =>
+        resolveWorkspaceMember(contextDb, foreign.workspaceId, foreign.memberId),
+      ),
+      { context: { db, headers: new Headers() } },
+    );
+    const slug = `workspace-${randomUUID()}`;
+    const fiscalYearStartMonth = 4;
+
+    const updated = await foreignApi.workspace.update({ slug, fiscalYearStartMonth });
+    const [persisted] = await db.$client<
+      { slug: string; fiscal_year_start_month: number }[]
+    >`SELECT slug, fiscal_year_start_month FROM "workspace" WHERE id = ${foreign.workspaceId}`;
+
+    expect(updated).toMatchObject({
+      id: foreign.workspaceId,
+      slug,
+      fiscalYearStartMonth,
+    });
+    expect(persisted).toEqual({ slug, fiscal_year_start_month: fiscalYearStartMonth });
+  });
+
   it("workspace.update rejects a non-admin member with FORBIDDEN", async () => {
     const testMember = await createSeedWorkspaceMember("member");
     const memberRouter = createRouter((contextDb) =>
@@ -139,6 +171,37 @@ describe("Workspace/Member context middleware", () => {
     await expect(memberApi.workspace.update({ name: "Not allowed" })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
+  });
+
+  it("workspace.delete rejects a non-admin member with FORBIDDEN", async () => {
+    const testMember = await createSeedWorkspaceMember("member");
+    const memberApi = createRouterClient(
+      createRouter((contextDb) => resolveWorkspaceMember(contextDb, WORKSPACE_ID, testMember.id)),
+      { context: { db, headers: new Headers() } },
+    );
+
+    await expect(memberApi.workspace.delete()).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("workspace.delete removes an admin's Workspace and cascades its Members", async () => {
+    const fixture = await createForeignWorkspaceAndMember("admin");
+    const fixtureApi = createRouterClient(
+      createRouter((contextDb) =>
+        resolveWorkspaceMember(contextDb, fixture.workspaceId, fixture.memberId),
+      ),
+      { context: { db, headers: new Headers() } },
+    );
+
+    await expect(fixtureApi.workspace.delete()).resolves.toBeUndefined();
+
+    const [remainingWorkspace] = await db.$client<{ id: string }[]>`
+      SELECT id FROM "workspace" WHERE id = ${fixture.workspaceId}
+    `;
+    const [remainingMember] = await db.$client<{ id: string }[]>`
+      SELECT id FROM "member" WHERE id = ${fixture.memberId}
+    `;
+    expect(remainingWorkspace).toBeUndefined();
+    expect(remainingMember).toBeUndefined();
   });
 
   it("member.list excludes Members from another Workspace", async () => {

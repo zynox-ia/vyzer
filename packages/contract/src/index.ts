@@ -23,8 +23,18 @@ export type ProjectIconValue = z.infer<typeof projectIconValueSchema>;
 const workspaceSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
+  slug: z.string(),
+  fiscalYearStartMonth: z.number().int().min(1).max(12),
+  region: z.string(),
   icon: projectIconValueSchema,
 });
+
+const workspaceSlugSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(63)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
 const memberSchema = z.object({
   id: z.string().uuid(),
@@ -60,10 +70,14 @@ export const contract = {
       .input(
         z.object({
           name: z.string().trim().min(1).optional(),
+          slug: workspaceSlugSchema.optional(),
+          fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
           icon: projectIconValueSchema.optional(),
         }),
       )
       .output(workspaceSchema),
+    /** Deletes the current Workspace immediately; Members are removed by FK cascade. */
+    delete: oc.output(z.void()),
   },
   member: {
     /** Lista Members do Workspace resolvido pelo middleware. */
