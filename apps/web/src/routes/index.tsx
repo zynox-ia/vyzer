@@ -6,7 +6,7 @@ import { AgentPersonalizationPage } from "@/features/agent/personalization";
 import { HealthPage } from "@/features/health";
 import { PlaceholderPage } from "@/features/placeholder";
 import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "@/features/projects";
-import { MembersPage, PreferencesPage, SettingsRoute } from "@/features/settings";
+import { MembersPage, PreferencesPage, SettingsRoute, TeamStatusesPage } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
@@ -106,6 +106,7 @@ export const router = createBrowserRouter([
       { path: "agent-personalization", Component: AgentPersonalizationPage },
       { path: "workspace", Component: WorkspaceSettingsPage },
       { path: "members", Component: MembersPage },
+      { path: "teams/:team/statuses", Component: TeamStatusesPage },
       ...settingsPlaceholderPages.map(({ path, title }) => ({
         path,
         element: <SettingsPlaceholderPage title={title} />,
