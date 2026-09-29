@@ -13,13 +13,15 @@
  * - Danger zone: "Delete workspace" de verdade, com `Confirm` (danger). Imediato e sem volta,
  *   sem a janela de restauração do Linear (mesma linguagem do ADR-0016 para Team).
  *
- * Save no rodapé do cartão "Time & region", que fecha o formulário (padrão Settings Form; D16;
- * assim o espaço entre cartões segue os 48 px do Linear). Leitura aberta a
+ * Salva sozinho, sem botão Save, como o Linear (pedido do responsável, 29/09, no lugar do D16 da
+ * spec): texto ao sair do campo ou com Enter, ícone e mês na hora, toast "Saved" com Undo a cada
+ * gravação (pedido do responsável, 29/09); falha mostra um aviso e mantém o valor digitado. Leitura aberta a
  * qualquer Member; edição só por Admin (D14): a API devolve FORBIDDEN de qualquer forma, aqui os
  * controles ficam desabilitados para não convidar a uma ação que falha.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useState, type KeyboardEvent } from "react";
+import type { ApiClient } from "@vyzer/contract";
 import {
   Alert,
   Button,
@@ -69,6 +71,8 @@ const MONTH_OPTIONS: ListOption[] = MONTHS.map((label, index) => ({
   label,
 }));
 
+type WorkspacePatch = Parameters<ApiClient["workspace"]["update"]>[0];
+
 function sameIcon(a: ProjectIconValue, b: ProjectIconValue) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
@@ -107,12 +111,15 @@ export function WorkspaceSettingsPage() {
   const current = useQuery(currentWorkspaceQueryOptions());
   const update = useMutation({
     ...updateWorkspaceMutationOptions(),
-    onSuccess: async () => {
+    onSuccess: async (_saved, patch) => {
       // A sidebar e o WorkspaceMenu leem a mesma query: refazê-la atualiza nome e ícone sem
-      // recarregar a página.
+      // recarregar a página. O rascunho só some para o que foi salvo; o resto continua.
       await queryClient.invalidateQueries({ queryKey: currentWorkspaceQueryOptions().queryKey });
-      setDraft({});
-      toast({ title: "Workspace updated", variant: "success" });
+      setDraft((prev) => {
+        const next = { ...prev };
+        for (const key of Object.keys(patch) as (keyof typeof patch)[]) delete next[key];
+        return next;
+      });
     },
     onError: () => {
       toast({
@@ -142,7 +149,7 @@ export function WorkspaceSettingsPage() {
     name?: string;
     icon?: ProjectIconValue;
     slug?: string;
-    fiscalYearStartMonth?: string;
+    fiscalYearStartMonth?: number;
   }>({});
 
   if (current.isPending) {
@@ -179,48 +186,54 @@ export function WorkspaceSettingsPage() {
   const name = draft.name ?? workspace.name;
   const icon = draft.icon ?? workspace.icon;
   const slug = draft.slug ?? workspace.slug;
-  const month = draft.fiscalYearStartMonth ?? String(workspace.fiscalYearStartMonth);
+  const month = String(draft.fiscalYearStartMonth ?? workspace.fiscalYearStartMonth);
   const trimmedName = name.trim();
   const trimmedSlug = slug.trim();
   const nameError = trimmedName === "" ? NAME_REQUIRED : undefined;
   const slugError = SLUG_PATTERN.test(trimmedSlug) ? undefined : SLUG_INVALID;
   const nameChanged = trimmedName !== workspace.name;
-  const iconChanged = !sameIcon(icon, workspace.icon);
   const slugChanged = trimmedSlug !== workspace.slug;
-  const monthChanged = month !== String(workspace.fiscalYearStartMonth);
-  const dirty = nameChanged || iconChanged || slugChanged || monthChanged;
-  const saving = update.isPending;
 
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!canEdit || !dirty || nameError || slugError || saving) return;
-    update.mutate({
-      ...(nameChanged && { name: trimmedName }),
-      ...(iconChanged && { icon }),
-      ...(slugChanged && { slug: trimmedSlug }),
-      ...(monthChanged && { fiscalYearStartMonth: Number(month) }),
+  // Salva sozinho, como o Linear: texto ao sair do campo (ou Enter), ícone e mês na hora. Valor
+  // inválido fica no campo com o erro, sem ir para a API; falha da API mantém o rascunho.
+  // Cada gravação mostra "Saved" com Undo, que regrava o valor de antes (também sem aviso).
+  const save = (patch: WorkspacePatch) => {
+    const previous: WorkspacePatch = {};
+    if ("name" in patch) previous.name = workspace.name;
+    if ("icon" in patch) previous.icon = workspace.icon;
+    if ("slug" in patch) previous.slug = workspace.slug;
+    if ("fiscalYearStartMonth" in patch) {
+      previous.fiscalYearStartMonth = workspace.fiscalYearStartMonth;
+    }
+    update.mutate(patch, {
+      onSuccess: () =>
+        toast({ title: "Saved", variant: "success", onUndo: () => update.mutate(previous) }),
     });
+  };
+  const commitName = () => {
+    if (canEdit && nameChanged && !nameError) save({ name: trimmedName });
+  };
+  const commitSlug = () => {
+    if (canEdit && slugChanged && !slugError) save({ slug: trimmedSlug });
+  };
+  const commitOnEnter = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") e.currentTarget.blur();
   };
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="type-heading-1 pb-4 text-primary">Workspace</h1>
-      {/* Enter num campo de texto não envia: só o botão Save (mesmo padrão do Settings Form). */}
-      {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
-      <form
-        onSubmit={onSubmit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && e.target instanceof HTMLInputElement) e.preventDefault();
-        }}
-        className="flex flex-col gap-4"
-      >
+      <div className="flex flex-col gap-4">
         <SettingsGroup>
           <SettingsRow label="Icon" description="Shown next to the workspace name in the sidebar">
             {() =>
               canEdit ? (
                 <IconPicker
                   value={icon}
-                  onValueChange={(next) => setDraft((prev) => ({ ...prev, icon: next }))}
+                  onValueChange={(next) => {
+                    setDraft((prev) => ({ ...prev, icon: next }));
+                    if (!sameIcon(next, workspace.icon)) save({ icon: next });
+                  }}
                   triggerLabel="Choose workspace icon"
                 />
               ) : (
@@ -236,6 +249,8 @@ export function WorkspaceSettingsPage() {
                 invalid={Boolean(nameError)}
                 disabled={!canEdit}
                 onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
+                onBlur={commitName}
+                onKeyDown={commitOnEnter}
                 className="w-64"
               />
             )}
@@ -250,6 +265,8 @@ export function WorkspaceSettingsPage() {
                   disabled={!canEdit}
                   aria-invalid={Boolean(slugError) || undefined}
                   onChange={(e) => setDraft((prev) => ({ ...prev, slug: e.target.value }))}
+                  onBlur={commitSlug}
+                  onKeyDown={commitOnEnter}
                 />
               </InputGroup>
             )}
@@ -267,9 +284,13 @@ export function WorkspaceSettingsPage() {
                 trigger="button"
                 value={month}
                 disabled={!canEdit}
-                onValueChange={(next) =>
-                  setDraft((prev) => ({ ...prev, fiscalYearStartMonth: next }))
-                }
+                onValueChange={(next) => {
+                  const fiscalYearStartMonth = Number(next);
+                  setDraft((prev) => ({ ...prev, fiscalYearStartMonth }));
+                  if (fiscalYearStartMonth !== workspace.fiscalYearStartMonth) {
+                    save({ fiscalYearStartMonth });
+                  }
+                }}
                 options={MONTH_OPTIONS}
               />
             )}
@@ -280,20 +301,8 @@ export function WorkspaceSettingsPage() {
           >
             {() => <span className="text-body-md text-secondary">{workspace.region}</span>}
           </SettingsRow>
-          {canEdit && (
-            <div className="flex justify-end py-4">
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={!dirty || Boolean(nameError) || Boolean(slugError) || saving}
-                loading={saving}
-              >
-                Save
-              </Button>
-            </div>
-          )}
         </SettingsGroup>
-      </form>
+      </div>
 
       <SettingsGroup title="Member onboarding">
         <SettingsRow label="Welcome message">

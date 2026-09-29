@@ -112,46 +112,89 @@ describe("WorkspaceSettingsPage", () => {
     await expect.element(screen.getByText("Loading workspace settings.")).not.toBeInTheDocument();
   });
 
-  it("Save começa desabilitado, habilita ao editar e exige nome", async () => {
+  it("não há botão Save nem formulário; nada é salvo sem editar", async () => {
     fetchCurrent.mockResolvedValue(makeCurrent());
     const screen = await render(<Harness />);
-    const name = screen.getByLabelText("Name");
-    const save = screen.getByRole("button", { name: "Save" });
+    await expect.element(screen.getByLabelText("Name")).toHaveValue("Zynox Dev");
 
-    await expect.element(name).toHaveValue("Zynox Dev");
-    await expect.element(save).toBeDisabled();
-
-    await name.fill("Acme");
-    await expect.element(save).toBeEnabled();
-
-    await name.fill("");
-    await expect.element(screen.getByText("Name is required.")).toBeVisible();
-    await expect.element(save).toBeDisabled();
+    await expect.element(screen.getByRole("button", { name: "Save" })).not.toBeInTheDocument();
+    expect(document.querySelector("form")).toBeNull();
+    await userEvent.click(screen.getByLabelText("Name").element());
+    await userEvent.tab();
+    expect(saveWorkspace).not.toHaveBeenCalled();
   });
 
-  it("Enter no Name não envia; Save envia só o campo alterado, avisa e invalida a query", async () => {
+  it("Name salva ao sair do campo, só { name } com trim, e mostra o toast Saved", async () => {
     fetchCurrent.mockResolvedValueOnce(makeCurrent());
     saveWorkspace.mockResolvedValue({});
     const screen = await render(<Harness />);
     const name = screen.getByLabelText("Name");
     await expect.element(name).toHaveValue("Zynox Dev");
 
-    await name.fill("Acme");
-    await userEvent.keyboard("{Enter}");
-    expect(saveWorkspace).not.toHaveBeenCalled();
-
     fetchCurrent.mockResolvedValue(makeCurrent("Acme"));
-    await screen.getByRole("button", { name: "Save" }).click();
+    await name.fill("  Acme  ");
+    expect(saveWorkspace).not.toHaveBeenCalled();
+    await userEvent.tab();
 
     await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
     expect(saveWorkspace.mock.calls[0]![0]).toEqual({ name: "Acme" });
-    await expect.element(screen.getByText("Workspace updated")).toBeVisible();
     await vi.waitFor(() => expect(fetchCurrent).toHaveBeenCalledTimes(2));
     await expect.element(name).toHaveValue("Acme");
-    await expect.element(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    await expect.element(screen.getByText("Saved", { exact: true })).toBeVisible();
   });
 
-  it("trocar o ícone pelo IconPicker envia só { icon }", async () => {
+  it("o toast Saved tem Undo, que regrava o valor de antes", async () => {
+    fetchCurrent.mockResolvedValueOnce(makeCurrent());
+    saveWorkspace.mockResolvedValue({});
+    const screen = await render(<Harness />);
+    const name = screen.getByLabelText("Name");
+    await expect.element(name).toHaveValue("Zynox Dev");
+
+    fetchCurrent.mockResolvedValue(makeCurrent("Acme"));
+    await name.fill("Acme");
+    await userEvent.tab();
+    await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
+
+    fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev"));
+    await screen.getByRole("button", { name: "Undo" }).click();
+
+    await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(2));
+    expect(saveWorkspace.mock.calls[1]![0]).toEqual({ name: "Zynox Dev" });
+    await expect.element(name).toHaveValue("Zynox Dev");
+  });
+
+  it("Enter no Name também salva, uma única vez", async () => {
+    fetchCurrent.mockResolvedValueOnce(makeCurrent());
+    saveWorkspace.mockResolvedValue({});
+    const screen = await render(<Harness />);
+    const name = screen.getByLabelText("Name");
+    await expect.element(name).toHaveValue("Zynox Dev");
+
+    fetchCurrent.mockResolvedValue(makeCurrent("Acme"));
+    await name.fill("Acme");
+    await userEvent.keyboard("{Enter}");
+
+    await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
+    expect(saveWorkspace.mock.calls[0]![0]).toEqual({ name: "Acme" });
+    await vi.waitFor(() => expect(fetchCurrent).toHaveBeenCalledTimes(2));
+    expect(saveWorkspace).toHaveBeenCalledTimes(1);
+  });
+
+  it("Name vazio mostra o erro e não chama a mutação", async () => {
+    fetchCurrent.mockResolvedValue(makeCurrent());
+    const screen = await render(<Harness />);
+    const name = screen.getByLabelText("Name");
+    await expect.element(name).toHaveValue("Zynox Dev");
+
+    await name.fill("");
+    await expect.element(screen.getByText("Name is required.")).toBeVisible();
+    await userEvent.tab();
+    expect(saveWorkspace).not.toHaveBeenCalled();
+    await expect.element(screen.getByText("Name is required.")).toBeVisible();
+    await expect.element(name).toHaveValue("");
+  });
+
+  it("trocar o ícone pelo IconPicker envia só { icon } na hora", async () => {
     fetchCurrent.mockResolvedValue(makeCurrent());
     saveWorkspace.mockResolvedValue({});
     const screen = await render(<Harness />);
@@ -164,10 +207,6 @@ describe("WorkspaceSettingsPage", () => {
     );
     if (!other) throw new Error("Nenhum ícone alternativo no picker");
     other.click();
-
-    const save = screen.getByRole("button", { name: "Save" });
-    await expect.element(save).toBeEnabled();
-    await save.click();
 
     await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
     const input = saveWorkspace.mock.calls[0]![0];
@@ -190,7 +229,7 @@ describe("WorkspaceSettingsPage", () => {
       .not.toBeInTheDocument();
   });
 
-  it("erro na gravação mostra o toast e mantém o rascunho", async () => {
+  it("erro na gravação mostra o toast e o valor digitado permanece", async () => {
     fetchCurrent.mockResolvedValue(makeCurrent());
     saveWorkspace.mockRejectedValue(new Error("boom"));
     const screen = await render(<Harness />);
@@ -198,11 +237,10 @@ describe("WorkspaceSettingsPage", () => {
     await expect.element(name).toHaveValue("Zynox Dev");
 
     await name.fill("Acme");
-    await screen.getByRole("button", { name: "Save" }).click();
+    await userEvent.tab();
 
     await expect.element(screen.getByText("Could not save workspace")).toBeVisible();
     await expect.element(name).toHaveValue("Acme");
-    await expect.element(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 
   it("Member que não é admin vê tudo somente leitura", async () => {
@@ -215,40 +253,45 @@ describe("WorkspaceSettingsPage", () => {
     await expect.element(screen.getByLabelText("First month of the fiscal year")).toBeDisabled();
     await expect.element(screen.getByRole("button", { name: "Delete workspace" })).toBeDisabled();
     await expect.element(screen.getByRole("button", { name: "Save" })).not.toBeInTheDocument();
+    expect(saveWorkspace).not.toHaveBeenCalled();
     await expect
       .element(screen.getByRole("button", { name: "Choose workspace icon" }))
       .not.toBeInTheDocument();
   });
 
-  it("URL mostra o prefixo, rejeita slug inválido e envia só { slug }", async () => {
-    fetchCurrent.mockResolvedValue(makeCurrent());
+  it("URL mostra o prefixo, salva só { slug } ao sair e rejeita slug inválido", async () => {
+    fetchCurrent.mockResolvedValueOnce(makeCurrent());
     saveWorkspace.mockResolvedValue({});
     const screen = await render(<Harness />);
     const url = screen.getByLabelText("URL");
-    const save = screen.getByRole("button", { name: "Save" });
     await expect.element(url).toHaveValue("zynox-dev");
     await expect.element(screen.getByText("vyzer.app/")).toBeVisible();
 
     await url.fill("My Space");
     await expect.element(screen.getByText(/Use lowercase letters/)).toBeVisible();
-    await expect.element(save).toBeDisabled();
+    await userEvent.tab();
+    expect(saveWorkspace).not.toHaveBeenCalled();
+    await expect.element(screen.getByText(/Use lowercase letters/)).toBeVisible();
 
-    await url.fill("acme-co");
-    await expect.element(save).toBeEnabled();
-    await save.click();
+    fetchCurrent.mockResolvedValue({
+      ...makeCurrent(),
+      workspace: { ...makeCurrent().workspace, slug: "acme-co" },
+    });
+    await url.fill("  acme-co ");
+    await userEvent.tab();
 
     await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
     expect(saveWorkspace.mock.calls[0]![0]).toEqual({ slug: "acme-co" });
+    await expect.element(url).toHaveValue("acme-co");
   });
 
-  it("o Select do ano fiscal envia só { fiscalYearStartMonth } numérico", async () => {
+  it("o Select do ano fiscal envia só { fiscalYearStartMonth } numérico na hora", async () => {
     fetchCurrent.mockResolvedValue(makeCurrent());
     saveWorkspace.mockResolvedValue({});
     const screen = await render(<Harness />);
 
     await screen.getByLabelText("First month of the fiscal year").click();
     await page.getByRole("option", { name: "April" }).click();
-    await screen.getByRole("button", { name: "Save" }).click();
 
     await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
     expect(saveWorkspace.mock.calls[0]![0]).toEqual({ fiscalYearStartMonth: 4 });
