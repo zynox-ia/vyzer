@@ -14,6 +14,7 @@ import { useAgentChatStore } from "@/features/agent/agent-chat-store";
 import { FLOATING_SUGGESTIONS } from "@/features/agent/data";
 import { cn } from "@vyzer/design-system/cn";
 import type { ProjectIconValue } from "@vyzer/design-system/components";
+import type { Team } from "@/features/projects/project-data";
 import { AppShellProvider } from "./context";
 import { CreateIssueDialog } from "./create-issue-dialog";
 import { writeLastShellPath } from "./lib/last-path";
@@ -108,12 +109,14 @@ export function AppShell({
   workspaceName = "Zynox",
   workspaceIcon,
   workspaceLogoUrl,
+  teams,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
   workspaceLogoUrl?: string | null;
+  teams?: Team[];
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 } = {}) {
@@ -128,6 +131,7 @@ export function AppShell({
             workspaceName={workspaceName}
             workspaceIcon={workspaceIcon}
             workspaceLogoUrl={workspaceLogoUrl}
+            teams={teams}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
           />

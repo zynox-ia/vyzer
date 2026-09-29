@@ -36,7 +36,7 @@ import { cn } from "@vyzer/design-system/cn";
 // TEAMS de `features/projects`: mesma fonte da lista de Projects do time e do breadcrumb, para
 // o ícone e a cor do time (Navigation/cyan no Zynox, medido ao vivo no Linear) baterem nos três
 // lugares em vez de três cópias divergentes.
-import { TEAMS } from "@/features/projects/project-data";
+import { TEAMS, type Team } from "@/features/projects/project-data";
 import { NavAction, NavItem, NavList, SidebarSection, TeamNavGroup } from "./sidebar-nav";
 import { WorkspaceMenu } from "./workspace-menu";
 import { useAppShell } from "./use-app-shell";
@@ -46,12 +46,15 @@ export function SidebarContent({
   workspaceName = "Zynox",
   workspaceIcon,
   workspaceLogoUrl,
+  teams = TEAMS,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
   workspaceLogoUrl?: string | null;
+  /** Teams da seção "Your teams"; sem a prop, os de exemplo (a documentação em /design-system). */
+  teams?: Team[];
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 }) {
@@ -127,9 +130,9 @@ export function SidebarContent({
         {/* Favorites: sem exemplo populado no Figma; oculta enquanto vazia, como no Linear. */}
         <SidebarSection title="Favorites" hidden={true} />
 
-        <SidebarSection title="Your teams">
+        <SidebarSection title="Your teams" hidden={teams.length === 0}>
           <NavList label="Your teams">
-            {TEAMS.map((team) => (
+            {teams.map((team) => (
               <TeamNavGroup
                 key={team.slug}
                 name={team.name}
@@ -240,6 +243,7 @@ export function Sidebar({
   workspaceName = "Zynox",
   workspaceIcon,
   workspaceLogoUrl,
+  teams,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
@@ -247,6 +251,8 @@ export function Sidebar({
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
   workspaceLogoUrl?: string | null;
+  /** Teams da seção "Your teams"; sem a prop, os de exemplo (a documentação em /design-system). */
+  teams?: Team[];
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 }) {
@@ -269,6 +275,7 @@ export function Sidebar({
             workspaceName={workspaceName}
             workspaceIcon={workspaceIcon}
             workspaceLogoUrl={workspaceLogoUrl}
+            teams={teams}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
           />
@@ -309,6 +316,7 @@ export function Sidebar({
                 workspaceName={workspaceName}
                 workspaceIcon={workspaceIcon}
                 workspaceLogoUrl={workspaceLogoUrl}
+                teams={teams}
                 workspaceStatus={workspaceStatus}
                 onWorkspaceRetry={onWorkspaceRetry}
               />

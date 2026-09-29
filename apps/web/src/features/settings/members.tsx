@@ -26,16 +26,17 @@ import {
   TextInput,
   useToast,
 } from "@vyzer/design-system/components";
+import { formatShortDate } from "./format";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 import { membersQueryOptions, updateMemberMutationOptions } from "@/services/members";
 
-type SortKey = "name" | "email" | "role" | "createdAt";
+type SortKey = "name" | "email" | "role" | "teams" | "createdAt";
 type SortDirection = "asc" | "desc";
 type WorkspaceMember = Awaited<
   ReturnType<NonNullable<ReturnType<typeof membersQueryOptions>["queryFn"]>>
 >[number];
 
-const SORT_KEYS: SortKey[] = ["name", "email", "role", "createdAt"];
+const SORT_KEYS: SortKey[] = ["name", "email", "role", "teams", "createdAt"];
 
 function parseSortKey(value: string | null): SortKey {
   return SORT_KEYS.includes(value as SortKey) ? (value as SortKey) : "name";
@@ -45,16 +46,14 @@ function formatRole(role: string) {
   return role.length === 0 ? role : `${role[0]?.toUpperCase()}${role.slice(1)}`;
 }
 
-function formatJoinedDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(value));
+/** "2 teams", como o Linear mostra na coluna Teams. */
+function formatTeamCount(count: number) {
+  return `${count} ${count === 1 ? "team" : "teams"}`;
 }
 
 function compareMembers(a: WorkspaceMember, b: WorkspaceMember, key: SortKey) {
   if (key === "createdAt") return a.createdAt.localeCompare(b.createdAt);
+  if (key === "teams") return a.teamCount - b.teamCount;
   return a[key].localeCompare(b[key], "en", { sensitivity: "base" });
 }
 
@@ -66,6 +65,7 @@ function MembersTableSkeleton() {
           <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>Teams</TableHead>
           <TableHead>Joined</TableHead>
           <TableHead>
             <span className="sr-only">Actions</span>
@@ -85,21 +85,7 @@ function MembersTableSkeleton() {
             <Skeleton className="w-16" />
           </td>
           <td className="px-cell-x py-3">
-            <Skeleton className="w-12" />
-          </td>
-          <td className="px-cell-x py-3">
-            <Skeleton className="w-6" />
-          </td>
-        </tr>
-        <tr aria-hidden="true">
-          <td className="px-cell-x py-3">
-            <Skeleton shape="avatar" />
-          </td>
-          <td className="px-cell-x py-3">
-            <Skeleton />
-          </td>
-          <td className="px-cell-x py-3">
-            <Skeleton className="w-16" />
+            <Skeleton className="w-14" />
           </td>
           <td className="px-cell-x py-3">
             <Skeleton className="w-12" />
@@ -117,6 +103,29 @@ function MembersTableSkeleton() {
           </td>
           <td className="px-cell-x py-3">
             <Skeleton className="w-16" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-14" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-12" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-6" />
+          </td>
+        </tr>
+        <tr aria-hidden="true">
+          <td className="px-cell-x py-3">
+            <Skeleton shape="avatar" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-16" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-14" />
           </td>
           <td className="px-cell-x py-3">
             <Skeleton className="w-12" />
@@ -280,6 +289,9 @@ export function MembersPage() {
             <TableHead sort={sortState("role")} onSort={() => sortBy("role")}>
               Status
             </TableHead>
+            <TableHead sort={sortState("teams")} onSort={() => sortBy("teams")}>
+              Teams
+            </TableHead>
             <TableHead sort={sortState("createdAt")} onSort={() => sortBy("createdAt")}>
               Joined
             </TableHead>
@@ -299,7 +311,8 @@ export function MembersPage() {
               </TableCell>
               <TableCell>{member.email}</TableCell>
               <TableCell>{formatRole(member.role)}</TableCell>
-              <TableCell>{formatJoinedDate(member.createdAt)}</TableCell>
+              <TableCell>{formatTeamCount(member.teamCount)}</TableCell>
+              <TableCell>{formatShortDate(member.createdAt)}</TableCell>
               <TableCell className="w-12 text-right">
                 {canEdit && (
                   <Menu>
@@ -337,7 +350,7 @@ export function MembersPage() {
           ))}
           {sortedMembers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5}>No Members found.</TableCell>
+              <TableCell colSpan={6}>No Members found.</TableCell>
             </TableRow>
           )}
         </TableBody>
