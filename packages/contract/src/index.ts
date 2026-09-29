@@ -73,8 +73,46 @@ const teamListItemSchema = teamSchema.extend({
   issueCount: z.number().int().nonnegative(),
 });
 
+const workflowStatusCategorySchema = z.enum([
+  "triage",
+  "backlog",
+  "unstarted",
+  "started",
+  "completed",
+  "canceled",
+  "duplicate",
+]);
+
+const workflowStatusColorSchema = z.enum([
+  "grey",
+  "slate",
+  "purple",
+  "cyan",
+  "green",
+  "amber",
+  "orange",
+  "pink",
+  "red",
+]);
+
+const workflowStatusSchema = z.object({
+  id: z.string().uuid(),
+  teamId: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable(),
+  category: workflowStatusCategorySchema,
+  color: workflowStatusColorSchema,
+  position: z.number().int().nonnegative(),
+  isDefault: z.boolean(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+const teamSlugSchema = z.string().trim().min(1);
+
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
+export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
 
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
@@ -156,6 +194,41 @@ export const contract = {
     members: oc.input(z.object({ id: z.string().uuid() })).output(z.array(memberSchema)),
     /** Exclui imediatamente um Team do Workspace resolvido. */
     delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+  },
+  status: {
+    /** Lista o Workflow ordenado pelas categorias e posições do Team. */
+    list: oc.input(z.object({ team: teamSlugSchema })).output(z.array(workflowStatusSchema)),
+    /** Cria um Status no Team selecionado; Duplicate e Triage são controlados pelo sistema. */
+    create: oc
+      .input(
+        z.object({
+          team: teamSlugSchema,
+          category: workflowStatusCategorySchema,
+          name: z.string().trim().min(1),
+          description: z.string().trim().nullable().optional(),
+          color: workflowStatusColorSchema.optional(),
+        }),
+      )
+      .output(workflowStatusSchema),
+    /** Edita o nome, a descrição ou a cor de um Status do Workspace atual. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().trim().min(1).optional(),
+          description: z.string().trim().nullable().optional(),
+          color: workflowStatusColorSchema.optional(),
+        }),
+      )
+      .output(workflowStatusSchema),
+    /** Exclui um Status; moveIssuesTo é reservado ao domínio de Issues (Etapa 3.2). */
+    delete: oc
+      .input(z.object({ id: z.string().uuid(), moveIssuesTo: z.string().uuid().optional() }))
+      .output(z.void()),
+    reorder: oc
+      .input(z.object({ id: z.string().uuid(), position: z.number().int().nonnegative() }))
+      .output(z.void()),
+    setDefault: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
 };
 

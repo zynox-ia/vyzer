@@ -3,6 +3,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { seedTeamWorkflowStatuses } from "./workflow-status";
 
 /** Segundos para desistir de abrir uma conexão (o padrão do postgres.js é 30). */
 const CONNECT_TIMEOUT_SECONDS = 5;
@@ -167,12 +168,23 @@ export async function createWorkspaceTeam(
   workspaceId: string,
   values: Pick<typeof schema.team.$inferInsert, "name" | "slug" | "key" | "icon">,
 ) {
-  const [createdTeam] = await db
-    .insert(schema.team)
-    .values({ ...values, workspaceId })
-    .returning();
+  return db.transaction(async (tx) => {
+    const [createdTeam] = await tx
+      .insert(schema.team)
+      .values({ ...values, workspaceId })
+      .returning();
 
-  return createdTeam ?? null;
+    if (!createdTeam) return null;
+
+    await seedTeamWorkflowStatuses(tx, createdTeam.id);
+    const [teamWithDefaultStatus] = await tx
+      .select()
+      .from(schema.team)
+      .where(eq(schema.team.id, createdTeam.id))
+      .limit(1);
+
+    return teamWithDefaultStatus ?? null;
+  });
 }
 
 /** Update mutable Team settings only within the resolved Workspace; slug intentionally stays fixed. */
@@ -237,4 +249,17 @@ export async function checkConnection(db: Db): Promise<void> {
 }
 
 export { MEMBER_ID, VYZER_TEAM_ID, WORKSPACE_ID, WORKSPACE_REGION, ZYNOX_TEAM_ID } from "./seed";
-export { member, team, teamMember, workspace } from "./schema";
+export {
+  DEFAULT_WORKFLOW_STATUSES,
+  VYZER_WORKFLOW_STATUSES,
+  WorkflowStatusRuleError,
+  ZYNOX_WORKFLOW_STATUSES,
+  createWorkspaceTeamWorkflowStatus,
+  deleteWorkspaceWorkflowStatus,
+  listWorkspaceTeamWorkflowStatuses,
+  reorderWorkspaceWorkflowStatus,
+  setWorkspaceDefaultWorkflowStatus,
+  updateWorkspaceWorkflowStatus,
+} from "./workflow-status";
+export { member, team, teamMember, workflowStatus, workspace } from "./schema";
+export type { WorkflowStatusCategory, WorkflowStatusColor } from "./schema";

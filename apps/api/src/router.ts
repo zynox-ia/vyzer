@@ -1,17 +1,26 @@
 import { ORPCError } from "@orpc/server";
 import {
   checkConnection,
+  createWorkspaceTeamWorkflowStatus,
   createTeamSlug,
   createWorkspaceTeam,
+  deleteWorkspaceWorkflowStatus,
   deleteWorkspace,
   deleteWorkspaceTeam,
   getWorkspaceTeamBySlug,
   listWorkspaceTeamMembers,
   listWorkspaceTeams,
+  listWorkspaceTeamWorkflowStatuses,
   listWorkspaceMembers,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
   updateWorkspaceTeam,
+  updateWorkspaceWorkflowStatus,
+  reorderWorkspaceWorkflowStatus,
+  setWorkspaceDefaultWorkflowStatus,
+  WorkflowStatusRuleError,
+  type WorkflowStatusCategory,
+  type WorkflowStatusColor,
   WORKSPACE_REGION,
 } from "@vyzer/db";
 import {
@@ -243,6 +252,64 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         }
       }),
     },
+    status: {
+      list: middleware.workspaceScoped.status.list.handler(async ({ context, input }) => {
+        const statuses = await listWorkspaceTeamWorkflowStatuses(
+          context.db,
+          context.workspace.id,
+          input.team,
+        );
+        if (!statuses) throw new ORPCError("NOT_FOUND");
+
+        return statuses.map(serializeWorkflowStatus);
+      }),
+      create: middleware.adminOnly.status.create.handler(async ({ context, input }) => {
+        const { team: teamSlug, ...values } = input;
+        const createdStatus = await withStatusErrors(() =>
+          createWorkspaceTeamWorkflowStatus(context.db, context.workspace.id, teamSlug, values),
+        );
+        if (!createdStatus) throw new ORPCError("NOT_FOUND");
+
+        return serializeWorkflowStatus(createdStatus);
+      }),
+      update: middleware.adminOnly.status.update.handler(async ({ context, input }) => {
+        const { id, ...values } = input;
+        const updatedStatus = await withStatusErrors(() =>
+          updateWorkspaceWorkflowStatus(context.db, context.workspace.id, id, values),
+        );
+        if (!updatedStatus) throw new ORPCError("NOT_FOUND");
+
+        return serializeWorkflowStatus(updatedStatus);
+      }),
+      delete: middleware.adminOnly.status.delete.handler(async ({ context, input }) => {
+        const result = await withStatusErrors(() =>
+          deleteWorkspaceWorkflowStatus(
+            context.db,
+            context.workspace.id,
+            input.id,
+            input.moveIssuesTo,
+          ),
+        );
+        if (!result) throw new ORPCError("NOT_FOUND");
+      }),
+      reorder: middleware.adminOnly.status.reorder.handler(async ({ context, input }) => {
+        const result = await withStatusErrors(() =>
+          reorderWorkspaceWorkflowStatus(
+            context.db,
+            context.workspace.id,
+            input.id,
+            input.position,
+          ),
+        );
+        if (result === null) throw new ORPCError("NOT_FOUND");
+      }),
+      setDefault: middleware.adminOnly.status.setDefault.handler(async ({ context, input }) => {
+        const result = await withStatusErrors(() =>
+          setWorkspaceDefaultWorkflowStatus(context.db, context.workspace.id, input.id),
+        );
+        if (result === null) throw new ORPCError("NOT_FOUND");
+      }),
+    },
   });
 }
 
@@ -252,4 +319,41 @@ function isUniqueConstraintViolation(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;
   if ("code" in error && error.code === "23505") return true;
   return "cause" in error && isUniqueConstraintViolation(error.cause);
+}
+
+async function withStatusErrors<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof WorkflowStatusRuleError) {
+      throw new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    if (isUniqueConstraintViolation(error)) {
+      throw new ORPCError("CONFLICT", {
+        message: "A Status with this name already exists in the category.",
+      });
+    }
+    throw error;
+  }
+}
+
+function serializeWorkflowStatus<
+  T extends {
+    id: string;
+    teamId: string;
+    name: string;
+    description: string | null;
+    category: WorkflowStatusCategory;
+    color: WorkflowStatusColor;
+    position: number;
+    isDefault: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  },
+>(status: T) {
+  return {
+    ...status,
+    createdAt: status.createdAt.toISOString(),
+    updatedAt: status.updatedAt.toISOString(),
+  };
 }

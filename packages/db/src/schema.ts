@@ -1,6 +1,7 @@
 /** Schema do banco. Entidades adicionadas por fatias de domínio; ver ADR-0005. */
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
+  check,
   integer,
   jsonb,
   pgTable,
@@ -9,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 /** Structural shape shared with ProjectIconValue in the design system and API contract. */
@@ -73,12 +75,72 @@ export const team = pgTable(
     key: text("key").notNull(),
     icon: jsonb("icon").$type<TeamIconValue>().notNull(),
     description: text("description"),
+    defaultStatusId: uuid("default_status_id").references((): AnyPgColumn => workflowStatus.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("team_workspace_slug_unique").on(table.workspaceId, table.slug),
     uniqueIndex("team_workspace_key_unique").on(table.workspaceId, table.key),
+  ],
+);
+
+export type WorkflowStatusCategory =
+  | "triage"
+  | "backlog"
+  | "unstarted"
+  | "started"
+  | "completed"
+  | "canceled"
+  | "duplicate";
+
+export type WorkflowStatusColor =
+  | "grey"
+  | "slate"
+  | "purple"
+  | "cyan"
+  | "green"
+  | "amber"
+  | "orange"
+  | "pink"
+  | "red";
+
+export const workflowStatus = pgTable(
+  "workflow_status",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    teamId: uuid("team_id")
+      .notNull()
+      .references((): AnyPgColumn => team.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    category: text("category").$type<WorkflowStatusCategory>().notNull(),
+    color: text("color").$type<WorkflowStatusColor>().notNull(),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check(
+      "workflow_status_category_check",
+      sql`${table.category} in ('triage', 'backlog', 'unstarted', 'started', 'completed', 'canceled', 'duplicate')`,
+    ),
+    check(
+      "workflow_status_color_check",
+      sql`${table.color} in ('grey', 'slate', 'purple', 'cyan', 'green', 'amber', 'orange', 'pink', 'red')`,
+    ),
+    check("workflow_status_position_check", sql`${table.position} >= 0`),
+    // Linear has same-name statuses in separate categories (e.g. Zynox's Ready in Unstarted and Started).
+    uniqueIndex("workflow_status_team_category_name_unique").on(
+      table.teamId,
+      table.category,
+      table.name,
+    ),
+    uniqueIndex("workflow_status_team_duplicate_unique")
+      .on(table.teamId)
+      .where(sql`${table.category} = 'duplicate'`),
   ],
 );
 
@@ -115,6 +177,18 @@ export const teamRelations = relations(team, ({ many, one }) => ({
     references: [workspace.id],
   }),
   members: many(teamMember),
+  workflowStatuses: many(workflowStatus),
+  defaultStatus: one(workflowStatus, {
+    fields: [team.defaultStatusId],
+    references: [workflowStatus.id],
+  }),
+}));
+
+export const workflowStatusRelations = relations(workflowStatus, ({ one }) => ({
+  team: one(team, {
+    fields: [workflowStatus.teamId],
+    references: [team.id],
+  }),
 }));
 
 export const teamMemberRelations = relations(teamMember, ({ one }) => ({
