@@ -107,11 +107,13 @@ function AgentFooter() {
 export function AppShell({
   workspaceName = "Zynox",
   workspaceIcon,
+  workspaceLogoUrl,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
+  workspaceLogoUrl?: string | null;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 } = {}) {
@@ -125,6 +127,7 @@ export function AppShell({
           <Sidebar
             workspaceName={workspaceName}
             workspaceIcon={workspaceIcon}
+            workspaceLogoUrl={workspaceLogoUrl}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
           />

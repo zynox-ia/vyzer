@@ -14,10 +14,10 @@ import {
   MenuLabel,
   MenuSeparator,
   MenuTrigger,
-  ProjectIcon,
   type ProjectIconValue,
 } from "@vyzer/design-system/components";
 import { Icon } from "@vyzer/design-system/icons";
+import { WorkspaceMark } from "./workspace-mark";
 
 /** Ícone de quem ainda não carregou o Workspace: o mesmo padrão salvo no banco (spec 1.1, D1). */
 const DEFAULT_ICON: ProjectIconValue = { kind: "icon", name: "Zap", color: "red" };
@@ -25,10 +25,12 @@ const DEFAULT_ICON: ProjectIconValue = { kind: "icon", name: "Zap", color: "red"
 export function WorkspaceMenu({
   name,
   icon = DEFAULT_ICON,
+  logoUrl,
   onRetry,
 }: {
   name: string;
   icon?: ProjectIconValue;
+  logoUrl?: string | null;
   onRetry?: () => void;
 }) {
   const navigate = useNavigate();
@@ -42,7 +44,7 @@ export function WorkspaceMenu({
         {/* size-icon-md (20 px): medido ao vivo no Linear (avatar quadrado de 20, raio 8) —
             pedido do responsável, 28/09, o nome do workspace fica visivelmente maior que o
             conteúdo da sidebar. */}
-        <ProjectIcon value={icon} className="size-icon-md" />
+        <WorkspaceMark icon={icon} logoUrl={logoUrl} className="size-icon-md" />
         <span className="min-w-0 truncate">{name}</span>
         <Icon icon={ChevronDown} size="xs" className="shrink-0 text-secondary" />
       </MenuTrigger>

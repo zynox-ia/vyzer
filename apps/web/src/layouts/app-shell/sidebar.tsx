@@ -45,11 +45,13 @@ import { useAppShell } from "./use-app-shell";
 export function SidebarContent({
   workspaceName = "Zynox",
   workspaceIcon,
+  workspaceLogoUrl,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
+  workspaceLogoUrl?: string | null;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 }) {
@@ -59,7 +61,12 @@ export function SidebarContent({
       {/* items-start + pt-4: medido ao vivo no Linear (x=12, y=16 até os botões do cabeçalho,
           contra x=8/y=10 daqui) — 16 px de topo, não centralização vertical num h-11. */}
       <div className="flex h-11 shrink-0 items-start gap-1 px-3 pt-4">
-        <WorkspaceMenu name={workspaceName} icon={workspaceIcon} onRetry={onWorkspaceRetry} />
+        <WorkspaceMenu
+          name={workspaceName}
+          icon={workspaceIcon}
+          logoUrl={workspaceLogoUrl}
+          onRetry={onWorkspaceRetry}
+        />
         {workspaceStatus && (
           <output aria-live="polite" className="sr-only">
             {workspaceStatus}
@@ -126,6 +133,7 @@ export function SidebarContent({
               <TeamNavGroup
                 key={team.slug}
                 name={team.name}
+                slug={team.slug}
                 icon={<ProjectIcon value={team.icon} className="size-icon-14" />}
               >
                 <NavItem
@@ -231,12 +239,14 @@ export function Sidebar({
   label = "Sidebar do workspace",
   workspaceName = "Zynox",
   workspaceIcon,
+  workspaceLogoUrl,
   workspaceStatus,
   onWorkspaceRetry,
 }: {
   label?: string;
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
+  workspaceLogoUrl?: string | null;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
 }) {
@@ -258,6 +268,7 @@ export function Sidebar({
           <SidebarContent
             workspaceName={workspaceName}
             workspaceIcon={workspaceIcon}
+            workspaceLogoUrl={workspaceLogoUrl}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
           />
@@ -297,6 +308,7 @@ export function Sidebar({
               <SidebarContent
                 workspaceName={workspaceName}
                 workspaceIcon={workspaceIcon}
+                workspaceLogoUrl={workspaceLogoUrl}
                 workspaceStatus={workspaceStatus}
                 onWorkspaceRetry={onWorkspaceRetry}
               />

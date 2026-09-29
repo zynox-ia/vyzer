@@ -84,6 +84,7 @@ function WorkspaceAppShell() {
         (currentWorkspace.isError ? "Workspace unavailable" : "Workspace")
       }
       workspaceIcon={currentWorkspace.data?.workspace.icon}
+      workspaceLogoUrl={currentWorkspace.data?.workspace.logoUrl}
       workspaceStatus={workspaceStatus}
       onWorkspaceRetry={
         currentWorkspace.isError ? () => void currentWorkspace.refetch() : undefined
