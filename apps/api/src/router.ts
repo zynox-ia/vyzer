@@ -33,6 +33,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           slug: context.workspace.slug,
           fiscalYearStartMonth: context.workspace.fiscalYearStartMonth,
           region: WORKSPACE_REGION,
+          logoUrl: context.workspace.logoUrl,
           icon: context.workspace.icon,
         },
         member: {
@@ -61,6 +62,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           slug: updatedWorkspace.slug,
           fiscalYearStartMonth: updatedWorkspace.fiscalYearStartMonth,
           region: WORKSPACE_REGION,
+          logoUrl: updatedWorkspace.logoUrl,
           icon: updatedWorkspace.icon,
         };
       }),

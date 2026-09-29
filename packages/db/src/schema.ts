@@ -26,6 +26,7 @@ export const workspace = pgTable("workspace", {
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   fiscalYearStartMonth: integer("fiscal_year_start_month").notNull().default(1),
+  logoUrl: text("logo_url"),
   icon: jsonb("icon")
     .$type<WorkspaceIconValue>()
     .notNull()

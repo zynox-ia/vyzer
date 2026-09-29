@@ -26,6 +26,7 @@ const workspaceSchema = z.object({
   slug: z.string(),
   fiscalYearStartMonth: z.number().int().min(1).max(12),
   region: z.string(),
+  logoUrl: z.string().nullable(),
   icon: projectIconValueSchema,
 });
 
@@ -35,6 +36,14 @@ const workspaceSlugSchema = z
   .min(1)
   .max(63)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
+export const workspaceLogoUrlSchema = z
+  .string()
+  .regex(
+    /^\/api\/workspace\/logo\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:png|jpg|webp|svg)$/,
+  );
+
+export const workspaceLogoUploadOutputSchema = z.object({ logoUrl: workspaceLogoUrlSchema });
 
 const memberSchema = z.object({
   id: z.string().uuid(),
@@ -72,6 +81,7 @@ export const contract = {
           name: z.string().trim().min(1).optional(),
           slug: workspaceSlugSchema.optional(),
           fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
+          logoUrl: workspaceLogoUrlSchema.nullable().optional(),
           icon: projectIconValueSchema.optional(),
         }),
       )

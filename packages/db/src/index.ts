@@ -51,7 +51,10 @@ export async function updateWorkspaceSettings(
   db: Db,
   workspaceId: string,
   values: Partial<
-    Pick<typeof schema.workspace.$inferInsert, "name" | "slug" | "fiscalYearStartMonth" | "icon">
+    Pick<
+      typeof schema.workspace.$inferInsert,
+      "name" | "slug" | "fiscalYearStartMonth" | "logoUrl" | "icon"
+    >
   >,
 ) {
   const [updatedWorkspace] = await db

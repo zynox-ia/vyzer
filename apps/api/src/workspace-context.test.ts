@@ -90,6 +90,9 @@ afterAll(async () => {
 describe("Workspace/Member context middleware", () => {
   it("workspace.current returns only the fixed seed context when another Workspace and Member exist", async () => {
     const foreign = await createForeignWorkspaceAndMember();
+    const [seedWorkspace] = await db.$client<{ logo_url: string | null }[]>`
+      SELECT logo_url FROM "workspace" WHERE id = ${WORKSPACE_ID}
+    `;
 
     const current = await api.workspace.current();
 
@@ -100,6 +103,7 @@ describe("Workspace/Member context middleware", () => {
         slug: "zynox-dev",
         fiscalYearStartMonth: 1,
         region: "United States",
+        logoUrl: seedWorkspace?.logo_url ?? null,
         icon: { kind: "icon", name: "Zap", color: "red" },
       },
       member: {
@@ -123,16 +127,19 @@ describe("Workspace/Member context middleware", () => {
       { context: { db, headers: new Headers() } },
     );
     const updatedName = `Updated Workspace ${randomUUID()}`;
+    const logoUrl = `/api/workspace/logo/${randomUUID()}.png`;
 
-    const updated = await foreignApi.workspace.update({ name: updatedName });
-    const [seedWorkspace] =
-      await db.$client`SELECT name FROM "workspace" WHERE id = ${WORKSPACE_ID}`;
-    const [foreignWorkspace] =
-      await db.$client`SELECT name FROM "workspace" WHERE id = ${foreign.workspaceId}`;
+    const updated = await foreignApi.workspace.update({ name: updatedName, logoUrl });
+    const [seedWorkspace] = await db.$client<{ name: string; logo_url: string | null }[]>`
+      SELECT name, logo_url FROM "workspace" WHERE id = ${WORKSPACE_ID}
+    `;
+    const [foreignWorkspace] = await db.$client<{ name: string; logo_url: string | null }[]>`
+      SELECT name, logo_url FROM "workspace" WHERE id = ${foreign.workspaceId}
+    `;
 
-    expect(updated).toMatchObject({ id: foreign.workspaceId, name: updatedName });
-    expect(seedWorkspace?.name).toBe("Zynox");
-    expect(foreignWorkspace?.name).toBe(updatedName);
+    expect(updated).toMatchObject({ id: foreign.workspaceId, name: updatedName, logoUrl });
+    expect(seedWorkspace).toEqual({ name: "Zynox", logo_url: null });
+    expect(foreignWorkspace).toEqual({ name: updatedName, logo_url: logoUrl });
   });
 
   it("workspace.update persists slug and fiscalYearStartMonth", async () => {
@@ -157,6 +164,22 @@ describe("Workspace/Member context middleware", () => {
       fiscalYearStartMonth,
     });
     expect(persisted).toEqual({ slug, fiscal_year_start_month: fiscalYearStartMonth });
+  });
+
+  it("workspace.update can clear the logoUrl", async () => {
+    const foreign = await createForeignWorkspaceAndMember("admin");
+    const foreignApi = createRouterClient(
+      createRouter((contextDb) =>
+        resolveWorkspaceMember(contextDb, foreign.workspaceId, foreign.memberId),
+      ),
+      { context: { db, headers: new Headers() } },
+    );
+    const logoUrl = `/api/workspace/logo/${randomUUID()}.png`;
+
+    await foreignApi.workspace.update({ logoUrl });
+    const cleared = await foreignApi.workspace.update({ logoUrl: null });
+
+    expect(cleared.logoUrl).toBeNull();
   });
 
   it("workspace.update rejects a non-admin member with FORBIDDEN", async () => {
