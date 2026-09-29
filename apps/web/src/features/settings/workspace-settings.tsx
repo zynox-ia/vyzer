@@ -150,6 +150,7 @@ export function WorkspaceSettingsPage() {
     icon?: ProjectIconValue;
     slug?: string;
     fiscalYearStartMonth?: number;
+    logoUrl?: string | null;
   }>({});
 
   if (current.isPending) {

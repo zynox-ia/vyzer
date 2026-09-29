@@ -36,6 +36,20 @@
       "when": 1790651459819,
       "tag": "0004_serious_molecule_man",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790664842703,
+      "tag": "0005_open_anita_blake",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790666680287,
+      "tag": "0006_wide_bloodstorm",
+      "breakpoints": true
     }
   ]
 }
