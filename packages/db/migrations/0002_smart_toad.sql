@@ -1,0 +1,1 @@
+ALTER TABLE "workspace" ADD COLUMN "icon" jsonb DEFAULT '{"kind":"icon","name":"Zap","color":"red"}'::jsonb NOT NULL;

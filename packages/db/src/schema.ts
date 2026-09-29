@@ -1,10 +1,33 @@
 /** Schema do banco. Entidades adicionadas por fatias de domínio; ver ADR-0005. */
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+
+/** Structural shape shared with ProjectIconValue in the design system and API contract. */
+type WorkspaceIconValue =
+  | {
+      kind: "icon";
+      name: string;
+      color:
+        | "grey"
+        | "slate"
+        | "purple"
+        | "cyan"
+        | "green"
+        | "amber"
+        | "orange"
+        | "pink"
+        | "red"
+        | `#${string}`;
+    }
+  | { kind: "emoji"; emoji: string };
 
 export const workspace = pgTable("workspace", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
+  icon: jsonb("icon")
+    .$type<WorkspaceIconValue>()
+    .notNull()
+    .default({ kind: "icon", name: "Zap", color: "red" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

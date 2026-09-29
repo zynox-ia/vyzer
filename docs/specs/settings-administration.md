@@ -61,20 +61,20 @@ A tentativa anterior falhou porque o botão só aparece no hover da linha do Tea
 
 ## Reuso do design system
 
-| Necessidade | Peça existente |
-| --- | --- |
-| Tabelas de Members e Teams (ordenação, hover de linha, setas ↑↓) | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead` (com `onSort`), `TableCell` |
-| Menu "···" da sidebar, "Open menu" das linhas, submenu | `Menu`, `MenuTrigger`, `MenuContent variant="dropdown"`, `MenuItem` (com `icon` e `shortcut`), `MenuSub*`, `MenuSeparator` (Radix Dropdown) |
-| Botão "···" | `IconButton icon={Ellipsis} variant="ghost" size="sm" iconSize="14"` com `className="rounded-full"` (o mesmo ajuste do botão de ajuda da sidebar) |
-| Confirmar exclusão | `Confirm variant="danger"` (Radix AlertDialog; Cancel recebe o foco inicial) |
-| Editar nome de Member | `Dialog`/`DialogContent`/`DialogFooter` + `TextInput` + `Button` |
-| Formulários | `Field`, `FormLabel`, `HelperText`, `FormMessage`, `TextInput`, `TextArea`, `Select`; layout de linha do pattern Settings Form |
-| Ícone + cor do Workspace/Team | `IconPicker` + `ProjectIcon` + `ProjectIconValue` (o mesmo valor já usado em Team/Project) |
-| Avatar de Member | `Avatar` (ícone de pessoa; o DS não tem iniciais, decisão já registrada) |
-| Role | `Badge` (`tone="neutral"`) ou texto simples; fica com o implementador dentro do que já existe |
-| Feedback de salvar/copiar | `useToast` (o `ToastProvider` já é montado em `main.tsx`); erro de rede com `Alert tone="danger"` |
-| Carregando / vazio / erro | `Skeleton`, `EmptyState`, `Alert`, e `refetch` do TanStack Query |
-| Linhas rótulo-esquerda/controle-direita em Workspace | `SettingsGroup`/`SettingsRow` de `features/settings/settings-row.tsx` (já usados em Preferences) |
+| Necessidade                                                      | Peça existente                                                                                                                                    |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tabelas de Members e Teams (ordenação, hover de linha, setas ↑↓) | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead` (com `onSort`), `TableCell`                                                          |
+| Menu "···" da sidebar, "Open menu" das linhas, submenu           | `Menu`, `MenuTrigger`, `MenuContent variant="dropdown"`, `MenuItem` (com `icon` e `shortcut`), `MenuSub*`, `MenuSeparator` (Radix Dropdown)       |
+| Botão "···"                                                      | `IconButton icon={Ellipsis} variant="ghost" size="sm" iconSize="14"` com `className="rounded-full"` (o mesmo ajuste do botão de ajuda da sidebar) |
+| Confirmar exclusão                                               | `Confirm variant="danger"` (Radix AlertDialog; Cancel recebe o foco inicial)                                                                      |
+| Editar nome de Member                                            | `Dialog`/`DialogContent`/`DialogFooter` + `TextInput` + `Button`                                                                                  |
+| Formulários                                                      | `Field`, `FormLabel`, `HelperText`, `FormMessage`, `TextInput`, `TextArea`, `Select`; layout de linha do pattern Settings Form                    |
+| Ícone + cor do Workspace/Team                                    | `IconPicker` + `ProjectIcon` + `ProjectIconValue` (o mesmo valor já usado em Team/Project)                                                        |
+| Avatar de Member                                                 | `Avatar` (ícone de pessoa; o DS não tem iniciais, decisão já registrada)                                                                          |
+| Role                                                             | `Badge` (`tone="neutral"`) ou texto simples; fica com o implementador dentro do que já existe                                                     |
+| Feedback de salvar/copiar                                        | `useToast` (o `ToastProvider` já é montado em `main.tsx`); erro de rede com `Alert tone="danger"`                                                 |
+| Carregando / vazio / erro                                        | `Skeleton`, `EmptyState`, `Alert`, e `refetch` do TanStack Query                                                                                  |
+| Linhas rótulo-esquerda/controle-direita em Workspace             | `SettingsGroup`/`SettingsRow` de `features/settings/settings-row.tsx` (já usados em Preferences)                                                  |
 
 Composição local nova (apps/web, não DS): tabela larga → `SettingsLayout` ganha uma variante larga (`max-w-content`, 72 rem, token existente) em vez do `max-w-160` fixo. Ver D13.
 
@@ -82,15 +82,15 @@ Composição local nova (apps/web, não DS): tabela larga → `SettingsLayout` g
 
 ### 1. Workspace
 
-| Campo do Linear | Proposta | Motivo |
-| --- | --- | --- |
-| Name | **Entra.** `TextInput`, Save no rodapé (padrão Settings Form). Nome do Workspace na sidebar atualiza pelo cache da query | Já existe no schema |
-| Logo (upload 256×256) | **Substituir por ícone + cor** com `IconPicker` (D1). Sem upload | Upload exige storage de arquivos, que não existe. O Vyzer já representa ícone de Team/Project com `ProjectIconValue`; o `WorkspaceMenu` hoje tem um `Zap` vermelho fixo no código (`workspace-menu.tsx:31`), que passa a vir do dado |
-| URL (`linear.app/<slug>`) | **Adiar** (D2) | Não há roteamento por Workspace nem domínio; nada consome o slug |
-| First month of the fiscal year | **Adiar** (D3) | Só serve para agrupar por trimestre/ano em Projects/Initiatives, que não usam isso |
-| Region | **Omitir** | Fixa na criação; temos um banco só |
-| Member onboarding | **Omitir** | "Available on Enterprise" no Linear |
-| Delete workspace | **Omitir a Danger zone** (D4) | Há um Workspace fixo (ADR-0015); apagá-lo quebra o middleware em toda procedure |
+| Campo do Linear                | Proposta                                                                                                                 | Motivo                                                                                                                                                                                                                               |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name                           | **Entra.** `TextInput`, Save no rodapé (padrão Settings Form). Nome do Workspace na sidebar atualiza pelo cache da query | Já existe no schema                                                                                                                                                                                                                  |
+| Logo (upload 256×256)          | **Substituir por ícone + cor** com `IconPicker` (D1). Sem upload                                                         | Upload exige storage de arquivos, que não existe. O Vyzer já representa ícone de Team/Project com `ProjectIconValue`; o `WorkspaceMenu` hoje tem um `Zap` vermelho fixo no código (`workspace-menu.tsx:31`), que passa a vir do dado |
+| URL (`linear.app/<slug>`)      | **Adiar** (D2)                                                                                                           | Não há roteamento por Workspace nem domínio; nada consome o slug                                                                                                                                                                     |
+| First month of the fiscal year | **Adiar** (D3)                                                                                                           | Só serve para agrupar por trimestre/ano em Projects/Initiatives, que não usam isso                                                                                                                                                   |
+| Region                         | **Omitir**                                                                                                               | Fixa na criação; temos um banco só                                                                                                                                                                                                   |
+| Member onboarding              | **Omitir**                                                                                                               | "Available on Enterprise" no Linear                                                                                                                                                                                                  |
+| Delete workspace               | **Omitir a Danger zone** (D4)                                                                                            | Há um Workspace fixo (ADR-0015); apagá-lo quebra o middleware em toda procedure                                                                                                                                                      |
 
 Resultado: página com H1 "Workspace", bloco de ícone + Name, Save. Curta de propósito; cresce quando os campos adiados tiverem consumidor.
 
@@ -139,28 +139,28 @@ Resultado: página com H1 "Workspace", bloco de ícone + Name, Save. Curta de pr
 
 ### Novo no banco
 
-| Etapa | Mudança | Nota |
-| --- | --- | --- |
-| 1.1 | `workspace.icon` (jsonb `ProjectIconValue`, default `{kind:"icon",name:"Zap",color:"red"}`) | Só se D1 for aprovado; o default mantém o visual de hoje |
-| 1.2 | `member.created_at` | Coluna "Joined". Seed idempotente mantém o valor existente |
-| 2.1 | `team_member (team_id, member_id, created_at)`, chave composta | D5. Seed vincula o admin aos dois Teams (Vyzer e Zynox) |
-| 2.1 | `team.description` (text, nulo) | D10. Entra junto do schema de Team da Etapa 2, sem migration extra |
+| Etapa | Mudança                                                                                     | Nota                                                               |
+| ----- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 1.1   | `workspace.icon` (jsonb `ProjectIconValue`, default `{kind:"icon",name:"Zap",color:"red"}`) | Só se D1 for aprovado; o default mantém o visual de hoje           |
+| 1.2   | `member.created_at`                                                                         | Coluna "Joined". Seed idempotente mantém o valor existente         |
+| 2.1   | `team_member (team_id, member_id, created_at)`, chave composta                              | D5. Seed vincula o admin aos dois Teams (Vyzer e Zynox)            |
+| 2.1   | `team.description` (text, nulo)                                                             | D10. Entra junto do schema de Team da Etapa 2, sem migration extra |
 
 ### API (contrato compartilhado + router)
 
 Toda procedure passa pelo middleware de Workspace/Member (ADR-0007/0015). **Mutações exigem Role admin** (D14). Leituras não.
 
-| Etapa | Procedure | Entrada → saída | Erros |
-| --- | --- | --- | --- |
-| 1.1 | `workspace.update` | `{ name?, icon? }` → Workspace | `FORBIDDEN` (não admin); nome vazio → validação |
-| 1.2 | `member.list` | — → `{ id, name, email, role, createdAt }[]` | — |
-| 1.2 | `member.update` | `{ id, name }` → Member | `FORBIDDEN`; `NOT_FOUND` se o Member é de outro Workspace |
-| 2.1 | `team.list` | — → Team + `memberCount` + `issueCount` (=0 até Issues) | — |
-| 2.1 | `team.create` | `{ name, key, icon }` → Team (slug derivado) | `CONFLICT` (key ou slug), `FORBIDDEN` |
-| 2.1 | `team.delete` | `{ id }` → `void` | `CONFLICT` com Project associado (só testável de verdade na Etapa 3), `NOT_FOUND`, `FORBIDDEN` |
-| 2.2 | `team.get` | `{ team: slug }` → Team | `NOT_FOUND` |
-| 2.2 | `team.update` | `{ id, name?, key?, icon?, description? }` → Team | `CONFLICT` (key), `NOT_FOUND`, `FORBIDDEN` |
-| 2.2 | `team.members` | `{ id }` → Member[] | `NOT_FOUND` |
+| Etapa | Procedure          | Entrada → saída                                         | Erros                                                                                          |
+| ----- | ------------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1.1   | `workspace.update` | `{ name?, icon? }` → Workspace                          | `FORBIDDEN` (não admin); nome vazio → validação                                                |
+| 1.2   | `member.list`      | — → `{ id, name, email, role, createdAt }[]`            | —                                                                                              |
+| 1.2   | `member.update`    | `{ id, name }` → Member                                 | `FORBIDDEN`; `NOT_FOUND` se o Member é de outro Workspace                                      |
+| 2.1   | `team.list`        | — → Team + `memberCount` + `issueCount` (=0 até Issues) | —                                                                                              |
+| 2.1   | `team.create`      | `{ name, key, icon }` → Team (slug derivado)            | `CONFLICT` (key ou slug), `FORBIDDEN`                                                          |
+| 2.1   | `team.delete`      | `{ id }` → `void`                                       | `CONFLICT` com Project associado (só testável de verdade na Etapa 3), `NOT_FOUND`, `FORBIDDEN` |
+| 2.2   | `team.get`         | `{ team: slug }` → Team                                 | `NOT_FOUND`                                                                                    |
+| 2.2   | `team.update`      | `{ id, name?, key?, icon?, description? }` → Team       | `CONFLICT` (key), `NOT_FOUND`, `FORBIDDEN`                                                     |
+| 2.2   | `team.members`     | `{ id }` → Member[]                                     | `NOT_FOUND`                                                                                    |
 
 O CRUD base de Team já está previsto na Etapa 2 da spec principal; esta spec só acrescenta `get`, `members`, os campos `memberCount`/`issueCount`/`description` e a exigência de admin. Cada procedure ganha teste de isolamento por Workspace (ADR-0007) e, nas mutações, teste de `FORBIDDEN` para não-admin (Member criado só no teste).
 
@@ -175,13 +175,13 @@ O CRUD base de Team já está previsto na Etapa 2 da spec principal; esta spec s
 
 As etapas continuam **sequenciais**, cada uma fechada, testada e revisada antes da seguinte. Proposta: fatiar as etapas 1 e 2 assim.
 
-| Sub-etapa | Entra | Depende de |
-| --- | --- | --- |
-| **1.1** Workspace settings | `workspace.icon` (D1), `workspace.update` + guarda de admin, página `/settings/workspace`, `WorkspaceMenu` lendo o ícone | Etapa 1 atual (concluída, commit `fe7b579`) |
-| **1.2** Members | `member.created_at`, `member.list`/`member.update`, página `/settings/members` (sem coluna Teams), variante larga do layout | 1.1 (guarda de admin) |
-| **2.1** Teams: tabela, criar, excluir | `team`, `team_member`, seed, `team.list/create/delete`, `/settings/teams`, `/settings/teams/new`, coluna Teams em Members, `nav-data` a partir da API | 1.2 |
-| **2.2** Team settings | `team.get/update/members`, `team.description`, `/settings/teams/:team` (mais `/general` e `/members`) | 2.1 |
-| **2.3** Menu "···" da sidebar | componente do menu, integração em `TeamNavGroup`, Copy URL | 2.2 (destino de "Team settings") |
+| Sub-etapa                             | Entra                                                                                                                                                 | Depende de                                  |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **1.1** Workspace settings            | `workspace.icon` (D1), `workspace.update` + guarda de admin, página `/settings/workspace`, `WorkspaceMenu` lendo o ícone                              | Etapa 1 atual (concluída, commit `fe7b579`) |
+| **1.2** Members                       | `member.created_at`, `member.list`/`member.update`, página `/settings/members` (sem coluna Teams), variante larga do layout                           | 1.1 (guarda de admin)                       |
+| **2.1** Teams: tabela, criar, excluir | `team`, `team_member`, seed, `team.list/create/delete`, `/settings/teams`, `/settings/teams/new`, coluna Teams em Members, `nav-data` a partir da API | 1.2                                         |
+| **2.2** Team settings                 | `team.get/update/members`, `team.description`, `/settings/teams/:team` (mais `/general` e `/members`)                                                 | 2.1                                         |
+| **2.3** Menu "···" da sidebar         | componente do menu, integração em `TeamNavGroup`, Copy URL                                                                                            | 2.2 (destino de "Team settings")            |
 
 A sidebar e o breadcrumb com Team real (Etapa 2 original) ficam na 2.1, já que `team.list` nasce ali. Nada muda na Etapa 3. A checagem "Team não pode ser excluído com Project associado" continua como pendência documentada até a Etapa 3; na 2.1 a UI de exclusão já trata o `CONFLICT` genericamente.
 
@@ -199,15 +199,15 @@ A sidebar e o breadcrumb com Team real (Etapa 2 original) ficam na 2.1, já que 
 
 Vale para cada página/tabela/formulário, exceto onde indicado.
 
-| Estado | Comportamento |
-| --- | --- |
-| Padrão | Dados reais da API |
-| Hover / foco / ativo / desabilitado | Como nos componentes do DS; "···" e "Open menu" aparecem no hover da linha e no foco |
-| Carregando | `Skeleton` no lugar de linhas/campos, sem deslocar controles |
-| Vazio | Members nunca fica vazio (há o admin). Teams vazio (todos excluídos): `EmptyState` com ação **Create team**. Sidebar sem Teams: seção "Your teams" oculta, como Favorites vazio |
-| Erro | `Alert` acessível com nova tentativa (`refetch`); erro de rede não vira "lista vazia" nem "não encontrado" |
-| Não encontrado | Slug de Team inexistente: `EmptyState`, como Project não encontrado |
-| Sem permissão | Não-admin: campos de edição desabilitados/omitidos e ações de mutação ausentes; a API devolve `FORBIDDEN` de qualquer forma. Sem auth hoje o Member é sempre o admin; o estado é testado com contexto injetado |
+| Estado                              | Comportamento                                                                                                                                                                                                  |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Padrão                              | Dados reais da API                                                                                                                                                                                             |
+| Hover / foco / ativo / desabilitado | Como nos componentes do DS; "···" e "Open menu" aparecem no hover da linha e no foco                                                                                                                           |
+| Carregando                          | `Skeleton` no lugar de linhas/campos, sem deslocar controles                                                                                                                                                   |
+| Vazio                               | Members nunca fica vazio (há o admin). Teams vazio (todos excluídos): `EmptyState` com ação **Create team**. Sidebar sem Teams: seção "Your teams" oculta, como Favorites vazio                                |
+| Erro                                | `Alert` acessível com nova tentativa (`refetch`); erro de rede não vira "lista vazia" nem "não encontrado"                                                                                                     |
+| Não encontrado                      | Slug de Team inexistente: `EmptyState`, como Project não encontrado                                                                                                                                            |
+| Sem permissão                       | Não-admin: campos de edição desabilitados/omitidos e ações de mutação ausentes; a API devolve `FORBIDDEN` de qualquer forma. Sem auth hoje o Member é sempre o admin; o estado é testado com contexto injetado |
 
 ## Critérios de aceite
 
@@ -256,25 +256,25 @@ Vale para cada página/tabela/formulário, exceto onde indicado.
 
 Recomendação primeiro; alternativa entre parênteses. Se a resposta for "siga as recomendações", nada mais é preciso.
 
-| # | Pergunta | Recomendação |
-| --- | --- | --- |
-| D0 | Frames de Figma para Members/Teams/Workspace | Alguém com o MCP autorizado roda `get_metadata` a partir de `33:20122`; até lá, Linear ao vivo é a referência |
-| D1 | Logo do Workspace | Trocar upload por **ícone + cor** (`IconPicker`, salvo em `workspace.icon`), sem storage (alternativa: adiar tudo e manter o `Zap` fixo) |
-| D2 | URL (slug) do Workspace | **Adiar**; nada consome |
-| D3 | Fiscal year, Region, Member onboarding | Fiscal year **adiado**; Region e onboarding **omitidos** (Enterprise/não se aplica) |
-| D4 | "Delete workspace" com 1 Workspace e sem auth | **Omitir a Danger zone** (alternativa: botão desabilitado com ajuda "Not available…", ruído que o Linear não tem) |
-| D5 | Team↔Member: modelar vínculo? | **Sim**, `team_member` na 2.1 (alimenta coluna Teams, "Members" da lista e do Team, e "Leave team" no futuro). Sem UI de adicionar/remover agora |
-| D6 | Export CSV (Members e Teams) e ações extras de Member | **Adiar** CSV (sem consumidor, trivial depois). Row menu de Member só com "Update name…" |
-| D7 | Colunas "Issues" e "Visibility" de Teams | **Issues = 0** vindo do contrato (mesmo critério de Project); **Visibility omitida** (só existe "Workspace") |
-| D8 | Identificadores de Team | Slug **imutável** após criar; **key editável**, única por Workspace (`[A-Z][A-Z0-9]*`; limite de tamanho a confirmar); rotas de Settings usam **slug**, não a key do Linear |
-| D9 | Hub de configuração do Team | **Hub reduzido** (General, Members, Danger zone) com subpáginas reais; o hub cresce por domínio (alternativa: uma única página com General + Members em seções) |
-| D10 | Campos de General do Team | Entra **Description** (`team.description`); adiados Timezone, Estimates, Create issues by email, Other |
-| D11 | Itens do menu "···" | **Team settings + Copy URL** agora; Favorite/Archive/Subscribe/Slack/Leave voltam com seus domínios; sem hints de atalho |
-| D12 | Menu do Workspace com entradas mortas | Ligar **Workspace settings** → `/settings/workspace` e **Invite people** → `/settings/members` (o Linear faz o mesmo); **esconder** "Create workspace" e "Log out" enquanto valer o ADR-0015. Toca `workspace-menu.tsx`, da Luna; pede aprovação |
-| D13 | Layout largo para tabelas | `SettingsLayout` com variante larga (`max-w-content`, token existente); Workspace/Preferences/General seguem em 640 px |
-| D14 | Autorização das mutações | Só **admin** muda Workspace, Members e Teams; leitura para todos os Members. Exige guarda de Role no middleware (arquivo `orpc.ts`, da Luna) |
-| D15 | Excluir Team: hard delete? | **Hard delete** agora (não há Issues); o Linear tem janela de 30 dias, então é divergência deliberada a registrar em ADR curta quando aprovada (ADR-0001) |
-| D16 | Salvar: botão ou autosave | **Botão Save** (padrão Settings Form já aprovado). Não testei o autosave do Linear porque exigiria editar dados reais |
+| #   | Pergunta                                              | Recomendação                                                                                                                                                                                                                                     |
+| --- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D0  | Frames de Figma para Members/Teams/Workspace          | Alguém com o MCP autorizado roda `get_metadata` a partir de `33:20122`; até lá, Linear ao vivo é a referência                                                                                                                                    |
+| D1  | Logo do Workspace                                     | Trocar upload por **ícone + cor** (`IconPicker`, salvo em `workspace.icon`), sem storage (alternativa: adiar tudo e manter o `Zap` fixo)                                                                                                         |
+| D2  | URL (slug) do Workspace                               | **Adiar**; nada consome                                                                                                                                                                                                                          |
+| D3  | Fiscal year, Region, Member onboarding                | Fiscal year **adiado**; Region e onboarding **omitidos** (Enterprise/não se aplica)                                                                                                                                                              |
+| D4  | "Delete workspace" com 1 Workspace e sem auth         | **Omitir a Danger zone** (alternativa: botão desabilitado com ajuda "Not available…", ruído que o Linear não tem)                                                                                                                                |
+| D5  | Team↔Member: modelar vínculo?                         | **Sim**, `team_member` na 2.1 (alimenta coluna Teams, "Members" da lista e do Team, e "Leave team" no futuro). Sem UI de adicionar/remover agora                                                                                                 |
+| D6  | Export CSV (Members e Teams) e ações extras de Member | **Adiar** CSV (sem consumidor, trivial depois). Row menu de Member só com "Update name…"                                                                                                                                                         |
+| D7  | Colunas "Issues" e "Visibility" de Teams              | **Issues = 0** vindo do contrato (mesmo critério de Project); **Visibility omitida** (só existe "Workspace")                                                                                                                                     |
+| D8  | Identificadores de Team                               | Slug **imutável** após criar; **key editável**, única por Workspace (`[A-Z][A-Z0-9]*`; limite de tamanho a confirmar); rotas de Settings usam **slug**, não a key do Linear                                                                      |
+| D9  | Hub de configuração do Team                           | **Hub reduzido** (General, Members, Danger zone) com subpáginas reais; o hub cresce por domínio (alternativa: uma única página com General + Members em seções)                                                                                  |
+| D10 | Campos de General do Team                             | Entra **Description** (`team.description`); adiados Timezone, Estimates, Create issues by email, Other                                                                                                                                           |
+| D11 | Itens do menu "···"                                   | **Team settings + Copy URL** agora; Favorite/Archive/Subscribe/Slack/Leave voltam com seus domínios; sem hints de atalho                                                                                                                         |
+| D12 | Menu do Workspace com entradas mortas                 | Ligar **Workspace settings** → `/settings/workspace` e **Invite people** → `/settings/members` (o Linear faz o mesmo); **esconder** "Create workspace" e "Log out" enquanto valer o ADR-0015. Toca `workspace-menu.tsx`, da Luna; pede aprovação |
+| D13 | Layout largo para tabelas                             | `SettingsLayout` com variante larga (`max-w-content`, token existente); Workspace/Preferences/General seguem em 640 px                                                                                                                           |
+| D14 | Autorização das mutações                              | Só **admin** muda Workspace, Members e Teams; leitura para todos os Members. Exige guarda de Role no middleware (arquivo `orpc.ts`, da Luna)                                                                                                     |
+| D15 | Excluir Team: hard delete?                            | **Hard delete** agora (não há Issues); o Linear tem janela de 30 dias, então é divergência deliberada a registrar em ADR curta quando aprovada (ADR-0001)                                                                                        |
+| D16 | Salvar: botão ou autosave                             | **Botão Save** (padrão Settings Form já aprovado). Não testei o autosave do Linear porque exigiria editar dados reais                                                                                                                            |
 
 ## Fora do escopo
 

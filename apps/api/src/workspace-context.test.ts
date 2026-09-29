@@ -3,8 +3,15 @@ import { readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { createRouterClient } from "@orpc/server";
-import { createDb, member, MEMBER_ID, WORKSPACE_ID, workspace } from "@vyzer/db";
-import { router } from "./router";
+import {
+  createDb,
+  member,
+  MEMBER_ID,
+  resolveWorkspaceMember,
+  WORKSPACE_ID,
+  workspace,
+} from "@vyzer/db";
+import { createRouter, router } from "./router";
 
 function testDatabaseUrl(): string {
   const fromProcess = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
@@ -24,7 +31,7 @@ const db = createDb(testDatabaseUrl());
 const api = createRouterClient(router, { context: { db, headers: new Headers() } });
 const foreignWorkspaceIds: string[] = [];
 
-async function createForeignWorkspaceAndMember() {
+async function createForeignWorkspaceAndMember(role: "admin" | "member" = "member") {
   const workspaceId = randomUUID();
   const memberId = randomUUID();
   const suffix = randomUUID();
@@ -36,7 +43,7 @@ async function createForeignWorkspaceAndMember() {
     workspaceId,
     name: `Unrelated Member ${suffix}`,
     email: `${suffix}@example.test`,
-    role: "member",
+    role,
   });
 
   return { workspaceId, memberId };
@@ -60,7 +67,11 @@ describe("Workspace/Member context middleware", () => {
     const current = await api.workspace.current();
 
     expect(current).toEqual({
-      workspace: { id: WORKSPACE_ID, name: "Zynox" },
+      workspace: {
+        id: WORKSPACE_ID,
+        name: "Zynox",
+        icon: { kind: "icon", name: "Zap", color: "red" },
+      },
       member: {
         id: MEMBER_ID,
         name: expect.any(String),
@@ -71,5 +82,53 @@ describe("Workspace/Member context middleware", () => {
     expect(current.member.name).not.toBe("");
     expect(current.workspace.id).not.toBe(foreign.workspaceId);
     expect(current.member.id).not.toBe(foreign.memberId);
+  });
+
+  it("workspace.update only updates the Workspace resolved by middleware", async () => {
+    const foreign = await createForeignWorkspaceAndMember("admin");
+    const foreignApi = createRouterClient(
+      createRouter((contextDb) =>
+        resolveWorkspaceMember(contextDb, foreign.workspaceId, foreign.memberId),
+      ),
+      { context: { db, headers: new Headers() } },
+    );
+    const updatedName = `Updated Workspace ${randomUUID()}`;
+
+    const updated = await foreignApi.workspace.update({ name: updatedName });
+    const [seedWorkspace] =
+      await db.$client`SELECT name FROM "workspace" WHERE id = ${WORKSPACE_ID}`;
+    const [foreignWorkspace] =
+      await db.$client`SELECT name FROM "workspace" WHERE id = ${foreign.workspaceId}`;
+
+    expect(updated).toMatchObject({ id: foreign.workspaceId, name: updatedName });
+    expect(seedWorkspace?.name).toBe("Zynox");
+    expect(foreignWorkspace?.name).toBe(updatedName);
+  });
+
+  it("workspace.update rejects a non-admin member with FORBIDDEN", async () => {
+    const memberId = randomUUID();
+    const suffix = randomUUID();
+
+    await db.insert(member).values({
+      id: memberId,
+      workspaceId: WORKSPACE_ID,
+      name: `Workspace Member ${suffix}`,
+      email: `${suffix}@example.test`,
+      role: "member",
+    });
+    try {
+      const memberRouter = createRouter((contextDb) =>
+        resolveWorkspaceMember(contextDb, WORKSPACE_ID, memberId),
+      );
+      const memberApi = createRouterClient(memberRouter, {
+        context: { db, headers: new Headers() },
+      });
+
+      await expect(memberApi.workspace.update({ name: "Not allowed" })).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
+    } finally {
+      await db.$client`DELETE FROM "member" WHERE id = ${memberId}`;
+    }
   });
 });

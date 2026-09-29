@@ -46,6 +46,21 @@ export async function resolveWorkspaceMember(
   return { workspace: resolvedWorkspace, member: resolvedMember };
 }
 
+/** Update the editable fields of one Workspace and return the persisted row. */
+export async function updateWorkspaceSettings(
+  db: Db,
+  workspaceId: string,
+  values: Partial<Pick<typeof schema.workspace.$inferInsert, "name" | "icon">>,
+) {
+  const [updatedWorkspace] = await db
+    .update(schema.workspace)
+    .set({ ...values, updatedAt: new Date() })
+    .where(eq(schema.workspace.id, workspaceId))
+    .returning();
+
+  return updatedWorkspace ?? null;
+}
+
 /** Faz uma consulta trivial; lança erro se o banco não responder. */
 export async function checkConnection(db: Db): Promise<void> {
   await db.execute(sql`select 1`);

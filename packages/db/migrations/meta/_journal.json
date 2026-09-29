@@ -15,6 +15,13 @@
       "when": 1790644025380,
       "tag": "0001_glossy_kronos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790647559114,
+      "tag": "0002_smart_toad",
+      "breakpoints": true
     }
   ]
 }
