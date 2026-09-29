@@ -19,6 +19,8 @@ Não haverá mudança visual nem alteração no design system. As telas continua
 
 ## Etapas de implementação
 
+**Aprovado em 28/09: as Etapas 1 e 2 abaixo foram refatiadas em sub-etapas menores por [`settings-administration.md`](./settings-administration.md)** (1.1 Workspace, 1.2 Members, 2.1 Teams, 2.2 Team settings, 2.3 menu "···"), que também acrescenta as telas de Settings → Administration a cada uma. Este documento continua valendo para o modelo de dados e o comportamento de Project (Etapa 3, inalterada); para a ordem real de implementação de Workspace/Team, siga a outra spec.
+
 **Sequenciais, não paralelas.** Cada etapa é uma fatia vertical completa (banco → API → services → tela) só da própria entidade, fechada, testada e revisada antes de a próxima começar. Nenhuma etapa toca arquivos da etapa seguinte. Ao fim de cada etapa: `pnpm check`/`build`/`test` verdes, commit local, mensagem ao coordenador — e só depois da confirmação a próxima etapa começa.
 
 ### Etapa 1 — Workspace e Member
