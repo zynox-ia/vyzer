@@ -13,7 +13,8 @@
  * - Danger zone: "Delete workspace" de verdade, com `Confirm` (danger). Imediato e sem volta,
  *   sem a janela de restauração do Linear (mesma linguagem do ADR-0016 para Team).
  *
- * Save no rodapé dos dois primeiros cartões (padrão Settings Form; D16). Leitura aberta a
+ * Save no rodapé do cartão "Time & region", que fecha o formulário (padrão Settings Form; D16;
+ * assim o espaço entre cartões segue os 48 px do Linear). Leitura aberta a
  * qualquer Member; edição só por Admin (D14): a API devolve FORBIDDEN de qualquer forma, aqui os
  * controles ficam desabilitados para não convidar a uma ação que falha.
  */
@@ -279,20 +280,19 @@ export function WorkspaceSettingsPage() {
           >
             {() => <span className="text-body-md text-secondary">{workspace.region}</span>}
           </SettingsRow>
+          {canEdit && (
+            <div className="flex justify-end py-4">
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={!dirty || Boolean(nameError) || Boolean(slugError) || saving}
+                loading={saving}
+              >
+                Save
+              </Button>
+            </div>
+          )}
         </SettingsGroup>
-
-        {canEdit && (
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={!dirty || Boolean(nameError) || Boolean(slugError) || saving}
-              loading={saving}
-            >
-              Save
-            </Button>
-          </div>
-        )}
       </form>
 
       <SettingsGroup title="Member onboarding">
