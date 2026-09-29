@@ -18,4 +18,8 @@ function port(name: string, fallback: number): number {
 export const env = {
   databaseUrl: required("DATABASE_URL"),
   port: port("API_PORT", 3001),
+  rustfsEndpoint: required("RUSTFS_ENDPOINT"),
+  rustfsBucket: required("RUSTFS_BUCKET"),
+  rustfsAccessKey: required("RUSTFS_ACCESS_KEY"),
+  rustfsSecretKey: required("RUSTFS_SECRET_KEY"),
 };

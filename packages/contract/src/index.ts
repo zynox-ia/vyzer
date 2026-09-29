@@ -26,6 +26,7 @@ const workspaceSchema = z.object({
   slug: z.string(),
   fiscalYearStartMonth: z.number().int().min(1).max(12),
   region: z.string(),
+  logoUrl: z.string().nullable(),
   icon: projectIconValueSchema,
 });
 
@@ -36,6 +37,14 @@ const workspaceSlugSchema = z
   .max(63)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
+export const workspaceLogoUrlSchema = z
+  .string()
+  .regex(
+    /^\/api\/workspace\/logo\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:png|jpg|webp|svg)$/,
+  );
+
+export const workspaceLogoUploadOutputSchema = z.object({ logoUrl: workspaceLogoUrlSchema });
+
 const memberSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -43,6 +52,29 @@ const memberSchema = z.object({
   role: z.string(),
   createdAt: z.iso.datetime(),
 });
+
+const memberListItemSchema = memberSchema.extend({ teamCount: z.number().int().nonnegative() });
+
+const teamSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  key: z.string(),
+  icon: projectIconValueSchema,
+  description: z.string().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+const teamKeySchema = z.string().regex(/^[A-Z][A-Z0-9]*$/);
+
+const teamListItemSchema = teamSchema.extend({
+  memberCount: z.number().int().nonnegative(),
+  issueCount: z.number().int().nonnegative(),
+});
+
+export type Team = z.infer<typeof teamSchema>;
+export type TeamListItem = z.infer<typeof teamListItemSchema>;
 
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
@@ -72,6 +104,7 @@ export const contract = {
           name: z.string().trim().min(1).optional(),
           slug: workspaceSlugSchema.optional(),
           fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
+          logoUrl: workspaceLogoUrlSchema.nullable().optional(),
           icon: projectIconValueSchema.optional(),
         }),
       )
@@ -81,7 +114,7 @@ export const contract = {
   },
   member: {
     /** Lista Members do Workspace resolvido pelo middleware. */
-    list: oc.output(z.array(memberSchema)),
+    list: oc.output(z.array(memberListItemSchema)),
     /** Renomeia um Member do Workspace; exige Role admin no middleware. */
     update: oc
       .input(
@@ -91,6 +124,38 @@ export const contract = {
         }),
       )
       .output(memberSchema),
+  },
+  team: {
+    /** Lista somente os Teams do Workspace resolvido, com contagens para a tabela. */
+    list: oc.output(z.array(teamListItemSchema)),
+    /** Cria um Team; o servidor deriva o slug do nome. */
+    create: oc
+      .input(
+        z.object({
+          name: z.string().trim().min(1),
+          key: teamKeySchema,
+          icon: projectIconValueSchema,
+        }),
+      )
+      .output(teamSchema),
+    /** Lê um Team pelo slug, somente dentro do Workspace resolvido. */
+    get: oc.input(z.object({ team: z.string().trim().min(1) })).output(teamSchema),
+    /** Atualiza os campos editáveis do Team; o slug não muda após criação. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().trim().min(1).optional(),
+          key: teamKeySchema.optional(),
+          icon: projectIconValueSchema.optional(),
+          description: z.string().trim().nullable().optional(),
+        }),
+      )
+      .output(teamSchema),
+    /** Lista Members vinculados a um Team do Workspace resolvido. */
+    members: oc.input(z.object({ id: z.string().uuid() })).output(z.array(memberSchema)),
+    /** Exclui imediatamente um Team do Workspace resolvido. */
+    delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
 };
 
