@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, type RouteObject } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/layouts/app-shell";
 import { AgentPage } from "@/features/agent";
 import { AgentPersonalizationPage } from "@/features/agent/personalization";
@@ -7,6 +8,7 @@ import { PlaceholderPage } from "@/features/placeholder";
 import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "@/features/projects";
 import { PreferencesPage, SettingsRoute } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
+import { currentWorkspaceQueryOptions } from "@/services/workspace";
 
 /** Rotas só de desenvolvimento: ficam fora do build de produção. */
 const devRoutes: RouteObject[] = import.meta.env.DEV
@@ -69,6 +71,29 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
   { path: "teams/new", title: "Create a team" },
 ];
 
+/** Product-only data wrapper; the `/design-system` documentation keeps its static sidebar. */
+function WorkspaceAppShell() {
+  const currentWorkspace = useQuery(currentWorkspaceQueryOptions());
+  const workspaceStatus = currentWorkspace.isPending
+    ? "Loading workspace name."
+    : currentWorkspace.isError
+      ? "Could not load workspace name."
+      : undefined;
+
+  return (
+    <AppShell
+      workspaceName={
+        currentWorkspace.data?.workspace.name ??
+        (currentWorkspace.isError ? "Workspace unavailable" : "Workspace")
+      }
+      workspaceStatus={workspaceStatus}
+      onWorkspaceRetry={
+        currentWorkspace.isError ? () => void currentWorkspace.refetch() : undefined
+      }
+    />
+  );
+}
+
 export const router = createBrowserRouter([
   { path: "/_health", Component: HealthPage },
   ...devRoutes,
@@ -89,7 +114,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
-    Component: AppShell,
+    Component: WorkspaceAppShell,
     children: [
       { index: true, element: <Navigate to="/projects" replace /> },
       { path: "projects", Component: ProjectsListPage },

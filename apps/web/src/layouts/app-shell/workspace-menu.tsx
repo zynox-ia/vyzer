@@ -17,7 +17,7 @@ import {
 } from "@vyzer/design-system/components";
 import { Icon } from "@vyzer/design-system/icons";
 
-export function WorkspaceMenu({ name }: { name: string }) {
+export function WorkspaceMenu({ name, onRetry }: { name: string; onRetry?: () => void }) {
   return (
     <Menu>
       {/* text-sidebar-title (14 px/500): regra do responsável, 28/09 — o nome do workspace fica
@@ -34,6 +34,12 @@ export function WorkspaceMenu({ name }: { name: string }) {
       </MenuTrigger>
       <MenuContent variant="dropdown" align="start">
         <MenuLabel>{name}</MenuLabel>
+        {onRetry && (
+          <>
+            <MenuItem onSelect={onRetry}>Retry loading workspace</MenuItem>
+            <MenuSeparator />
+          </>
+        )}
         <MenuItem icon={Settings}>Workspace settings</MenuItem>
         <MenuItem icon={UserRoundPlus}>Invite people</MenuItem>
         <MenuSeparator />

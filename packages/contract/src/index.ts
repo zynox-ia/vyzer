@@ -10,6 +10,23 @@ export const contract = {
       database: z.literal("ok"),
     }),
   ),
+  workspace: {
+    /** Retorna o Workspace e o Member resolvidos pelo middleware do contexto atual. */
+    current: oc.output(
+      z.object({
+        workspace: z.object({
+          id: z.string().uuid(),
+          name: z.string(),
+        }),
+        member: z.object({
+          id: z.string().uuid(),
+          name: z.string(),
+          email: z.string().email(),
+          role: z.string(),
+        }),
+      }),
+    ),
+  },
 };
 
 export type Contract = typeof contract;

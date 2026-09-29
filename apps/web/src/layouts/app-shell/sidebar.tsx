@@ -37,14 +37,27 @@ import { WorkspaceMenu } from "./workspace-menu";
 import { useAppShell } from "./use-app-shell";
 
 /** Exportado para a documentação mostrar a gaveta aberta de forma estática (sem Dialog modal). */
-export function SidebarContent() {
+export function SidebarContent({
+  workspaceName = "Zynox",
+  workspaceStatus,
+  onWorkspaceRetry,
+}: {
+  workspaceName?: string;
+  workspaceStatus?: string;
+  onWorkspaceRetry?: () => void;
+}) {
   const { setCommandMenuOpen, setCreateIssueOpen } = useAppShell();
   return (
     <div className="flex h-full flex-col">
       {/* items-start + pt-4: medido ao vivo no Linear (x=12, y=16 até os botões do cabeçalho,
           contra x=8/y=10 daqui) — 16 px de topo, não centralização vertical num h-11. */}
       <div className="flex h-11 shrink-0 items-start gap-1 px-3 pt-4">
-        <WorkspaceMenu name="Zynox" />
+        <WorkspaceMenu name={workspaceName} onRetry={onWorkspaceRetry} />
+        {workspaceStatus && (
+          <output aria-live="polite" className="sr-only">
+            {workspaceStatus}
+          </output>
+        )}
         <div className="ml-auto flex items-center gap-1">
           {/* iconSize="14": pedido do responsável, 28/09 — o ícone de 16 (padrão do sm) ficava
               grande na linha do seletor de workspace; o botão continua 24 px (size="sm"). */}
@@ -207,7 +220,17 @@ function ResizeHandle() {
   );
 }
 
-export function Sidebar({ label = "Sidebar do workspace" }: { label?: string }) {
+export function Sidebar({
+  label = "Sidebar do workspace",
+  workspaceName = "Zynox",
+  workspaceStatus,
+  onWorkspaceRetry,
+}: {
+  label?: string;
+  workspaceName?: string;
+  workspaceStatus?: string;
+  onWorkspaceRetry?: () => void;
+}) {
   const { sidebarCollapsed, toggleSidebar, sidebarWidth, sidebarDrawerOpen, setSidebarDrawerOpen } =
     useAppShell();
 
@@ -223,7 +246,11 @@ export function Sidebar({ label = "Sidebar do workspace" }: { label?: string }) 
           // segunda aqui (refinamento, medido ao vivo no Linear, 28/09).
           className="relative hidden shrink-0 tablet:block"
         >
-          <SidebarContent />
+          <SidebarContent
+            workspaceName={workspaceName}
+            workspaceStatus={workspaceStatus}
+            onWorkspaceRetry={onWorkspaceRetry}
+          />
           <ResizeHandle />
         </nav>
       )}
@@ -257,7 +284,11 @@ export function Sidebar({ label = "Sidebar do workspace" }: { label?: string }) 
               aria-describedby={undefined}
             >
               <DialogPrimitive.Title className="sr-only">{label}</DialogPrimitive.Title>
-              <SidebarContent />
+              <SidebarContent
+                workspaceName={workspaceName}
+                workspaceStatus={workspaceStatus}
+                onWorkspaceRetry={onWorkspaceRetry}
+              />
             </DialogPrimitive.Content>
           </DialogPrimitive.Overlay>
         </DialogPrimitive.Portal>

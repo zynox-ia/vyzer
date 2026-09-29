@@ -103,7 +103,15 @@ function AgentFooter() {
   );
 }
 
-export function AppShell() {
+export function AppShell({
+  workspaceName = "Zynox",
+  workspaceStatus,
+  onWorkspaceRetry,
+}: {
+  workspaceName?: string;
+  workspaceStatus?: string;
+  onWorkspaceRetry?: () => void;
+} = {}) {
   return (
     <AppShellProvider>
       {/* Estado da conversa do agente, compartilhado acima das rotas (revisão de código,
@@ -111,7 +119,11 @@ export function AppShell() {
       <AgentChatProvider>
         <TrackShellPath />
         <div className="flex h-dvh overflow-hidden bg-app text-primary">
-          <Sidebar />
+          <Sidebar
+            workspaceName={workspaceName}
+            workspaceStatus={workspaceStatus}
+            onWorkspaceRetry={onWorkspaceRetry}
+          />
           <ShellFrame />
         </div>
         <AgentFooter />
