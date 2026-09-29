@@ -1,5 +1,5 @@
 /** Members in the resolved Workspace (settings-administration.md, sub-etapa 1.2). */
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 import { Ellipsis, Pencil } from "lucide-react";
@@ -26,7 +26,6 @@ import {
   TextInput,
   useToast,
 } from "@vyzer/design-system/components";
-import { FormLabel, FormMessage } from "@vyzer/design-system/components";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 import { membersQueryOptions, updateMemberMutationOptions } from "@/services/members";
 
@@ -68,6 +67,9 @@ function MembersTableSkeleton() {
           <TableHead>Email</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Joined</TableHead>
+          <TableHead>
+            <span className="sr-only">Actions</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -85,19 +87,8 @@ function MembersTableSkeleton() {
           <td className="px-cell-x py-3">
             <Skeleton className="w-12" />
           </td>
-        </tr>
-        <tr aria-hidden="true">
           <td className="px-cell-x py-3">
-            <Skeleton shape="avatar" />
-          </td>
-          <td className="px-cell-x py-3">
-            <Skeleton />
-          </td>
-          <td className="px-cell-x py-3">
-            <Skeleton className="w-16" />
-          </td>
-          <td className="px-cell-x py-3">
-            <Skeleton className="w-12" />
+            <Skeleton className="w-6" />
           </td>
         </tr>
         <tr aria-hidden="true">
@@ -112,6 +103,26 @@ function MembersTableSkeleton() {
           </td>
           <td className="px-cell-x py-3">
             <Skeleton className="w-12" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-6" />
+          </td>
+        </tr>
+        <tr aria-hidden="true">
+          <td className="px-cell-x py-3">
+            <Skeleton shape="avatar" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-16" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-12" />
+          </td>
+          <td className="px-cell-x py-3">
+            <Skeleton className="w-6" />
           </td>
         </tr>
       </TableBody>
@@ -130,46 +141,39 @@ function UpdateMemberNameDialog({
   onSave: (name: string) => void;
   saving: boolean;
 }) {
-  const [name, setName] = useState(member.name);
+  // Como o Linear (medido ao vivo, aberto e cancelado): campo vazio com o nome atual de
+  // placeholder, "Cancel" e "Update".
+  const [name, setName] = useState("");
 
   const trimmedName = name.trim();
-  const invalid = trimmedName.length === 0;
-  const unchanged = member?.name === trimmedName;
+  const unchanged = member.name === trimmedName;
+  const cannotSave = trimmedName.length === 0 || unchanged || saving;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (invalid || unchanged || saving) return;
+    if (cannotSave) return;
     onSave(trimmedName);
   };
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent title="Update name" description="Change this Member's display name.">
+      <DialogContent title={`Please enter the new full name for ${member.name}`}>
         <form onSubmit={submit} className="contents">
           <DialogBody>
-            <div className="flex flex-col gap-1.5">
-              <FormLabel htmlFor="member-name">Name</FormLabel>
-              <TextInput
-                id="member-name"
-                autoComplete="off"
-                value={name}
-                invalid={invalid}
-                onChange={(event) => setName(event.target.value)}
-              />
-              {invalid && <FormMessage>Name is required.</FormMessage>}
-            </div>
+            <TextInput
+              aria-label="Full name"
+              autoComplete="off"
+              placeholder={member.name}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
           </DialogBody>
           <DialogFooter>
             <Button type="button" onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={invalid || unchanged || saving}
-              loading={saving}
-            >
-              Save
+            <Button type="submit" variant="primary" disabled={cannotSave} loading={saving}>
+              Update
             </Button>
           </DialogFooter>
         </form>
@@ -185,6 +189,8 @@ export function MembersPage() {
   const members = useQuery(membersQueryOptions());
   const current = useQuery(currentWorkspaceQueryOptions());
   const [editingMember, setEditingMember] = useState<WorkspaceMember | null>(null);
+  // O Radix devolve o foco ao gatilho ao fechar o menu, tirando-o do Dialog que acabou de abrir.
+  const openingDialog = useRef(false);
   const sort = parseSortKey(params.get("sort"));
   const direction: SortDirection = params.get("dir") === "desc" ? "desc" : "asc";
   const canEdit = current.data?.member.role === "admin";
@@ -277,43 +283,61 @@ export function MembersPage() {
             <TableHead sort={sortState("createdAt")} onSort={() => sortBy("createdAt")}>
               Joined
             </TableHead>
+            <TableHead>
+              <span className="sr-only">Actions</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedMembers.map((member) => (
             <TableRow key={member.id} className="group">
               <TableCell className="min-w-56">
-                <div className="flex min-w-0 items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Avatar name={member.name} />
-                    <span className="truncate text-primary">{member.name}</span>
-                  </div>
-                  {canEdit && (
-                    <Menu>
-                      <MenuTrigger asChild>
-                        <IconButton
-                          icon={Ellipsis}
-                          label="Open menu"
-                          className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100"
-                        />
-                      </MenuTrigger>
-                      <MenuContent variant="dropdown" align="end">
-                        <MenuItem icon={Pencil} onSelect={() => setEditingMember(member)}>
-                          Update name…
-                        </MenuItem>
-                      </MenuContent>
-                    </Menu>
-                  )}
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <Avatar name={member.name} />
+                  <span className="truncate text-label-md text-primary">{member.name}</span>
                 </div>
               </TableCell>
               <TableCell>{member.email}</TableCell>
               <TableCell>{formatRole(member.role)}</TableCell>
               <TableCell>{formatJoinedDate(member.createdAt)}</TableCell>
+              <TableCell className="w-12 text-right">
+                {canEdit && (
+                  <Menu>
+                    <MenuTrigger asChild>
+                      <IconButton
+                        icon={Ellipsis}
+                        label="Open menu"
+                        className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 data-[state=open]:opacity-100"
+                      />
+                    </MenuTrigger>
+                    <MenuContent
+                      variant="dropdown"
+                      align="end"
+                      onCloseAutoFocus={(event) => {
+                        if (openingDialog.current) {
+                          event.preventDefault();
+                          openingDialog.current = false;
+                        }
+                      }}
+                    >
+                      <MenuItem
+                        icon={Pencil}
+                        onSelect={() => {
+                          openingDialog.current = true;
+                          setEditingMember(member);
+                        }}
+                      >
+                        Update name…
+                      </MenuItem>
+                    </MenuContent>
+                  </Menu>
+                )}
+              </TableCell>
             </TableRow>
           ))}
           {sortedMembers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4}>No Members found.</TableCell>
+              <TableCell colSpan={5}>No Members found.</TableCell>
             </TableRow>
           )}
         </TableBody>

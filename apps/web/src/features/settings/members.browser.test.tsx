@@ -159,8 +159,17 @@ describe("MembersPage", () => {
     await row.hover();
     await row.getByRole("button", { name: "Open menu" }).click();
     await screen.getByRole("menuitem", { name: /Update name/ }).click();
-    await screen.getByRole("textbox", { name: "Name" }).fill("Bia");
-    await screen.getByRole("button", { name: "Save" }).click();
+    await expect
+      .element(screen.getByRole("dialog", { name: "Please enter the new full name for Bianca" }))
+      .toBeVisible();
+    // Foco vai direto para o campo (o Radix devolveria ao gatilho do menu), como no Linear; o
+    // campo abre vazio com o nome atual de placeholder e "Update" só habilita ao digitar.
+    const input = screen.getByRole("textbox", { name: "Full name" });
+    await expect.element(input).toHaveFocus();
+    await expect.element(input).toHaveAttribute("placeholder", "Bianca");
+    await expect.element(screen.getByRole("button", { name: "Update" })).toBeDisabled();
+    await input.fill("Bia");
+    await screen.getByRole("button", { name: "Update" }).click();
 
     await vi.waitFor(() =>
       expect(updateMember).toHaveBeenCalledWith({ id: MEMBER_ID, name: "Bia" }),
