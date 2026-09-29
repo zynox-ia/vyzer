@@ -1,7 +1,11 @@
 import { ORPCError } from "@orpc/server";
 import {
   checkConnection,
+  createTeamSlug,
+  createWorkspaceTeam,
   deleteWorkspace,
+  deleteWorkspaceTeam,
+  listWorkspaceTeams,
   listWorkspaceMembers,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
@@ -78,6 +82,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           email: currentMember.email,
           role: currentMember.role,
           createdAt: currentMember.createdAt.toISOString(),
+          teamCount: currentMember.teamCount,
         })),
       ),
       update: middleware.adminOnly.member.update.handler(async ({ context, input }) => {
@@ -101,7 +106,75 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         };
       }),
     },
+    team: {
+      list: middleware.workspaceScoped.team.list.handler(async ({ context }) =>
+        (await listWorkspaceTeams(context.db, context.workspace.id)).map((currentTeam) => ({
+          id: currentTeam.id,
+          name: currentTeam.name,
+          slug: currentTeam.slug,
+          key: currentTeam.key,
+          icon: currentTeam.icon,
+          description: currentTeam.description,
+          createdAt: currentTeam.createdAt.toISOString(),
+          updatedAt: currentTeam.updatedAt.toISOString(),
+          memberCount: currentTeam.memberCount,
+          issueCount: currentTeam.issueCount,
+        })),
+      ),
+      create: middleware.adminOnly.team.create.handler(async ({ context, input }) => {
+        const slug = createTeamSlug(input.name);
+        if (!slug) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Team name must include letters or numbers to create its URL.",
+          });
+        }
+
+        let createdTeam;
+        try {
+          createdTeam = await createWorkspaceTeam(context.db, context.workspace.id, {
+            ...input,
+            slug,
+          });
+        } catch (error) {
+          if (isUniqueConstraintViolation(error)) {
+            throw new ORPCError("CONFLICT", {
+              message: "A Team with this identifier or URL already exists in the Workspace.",
+            });
+          }
+          throw error;
+        }
+
+        if (!createdTeam) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "The Team could not be created.",
+          });
+        }
+
+        return {
+          id: createdTeam.id,
+          name: createdTeam.name,
+          slug: createdTeam.slug,
+          key: createdTeam.key,
+          icon: createdTeam.icon,
+          description: createdTeam.description,
+          createdAt: createdTeam.createdAt.toISOString(),
+          updatedAt: createdTeam.updatedAt.toISOString(),
+        };
+      }),
+      delete: middleware.adminOnly.team.delete.handler(async ({ context, input }) => {
+        const deletedTeam = await deleteWorkspaceTeam(context.db, context.workspace.id, input.id);
+        if (!deletedTeam) {
+          throw new ORPCError("NOT_FOUND");
+        }
+      }),
+    },
   });
 }
 
 export const router = createRouter();
+
+function isUniqueConstraintViolation(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  if ("code" in error && error.code === "23505") return true;
+  return "cause" in error && isUniqueConstraintViolation(error.cause);
+}

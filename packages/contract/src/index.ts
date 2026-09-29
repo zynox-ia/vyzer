@@ -53,6 +53,29 @@ const memberSchema = z.object({
   createdAt: z.iso.datetime(),
 });
 
+const memberListItemSchema = memberSchema.extend({ teamCount: z.number().int().nonnegative() });
+
+const teamSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  key: z.string(),
+  icon: projectIconValueSchema,
+  description: z.string().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+const teamKeySchema = z.string().regex(/^[A-Z][A-Z0-9]*$/);
+
+const teamListItemSchema = teamSchema.extend({
+  memberCount: z.number().int().nonnegative(),
+  issueCount: z.number().int().nonnegative(),
+});
+
+export type Team = z.infer<typeof teamSchema>;
+export type TeamListItem = z.infer<typeof teamListItemSchema>;
+
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
   health: oc.output(
@@ -91,7 +114,7 @@ export const contract = {
   },
   member: {
     /** Lista Members do Workspace resolvido pelo middleware. */
-    list: oc.output(z.array(memberSchema)),
+    list: oc.output(z.array(memberListItemSchema)),
     /** Renomeia um Member do Workspace; exige Role admin no middleware. */
     update: oc
       .input(
@@ -101,6 +124,22 @@ export const contract = {
         }),
       )
       .output(memberSchema),
+  },
+  team: {
+    /** Lista somente os Teams do Workspace resolvido, com contagens para a tabela. */
+    list: oc.output(z.array(teamListItemSchema)),
+    /** Cria um Team; o servidor deriva o slug do nome. */
+    create: oc
+      .input(
+        z.object({
+          name: z.string().trim().min(1),
+          key: teamKeySchema,
+          icon: projectIconValueSchema,
+        }),
+      )
+      .output(teamSchema),
+    /** Exclui imediatamente um Team do Workspace resolvido. */
+    delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
 };
 
