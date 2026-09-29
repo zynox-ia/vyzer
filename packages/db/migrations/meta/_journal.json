@@ -57,6 +57,13 @@
       "when": 1790708605385,
       "tag": "0007_slippery_chamber",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790725803436,
+      "tag": "0008_condemned_scourge",
+      "breakpoints": true
     }
   ]
 }

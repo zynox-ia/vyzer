@@ -134,8 +134,8 @@ export async function listWorkspaceTeams(db: Db, workspaceId: string) {
       description: schema.team.description,
       createdAt: schema.team.createdAt,
       updatedAt: schema.team.updatedAt,
-      memberCount: sql<number>`count(${schema.member.id})::int`,
-      issueCount: sql<number>`0`,
+      memberCount: sql<number>`count(distinct ${schema.member.id})::int`,
+      issueCount: sql<number>`count(distinct ${schema.issue.id})::int`,
     })
     .from(schema.team)
     .leftJoin(schema.teamMember, eq(schema.teamMember.teamId, schema.team.id))
@@ -145,6 +145,10 @@ export async function listWorkspaceTeams(db: Db, workspaceId: string) {
         eq(schema.member.id, schema.teamMember.memberId),
         eq(schema.member.workspaceId, workspaceId),
       ),
+    )
+    .leftJoin(
+      schema.issue,
+      and(eq(schema.issue.teamId, schema.team.id), eq(schema.issue.workspaceId, workspaceId)),
     )
     .where(eq(schema.team.workspaceId, workspaceId))
     .groupBy(schema.team.id)
@@ -261,5 +265,21 @@ export {
   setWorkspaceDefaultWorkflowStatus,
   updateWorkspaceWorkflowStatus,
 } from "./workflow-status";
-export { member, team, teamMember, workflowStatus, workspace } from "./schema";
-export type { WorkflowStatusCategory, WorkflowStatusColor } from "./schema";
+export {
+  IssueConflictError,
+  IssueRuleError,
+  createWorkspaceIssue,
+  deleteWorkspaceIssue,
+  getWorkspaceIssueByIdentifier,
+  listWorkspaceIssueEvents,
+  listWorkspaceTeamIssues,
+  updateWorkspaceIssue,
+} from "./issues";
+export { issue, issueEvent, member, team, teamMember, workflowStatus, workspace } from "./schema";
+export type { IssueCreateValues, IssueUpdateValues, IssueView } from "./issues";
+export type {
+  IssueEventType,
+  IssuePriority,
+  WorkflowStatusCategory,
+  WorkflowStatusColor,
+} from "./schema";

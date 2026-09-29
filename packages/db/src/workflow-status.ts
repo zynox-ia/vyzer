@@ -258,6 +258,7 @@ export async function deleteWorkspaceWorkflowStatus(
   db: Db,
   workspaceId: string,
   statusId: string,
+  actorId: string,
   moveIssuesTo?: string,
 ) {
   return db.transaction(async (tx) => {
@@ -294,14 +295,71 @@ export async function deleteWorkspaceWorkflowStatus(
       throw new WorkflowStatusRuleError("Each workflow category must keep at least one Status.");
     }
 
+    const affectedIssues = await tx
+      .select({
+        id: schema.issue.id,
+        startedAt: schema.issue.startedAt,
+        completedAt: schema.issue.completedAt,
+        canceledAt: schema.issue.canceledAt,
+      })
+      .from(schema.issue)
+      .where(
+        and(
+          eq(schema.issue.workspaceId, workspaceId),
+          eq(schema.issue.teamId, currentTeam.id),
+          eq(schema.issue.statusId, currentStatus.id),
+        ),
+      );
+
+    let moveTarget: (typeof statuses)[number] | undefined;
     if (moveIssuesTo !== undefined) {
-      const moveTarget = statuses.find((status) => status.id === moveIssuesTo);
+      moveTarget = statuses.find((status) => status.id === moveIssuesTo);
       if (!moveTarget || moveTarget.id === currentStatus.id) {
         throw new WorkflowStatusRuleError("Move target must be another Status in the same Team.");
       }
     }
 
-    // TODO(3.2): once Issue exists, require moveIssuesTo when this Status has Issues and move them in this transaction.
+    if (affectedIssues.length > 0 && !moveTarget) {
+      throw new WorkflowStatusRuleError(
+        "Choose a destination Status before deleting a Status with Issues.",
+      );
+    }
+
+    if (moveTarget) {
+      const now = new Date();
+      for (const [offset, affectedIssue] of affectedIssues.entries()) {
+        const statusTimes = statusTransitionTimes(
+          moveTarget.category,
+          currentStatus.category,
+          affectedIssue,
+          now,
+        );
+        await tx
+          .update(schema.issue)
+          .set({
+            statusId: moveTarget.id,
+            ...statusTimes,
+            updatedAt: now,
+          })
+          .where(eq(schema.issue.id, affectedIssue.id));
+        await tx.insert(schema.issueEvent).values({
+          workspaceId,
+          issueId: affectedIssue.id,
+          actorId,
+          type: "status",
+          payload: {
+            from: {
+              id: currentStatus.id,
+              name: currentStatus.name,
+              category: currentStatus.category,
+            },
+            to: { id: moveTarget.id, name: moveTarget.name, category: moveTarget.category },
+          },
+          createdAt: new Date(now.getTime() + offset),
+        });
+      }
+    }
+
     if (currentTeam.defaultStatusId === currentStatus.id) {
       const replacement = statuses.find(
         (status) =>
@@ -329,6 +387,32 @@ export async function deleteWorkspaceWorkflowStatus(
 
     return { id: currentStatus.id };
   });
+}
+
+function statusTransitionTimes(
+  category: schema.WorkflowStatusCategory,
+  previousCategory: schema.WorkflowStatusCategory,
+  previousTimes: { startedAt: Date | null; completedAt: Date | null; canceledAt: Date | null },
+  now: Date,
+) {
+  let { startedAt, completedAt, canceledAt } = previousTimes;
+
+  if (category === "started") {
+    if (previousCategory !== "started" || startedAt === null) startedAt = now;
+    completedAt = null;
+    canceledAt = null;
+  } else if (category === "completed") {
+    if (previousCategory !== "completed" || completedAt === null) completedAt = now;
+    canceledAt = null;
+  } else if (category === "canceled") {
+    if (previousCategory !== "canceled" || canceledAt === null) canceledAt = now;
+    completedAt = null;
+  } else {
+    completedAt = null;
+    canceledAt = null;
+  }
+
+  return { startedAt, completedAt, canceledAt };
 }
 
 export async function reorderWorkspaceWorkflowStatus(

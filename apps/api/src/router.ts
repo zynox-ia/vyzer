@@ -1,16 +1,21 @@
 import { ORPCError } from "@orpc/server";
 import {
   checkConnection,
+  createWorkspaceIssue,
   createWorkspaceTeamWorkflowStatus,
   createTeamSlug,
   createWorkspaceTeam,
   deleteWorkspaceWorkflowStatus,
+  deleteWorkspaceIssue,
   deleteWorkspace,
   deleteWorkspaceTeam,
   getWorkspaceTeamBySlug,
   listWorkspaceTeamMembers,
   listWorkspaceTeams,
   listWorkspaceTeamWorkflowStatuses,
+  listWorkspaceTeamIssues,
+  listWorkspaceIssueEvents,
+  getWorkspaceIssueByIdentifier,
   listWorkspaceMembers,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
@@ -18,6 +23,12 @@ import {
   updateWorkspaceWorkflowStatus,
   reorderWorkspaceWorkflowStatus,
   setWorkspaceDefaultWorkflowStatus,
+  updateWorkspaceIssue,
+  IssueConflictError,
+  IssueRuleError,
+  type IssueEventType,
+  type IssuePriority,
+  type IssueView,
   WorkflowStatusRuleError,
   type WorkflowStatusCategory,
   type WorkflowStatusColor,
@@ -287,6 +298,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
             context.db,
             context.workspace.id,
             input.id,
+            context.member.id,
             input.moveIssuesTo,
           ),
         );
@@ -308,6 +320,63 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           setWorkspaceDefaultWorkflowStatus(context.db, context.workspace.id, input.id),
         );
         if (result === null) throw new ORPCError("NOT_FOUND");
+      }),
+    },
+    issue: {
+      list: middleware.workspaceScoped.issue.list.handler(async ({ context, input }) => {
+        const issues = await listWorkspaceTeamIssues(
+          context.db,
+          context.workspace.id,
+          input.team,
+          input.view as IssueView | undefined,
+        );
+        if (!issues) throw new ORPCError("NOT_FOUND");
+
+        return issues.map(serializeIssue);
+      }),
+      get: middleware.workspaceScoped.issue.get.handler(async ({ context, input }) => {
+        const issue = await getWorkspaceIssueByIdentifier(
+          context.db,
+          context.workspace.id,
+          input.identifier,
+        );
+        if (!issue) throw new ORPCError("NOT_FOUND");
+
+        return serializeIssue(issue);
+      }),
+      create: middleware.workspaceScoped.issue.create.handler(async ({ context, input }) => {
+        const { team: teamSlug, ...values } = input;
+        const createdIssue = await withIssueErrors(() =>
+          createWorkspaceIssue(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            teamSlug,
+            values,
+          ),
+        );
+        if (!createdIssue) throw new ORPCError("NOT_FOUND");
+
+        return serializeIssue(createdIssue);
+      }),
+      update: middleware.workspaceScoped.issue.update.handler(async ({ context, input }) => {
+        const { id, ...values } = input;
+        const updatedIssue = await withIssueErrors(() =>
+          updateWorkspaceIssue(context.db, context.workspace.id, context.member.id, id, values),
+        );
+        if (!updatedIssue) throw new ORPCError("NOT_FOUND");
+
+        return serializeIssue(updatedIssue);
+      }),
+      delete: middleware.workspaceScoped.issue.delete.handler(async ({ context, input }) => {
+        const deletedIssue = await deleteWorkspaceIssue(context.db, context.workspace.id, input.id);
+        if (!deletedIssue) throw new ORPCError("NOT_FOUND");
+      }),
+      events: middleware.workspaceScoped.issue.events.handler(async ({ context, input }) => {
+        const events = await listWorkspaceIssueEvents(context.db, context.workspace.id, input.id);
+        if (!events) throw new ORPCError("NOT_FOUND");
+
+        return events.map(serializeIssueEvent);
       }),
     },
   });
@@ -356,4 +425,74 @@ function serializeWorkflowStatus<
     createdAt: status.createdAt.toISOString(),
     updatedAt: status.updatedAt.toISOString(),
   };
+}
+
+function serializeIssue<
+  T extends {
+    id: string;
+    teamId: string;
+    number: number;
+    identifier: string;
+    title: string;
+    description: string | null;
+    statusId: string;
+    status: {
+      id: string;
+      name: string;
+      category: WorkflowStatusCategory;
+      color: WorkflowStatusColor;
+    };
+    priority: IssuePriority;
+    assigneeId: string | null;
+    assignee: { id: string; name: string } | null;
+    creatorId: string;
+    creator: { id: string; name: string };
+    team: { id: string; name: string; slug: string; key: string };
+    dueDate: string | null;
+    startedAt: Date | null;
+    completedAt: Date | null;
+    canceledAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  },
+>(issue: T) {
+  return {
+    ...issue,
+    startedAt: issue.startedAt?.toISOString() ?? null,
+    completedAt: issue.completedAt?.toISOString() ?? null,
+    canceledAt: issue.canceledAt?.toISOString() ?? null,
+    createdAt: issue.createdAt.toISOString(),
+    updatedAt: issue.updatedAt.toISOString(),
+  };
+}
+
+function serializeIssueEvent<
+  T extends {
+    id: string;
+    issueId: string;
+    actorId: string;
+    actor: { id: string; name: string };
+    type: IssueEventType;
+    payload: Record<string, unknown>;
+    createdAt: Date;
+  },
+>(event: T) {
+  return { ...event, createdAt: event.createdAt.toISOString() };
+}
+
+async function withIssueErrors<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof IssueRuleError) {
+      throw new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    if (error instanceof IssueConflictError) {
+      throw new ORPCError("CONFLICT", { message: error.message });
+    }
+    if (isUniqueConstraintViolation(error)) {
+      throw new ORPCError("CONFLICT", { message: "This Issue number is already in use." });
+    }
+    throw error;
+  }
 }

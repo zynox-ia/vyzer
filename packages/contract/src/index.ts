@@ -108,11 +108,82 @@ const workflowStatusSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
+const issuePrioritySchema = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+]);
+const issueViewSchema = z.enum(["active", "backlog", "all"]);
+
+const issueTeamSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  key: teamKeySchema,
+});
+
+const issueStatusSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  category: workflowStatusCategorySchema,
+  color: workflowStatusColorSchema,
+});
+
+const issueMemberSchema = z.object({ id: z.string().uuid(), name: z.string() });
+
+const issueSchema = z.object({
+  id: z.string().uuid(),
+  teamId: z.string().uuid(),
+  number: z.number().int().positive(),
+  identifier: z.string(),
+  team: issueTeamSchema,
+  title: z.string(),
+  description: z.string().nullable(),
+  statusId: z.string().uuid(),
+  status: issueStatusSchema,
+  priority: issuePrioritySchema,
+  assigneeId: z.string().uuid().nullable(),
+  assignee: issueMemberSchema.nullable(),
+  creatorId: z.string().uuid(),
+  creator: issueMemberSchema,
+  dueDate: z.iso.date().nullable(),
+  startedAt: z.iso.datetime().nullable(),
+  completedAt: z.iso.datetime().nullable(),
+  canceledAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+const issueEventTypeSchema = z.enum([
+  "created",
+  "status",
+  "priority",
+  "assignee",
+  "title",
+  "description",
+  "due_date",
+  "team",
+]);
+
+const issueEventSchema = z.object({
+  id: z.string().uuid(),
+  issueId: z.string().uuid(),
+  actorId: z.string().uuid(),
+  actor: issueMemberSchema,
+  type: issueEventTypeSchema,
+  payload: z.record(z.string(), z.unknown()),
+  createdAt: z.iso.datetime(),
+});
+
 const teamSlugSchema = z.string().trim().min(1);
 
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
 export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
+export type Issue = z.infer<typeof issueSchema>;
+export type IssueEvent = z.infer<typeof issueEventSchema>;
 
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
@@ -221,7 +292,7 @@ export const contract = {
         }),
       )
       .output(workflowStatusSchema),
-    /** Exclui um Status; moveIssuesTo é reservado ao domínio de Issues (Etapa 3.2). */
+    /** Exclui um Status e, quando preciso, move as Issues para moveIssuesTo. */
     delete: oc
       .input(z.object({ id: z.string().uuid(), moveIssuesTo: z.string().uuid().optional() }))
       .output(z.void()),
@@ -229,6 +300,47 @@ export const contract = {
       .input(z.object({ id: z.string().uuid(), position: z.number().int().nonnegative() }))
       .output(z.void()),
     setDefault: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+  },
+  issue: {
+    /** Lista Issues de um Team; Active inclui Unstarted/Started, Backlog é separado. */
+    list: oc
+      .input(z.object({ team: teamSlugSchema, view: issueViewSchema.optional() }))
+      .output(z.array(issueSchema)),
+    /** Busca pelo identificador derivado da Team key atual (ex.: VYZ-35). */
+    get: oc.input(z.object({ identifier: z.string().trim().min(1) })).output(issueSchema),
+    /** Cria uma Issue; omitir statusId usa o Status padrão do Team. */
+    create: oc
+      .input(
+        z.object({
+          team: teamSlugSchema,
+          title: z.string().trim().min(1),
+          description: z.string().nullable().optional(),
+          statusId: z.string().uuid().optional(),
+          priority: issuePrioritySchema.optional(),
+          assigneeId: z.string().uuid().nullable().optional(),
+          dueDate: z.iso.date().nullable().optional(),
+        }),
+      )
+      .output(issueSchema),
+    /** Atualiza propriedades da Issue ou move-a para outro Team do Workspace. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          title: z.string().trim().min(1).optional(),
+          description: z.string().nullable().optional(),
+          statusId: z.string().uuid().optional(),
+          priority: issuePrioritySchema.optional(),
+          assigneeId: z.string().uuid().nullable().optional(),
+          dueDate: z.iso.date().nullable().optional(),
+          teamId: z.string().uuid().optional(),
+        }),
+      )
+      .output(issueSchema),
+    /** Hard-delete da Issue e dos eventos dependentes (D4). */
+    delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+    /** Activity persistida para uma Issue dentro do Workspace atual. */
+    events: oc.input(z.object({ id: z.string().uuid() })).output(z.array(issueEventSchema)),
   },
 };
 
