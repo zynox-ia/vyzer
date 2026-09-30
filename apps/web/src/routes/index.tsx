@@ -18,6 +18,7 @@ import {
   TeamsPage,
 } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
+import { CustomerRequestsPage } from "@/features/settings/customer-requests";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
 import { teamsQueryOptions } from "@/services/teams";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
@@ -63,7 +64,6 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
   { path: "loops", title: "Loops" },
   { path: "initiatives", title: "Initiatives" },
   { path: "documents", title: "Documents" },
-  { path: "customer-requests", title: "Customer requests" },
   { path: "releases", title: "Releases" },
   { path: "pulse", title: "Pulse" },
   { path: "asks", title: "Asks" },
@@ -116,6 +116,7 @@ export const router = createBrowserRouter([
       { path: "agent-personalization", Component: AgentPersonalizationPage },
       { path: "workspace", Component: WorkspaceSettingsPage },
       { path: "members", Component: MembersPage },
+      { path: "customer-requests", Component: CustomerRequestsPage },
       { path: "teams", Component: TeamsPage },
       { path: "teams/new", Component: TeamCreatePage },
       {

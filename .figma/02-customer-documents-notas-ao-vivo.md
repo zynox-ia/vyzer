@@ -24,3 +24,24 @@ Sem frame no Figma (MCP não autorizado nesta sessão). Referência: Linear ao v
 - **Settings → Documents** tem só Templates (Workspace e Team).
 
 **Não observado (não abriu por automação ou não exercitado):** marca de importância e menu "Open menu" da request; Add filter e Display options da lista de Customers e da aba Documents; diálogos "Edit…" e "Merge with…"; área de texto rico do formulário de request; o editor de Documents. **Dúvida:** receita e tamanho digitados no "Create customer" não apareceram nas colunas da lista; não confirmei se gravou.
+
+## C1 — Settings → Customer requests (implementada, 29/09)
+
+Tela `/settings/customer-requests`, comparada com o Linear ao vivo (`/zynox-dev/settings/customer-requests`). Só tokens e peças existentes do DS.
+
+**Lido ao vivo nesta etapa:**
+
+- **Cores dos 4 statuses:** Active = roxo (`lch(48% 59.31 288.43)`), Prospect = verde (`#4CB782`), Churned = vermelho (`#EB5757`), Lost = laranja (`#F2994A`). Na paleta do DS: purple, green, red, orange. **O seed do Backend hoje grava Active=green, Prospect=cyan, Churned=red, Lost=grey: precisa trocar para bater.**
+- **"Customer attributes data source" não é um Select no Linear:** é um cartão com uma linha "External data source" com o valor "None" só de leitura (dica: exige plano Business). Não há lista de opções para copiar.
+- **Todo o resto some atrás do switch:** com "Enable Customer requests" desligado, todos os demais controles ficam desabilitados (`fieldset disabled`), inclusive os "Open menu".
+
+**Divergências (uma linha cada):**
+
+- **Data source:** linha só de leitura "None", como o Linear, em vez do Select da spec (E4); `attributesDataSource` continua no banco, sem controle que o altere.
+- **Manage customers:** botão ghost desabilitado com "No customers"; a lista de Customers (C2) foi cortada, então não há para onde levar nem contagem.
+- **Reordenar statuses e tiers:** menu da linha com "Move up"/"Move down" no lugar do arrastar do Linear (sem dependência nova).
+- **Menus das listas de domínios:** "Open menu" abre um item "Add domain or email…" que abre um `Dialog`; o conteúdo do menu do Linear não abriu por automação. Cartões com itens mostram "N excluded domains and emails" (texto do cabeçalho com itens não observado).
+- **Formulários de status e tier:** `Dialog` com Name e Color (Select com as 9 cores da paleta); o formulário do Linear não foi aberto (controles desabilitados com o recurso desligado).
+- **"List of generic domains":** botão que abre um `Dialog` só leitura com uma lista curta embutida no web (`generic-domains.ts`, provedores citados no texto da tela); o Linear leva à documentação, que o Vyzer não tem. A lista completa do Linear não foi copiada.
+- **Docs:** o link "Docs" do texto de abertura foi omitido (o Vyzer não tem documentação pública).
+- **"Attributes can be edited in the Linear UI"** virou "…in the Vyzer UI".

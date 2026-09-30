@@ -44,7 +44,7 @@ export function SettingsGroup({
 }: {
   title?: string;
   /** Subtítulo do grupo, sob o título (ex.: "Used for team schedules, dates…"). */
-  description?: string;
+  description?: ReactNode;
   children: ReactNode;
 }) {
   return (
