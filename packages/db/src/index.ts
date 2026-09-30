@@ -474,6 +474,15 @@ export {
   updateWorkspaceLabel,
 } from "./labels";
 export {
+  IssueRelationRuleError,
+  addWorkspaceIssueLink,
+  addWorkspaceIssueRelation,
+  listWorkspaceIssueRelationDetails,
+  removeWorkspaceIssueLink,
+  removeWorkspaceIssueRelation,
+} from "./relations";
+export type { IssueRelationGroups, IssueRelationSummary } from "./relations";
+export {
   archiveAllWorkspaceNotifications,
   archiveWorkspaceNotifications,
   countUnreadWorkspaceNotifications,
@@ -486,7 +495,9 @@ export {
   apiKey,
   issue,
   issueEvent,
+  issueLink,
   issueLabel,
+  issueRelation,
   label,
   member,
   notification,
@@ -509,6 +520,7 @@ export type {
   ApiKeyPermissions,
   ApiKeyPolicy,
   IssueEventType,
+  IssueRelationType,
   IssuePriority,
   LabelColor,
   NotificationType,

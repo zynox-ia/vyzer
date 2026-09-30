@@ -25,7 +25,7 @@ const api = createRouterClient(router, { context: { db, headers: new Headers() }
 const foreignWorkspaceIds: string[] = [];
 
 function uniqueTeamKey(): string {
-  return `T${randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
+  return `T${randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase()}`;
 }
 
 function createWorkspaceApi(workspaceId: string, memberId: string) {
@@ -78,7 +78,7 @@ async function createFixtureTeam(
   namePrefix: string,
 ) {
   return workspaceApi.team.create({
-    name: `${namePrefix} ${randomUUID()}`,
+    name: `${namePrefix} ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
     key: uniqueTeamKey(),
     icon: { kind: "icon", name: "Layers", color: "purple" },
   });
@@ -1466,5 +1466,51 @@ describe("Workspace-scoped Issue Sub-issue procedures (Stage 3.4)", () => {
 
     const refetchedChild = await ownerApi.issue.get({ identifier: child.identifier });
     expect(refetchedChild.parentId).toBeNull();
+  });
+
+  it("issue.update changing the Assignee notifies the new Assignee (assigned) and the previous one (unassigned)", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Assignee Notification Team");
+    const previousAssignee = await createMemberInWorkspace(owner.workspaceId, "member");
+    const nextAssignee = await createMemberInWorkspace(owner.workspaceId, "member");
+    const previousAssigneeApi = createWorkspaceApi(owner.workspaceId, previousAssignee.id);
+    const nextAssigneeApi = createWorkspaceApi(owner.workspaceId, nextAssignee.id);
+    const issue = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Reassigned",
+      assigneeId: previousAssignee.id,
+    });
+
+    // The actor (owner) is neither the previous nor the next Assignee, so both notifications fire.
+    await ownerApi.issue.update({ id: issue.id, assigneeId: nextAssignee.id });
+
+    const events = await ownerApi.issue.events({ id: issue.id });
+    const assigneeChangeEvent = events.find((event) => event.type === "assignee");
+    expect(assigneeChangeEvent).toBeDefined();
+
+    const nextAssigneeNotifications = await nextAssigneeApi.notification.list({ limit: 20 });
+    const assignedNotification = nextAssigneeNotifications.items.find(
+      (item) => item.type === "assigned" && item.issue?.id === issue.id,
+    );
+    expect(assignedNotification).toBeDefined();
+
+    const previousAssigneeNotifications = await previousAssigneeApi.notification.list({
+      limit: 20,
+    });
+    const unassignedNotification = previousAssigneeNotifications.items.find(
+      (item) => item.type === "unassigned" && item.issue?.id === issue.id,
+    );
+    expect(unassignedNotification).toBeDefined();
+
+    // Both notifications are linked to the very issue_event that changed the Assignee.
+    const notificationEventLinks = await db.$client<{ type: string; issue_event_id: string }[]>`
+      SELECT type, issue_event_id FROM "notification"
+      WHERE issue_id = ${issue.id} AND type IN ('assigned', 'unassigned')
+    `;
+    expect(notificationEventLinks).toHaveLength(2);
+    for (const link of notificationEventLinks) {
+      expect(link.issue_event_id).toBe(assigneeChangeEvent!.id);
+    }
   });
 });

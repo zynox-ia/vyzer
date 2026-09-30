@@ -46,7 +46,7 @@ const DEFAULT_STATUS_SEED = [
 ];
 
 function uniqueTeamKey(): string {
-  return `T${randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
+  return `T${randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase()}`;
 }
 
 function createWorkspaceApi(workspaceId: string, memberId: string) {
@@ -155,7 +155,7 @@ afterAll(async () => {
 describe("Workspace-scoped Status procedures", () => {
   it("team.create seeds the seven default Statuses with Backlog as the Team default", async () => {
     const created = await api.team.create({
-      name: `Workflow Team ${randomUUID()}`,
+      name: `Workflow Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -176,7 +176,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `List Team ${randomUUID()}`,
+      name: `List Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -195,7 +195,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Create Team ${randomUUID()}`,
+      name: `Create Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -221,7 +221,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Same Name Team ${randomUUID()}`,
+      name: `Same Name Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -246,7 +246,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Forbidden Create Team ${randomUUID()}`,
+      name: `Forbidden Create Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -262,7 +262,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Update Team ${randomUUID()}`,
+      name: `Update Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -292,7 +292,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Forbidden Update Team ${randomUUID()}`,
+      name: `Forbidden Update Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -309,7 +309,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Delete Team ${randomUUID()}`,
+      name: `Delete Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -326,7 +326,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Last In Category Team ${randomUUID()}`,
+      name: `Last In Category Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -345,7 +345,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Duplicate Team ${randomUUID()}`,
+      name: `Duplicate Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -378,7 +378,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Default Team ${randomUUID()}`,
+      name: `Default Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -396,7 +396,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Invalid Default Team ${randomUUID()}`,
+      name: `Invalid Default Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });
@@ -411,7 +411,7 @@ describe("Workspace-scoped Status procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const created = await foreignApi.team.create({
-      name: `Reorder Team ${randomUUID()}`,
+      name: `Reorder Team ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
     });

@@ -1,8 +1,9 @@
 import { and, asc, eq, inArray, isNull, max, ne, or, sql } from "drizzle-orm";
 import type { Db } from "./index";
+import { insertWorkspaceIssueEvents } from "./issue-events";
 import * as schema from "./schema";
 
-type DbSession = Pick<Db, "delete" | "insert" | "select" | "update">;
+type DbSession = Pick<Db, "delete" | "execute" | "insert" | "select" | "update">;
 type LabelRow = typeof schema.label.$inferSelect;
 type LabelValues = Partial<Pick<LabelRow, "name" | "description" | "color">>;
 
@@ -331,7 +332,8 @@ export async function deleteWorkspaceLabel(
         and(eq(schema.issue.workspaceId, workspaceId), inArray(schema.issueLabel.labelId, ids)),
       );
     if (assignments.length > 0) {
-      await tx.insert(schema.issueEvent).values(
+      await insertWorkspaceIssueEvents(
+        tx,
         assignments.map((assignment) => ({
           workspaceId,
           issueId: assignment.issueId,
@@ -420,7 +422,8 @@ export async function mergeWorkspaceLabels(
             ),
           );
       }
-      await tx.insert(schema.issueEvent).values(
+      await insertWorkspaceIssueEvents(
+        tx,
         conflictingAssignments.map((row) => ({
           workspaceId,
           issueId: row.issueId,
@@ -460,7 +463,7 @@ export async function mergeWorkspaceLabels(
           .insert(schema.issueLabel)
           .values(addedIssueIds.map((issueId) => ({ issueId, labelId: target.id })));
       }
-      await tx.insert(schema.issueEvent).values([
+      await insertWorkspaceIssueEvents(tx, [
         ...issueIds.map((issueId) => ({
           workspaceId,
           issueId,
@@ -553,7 +556,8 @@ export async function convertWorkspaceLabelToGroup(
             inArray(schema.issueLabel.issueId, issueIds),
           ),
         );
-      await tx.insert(schema.issueEvent).values(
+      await insertWorkspaceIssueEvents(
+        tx,
         assignments.flatMap(({ issueId }) => [
           {
             workspaceId,
@@ -711,7 +715,7 @@ export async function setWorkspaceIssueLabels(
         .values(addedIds.map((labelId) => ({ issueId: currentIssue.id, labelId })));
     }
     if (removedIds.length + addedIds.length > 0) {
-      await tx.insert(schema.issueEvent).values([
+      await insertWorkspaceIssueEvents(tx, [
         ...changedLabelDetails.map((current) => ({
           workspaceId,
           issueId: currentIssue.id,

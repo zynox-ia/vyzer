@@ -39,7 +39,7 @@ const api = createRouterClient(router, { context: { db, headers: new Headers() }
 const foreignWorkspaceIds: string[] = [];
 
 function uniqueTeamKey(): string {
-  return `T${randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
+  return `T${randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase()}`;
 }
 
 function createWorkspaceApi(workspaceId: string, memberId: string) {
@@ -92,7 +92,7 @@ async function createFixtureTeam(
   namePrefix: string,
 ) {
   return workspaceApi.team.create({
-    name: `${namePrefix} ${randomUUID()}`,
+    name: `${namePrefix} ${randomUUID().replaceAll("-", "").slice(0, 8)}`,
     key: uniqueTeamKey(),
     icon: { kind: "icon", name: "Layers", color: "purple" },
   });

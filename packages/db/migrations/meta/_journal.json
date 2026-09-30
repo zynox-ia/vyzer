@@ -78,6 +78,13 @@
       "when": 1790735697043,
       "tag": "0010_wet_ken_ellis",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790735849509,
+      "tag": "0011_dark_vivisector",
+      "breakpoints": true
     }
   ]
 }

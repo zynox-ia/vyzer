@@ -328,6 +328,23 @@ const issueParentSummarySchema = z.object({
   identifier: z.string(),
   title: z.string(),
 });
+const issueRelationTypeSchema = z.enum(["blocks", "related", "duplicate"]);
+const issueRelationGroupsSchema = z.object({
+  blockedBy: z.array(issueParentSummarySchema),
+  blocking: z.array(issueParentSummarySchema),
+  related: z.array(issueParentSummarySchema),
+  duplicateOf: z.array(issueParentSummarySchema),
+});
+const issueLinkSchema = z.object({
+  id: z.string().uuid(),
+  issueId: z.string().uuid(),
+  url: z
+    .url()
+    .refine((value) => /^https?:\/\//i.test(value), "Only http and https links are supported."),
+  title: z.string().nullable(),
+  creatorId: z.string().uuid(),
+  createdAt: z.iso.datetime(),
+});
 
 const issueSchema = z.object({
   id: z.string().uuid(),
@@ -357,6 +374,8 @@ const issueListItemSchema = issueSchema.extend({ subIssueProgress: issueSubIssue
 const issueDetailSchema = issueSchema.extend({
   parent: issueParentSummarySchema.nullable(),
   subIssueProgress: issueSubIssueProgressSchema,
+  relations: issueRelationGroupsSchema,
+  links: z.array(issueLinkSchema),
 });
 
 const issueEventTypeSchema = z.enum([
@@ -370,6 +389,8 @@ const issueEventTypeSchema = z.enum([
   "label_added",
   "label_removed",
   "team",
+  "relation_added",
+  "relation_removed",
 ]);
 
 const issueEventSchema = z.object({
@@ -434,6 +455,10 @@ export type Issue = z.infer<typeof issueSchema>;
 export type IssueListItem = z.infer<typeof issueListItemSchema>;
 export type IssueDetail = z.infer<typeof issueDetailSchema>;
 export type IssueEvent = z.infer<typeof issueEventSchema>;
+export type IssueRelationType = z.infer<typeof issueRelationTypeSchema>;
+export type IssueRelationSummary = z.infer<typeof issueParentSummarySchema>;
+export type IssueRelationGroups = z.infer<typeof issueRelationGroupsSchema>;
+export type IssueLink = z.infer<typeof issueLinkSchema>;
 export type IssueFilters = z.infer<typeof issueFiltersSchema>;
 export type IssueListInput = z.infer<typeof issueListInputSchema>;
 export type IssueFacetsInput = z.infer<typeof issueFacetsInputSchema>;
@@ -644,6 +669,47 @@ export const contract = {
     move: oc
       .input(z.object({ id: z.string().uuid(), team: teamSlugSchema.nullable() }))
       .output(z.array(labelSchema)),
+  },
+  relation: {
+    /** Cria uma Relação entre Issues do Workspace atual. `blocks` e `duplicate` são direcionais. */
+    add: oc
+      .input(
+        z.object({
+          issueId: z.string().uuid(),
+          relatedIssueId: z.string().uuid(),
+          type: issueRelationTypeSchema,
+        }),
+      )
+      .output(z.void()),
+    /** Remove uma Relação entre Issues do Workspace atual. */
+    remove: oc
+      .input(
+        z.object({
+          issueId: z.string().uuid(),
+          relatedIssueId: z.string().uuid(),
+          type: issueRelationTypeSchema,
+        }),
+      )
+      .output(z.void()),
+  },
+  link: {
+    /** Anexa um link http(s) genérico a uma Issue. */
+    add: oc
+      .input(
+        z.object({
+          issueId: z.string().uuid(),
+          url: z
+            .url()
+            .refine(
+              (value) => /^https?:\/\//i.test(value),
+              "Only http and https links are supported.",
+            ),
+          title: z.string().trim().min(1).optional(),
+        }),
+      )
+      .output(z.void()),
+    /** Remove um link do Workspace atual. */
+    remove: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
   issue: {
     /** Lista Issues de um Team, filtradas e ordenadas para a view escolhida. */
