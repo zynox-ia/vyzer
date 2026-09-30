@@ -196,7 +196,7 @@ export type IssueRowContentProps = {
 };
 
 /** Ícone de 16 px com o rótulo só para leitores de tela. */
-function ValueIcon({ value, prefix = "" }: { value: IssueValue; prefix?: string }) {
+export function ValueIcon({ value, prefix = "" }: { value: IssueValue; prefix?: string }) {
   return (
     <>
       <span aria-hidden className="flex size-4 shrink-0 items-center justify-center">

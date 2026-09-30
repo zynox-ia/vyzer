@@ -14,22 +14,25 @@ export type AvatarGroupProps = {
   people: AvatarGroupPerson[];
   /** Quantos lugares no máximo, contando o "+N" (padrão: 4). */
   max?: number;
-  size?: AvatarSize;
+  /** O grupo só tem sm e md; o lg (32 px) é da linha de notificação. */
+  size?: GroupSize;
   className?: string;
 };
+
+type GroupSize = Exclude<AvatarSize, "lg">;
 
 /**
  * Corte do vizinho da direita: círculo centrado nele (tamanho − sobreposição + metade do tamanho)
  * com raio de metade do tamanho + 2 px. Valores na escala de espaçamento (4 px), sem cor. No sm, a
  * sobreposição é menor para o corte não comer o ícone de pessoa.
  */
-const overlap: Record<AvatarSize, string> = { sm: "-ml-0.5", md: "-ml-1" };
-const cut: Record<AvatarSize, string> = {
+const overlap: Record<GroupSize, string> = { sm: "-ml-0.5", md: "-ml-1" };
+const cut: Record<GroupSize, string> = {
   sm: "[mask-image:radial-gradient(circle_at_calc(var(--spacing)*5.5)_50%,transparent_calc(var(--spacing)*2.5),currentColor_calc(var(--spacing)*2.625))]",
   md: "[mask-image:radial-gradient(circle_at_calc(var(--spacing)*6.5)_50%,transparent_calc(var(--spacing)*3),currentColor_calc(var(--spacing)*3.125))]",
 };
 
-const moreSize: Record<AvatarSize, string> = { sm: "size-icon-sm", md: "size-icon-md" };
+const moreSize: Record<GroupSize, string> = { sm: "size-icon-sm", md: "size-icon-md" };
 
 export function AvatarGroup({ label, people, max = 4, size = "md", className }: AvatarGroupProps) {
   const overflow = people.length > max;

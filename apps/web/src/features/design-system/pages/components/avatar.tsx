@@ -30,10 +30,10 @@ export function Page() {
         },
         showcase: (
           <div className="flex flex-col gap-4">
-            {(["md", "sm"] as const).map((size) => (
+            {(["lg", "md", "sm"] as const).map((size) => (
               <div key={size} className="flex items-center gap-3">
                 <span className="w-24 text-body-sm text-secondary">
-                  {size === "md" ? "md · 20 px" : "sm · 16 px"}
+                  {size === "lg" ? "lg · 32 px" : size === "md" ? "md · 20 px" : "sm · 16 px"}
                 </span>
                 {PEOPLE.map((name) => (
                   <Avatar key={name} name={`${name} ${size}`} size={size} />
@@ -54,9 +54,9 @@ export function Page() {
         ),
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
-            20 px (md) ou 16 px (sm), em círculo. Foto em object-cover; sem foto, fundo
-            bg-neutral-subtle com o ícone UserRound em text-secondary: 12 px com 4 px de respiro no
-            md, 10 px com 3 px no sm.
+            32 px (lg), 20 px (md) ou 16 px (sm), em círculo. Foto em object-cover; sem foto, fundo
+            bg-neutral-subtle com o ícone UserRound em text-secondary: 20 px com 6 px de respiro no
+            lg, 12 px com 4 px no md, 10 px com 3 px no sm.
           </p>
         ),
         keyboard: ["Não recebe foco."],
@@ -72,7 +72,12 @@ export function Page() {
         props: [
           { name: "name", type: "string", description: "Nome acessível." },
           { name: "src", type: "string", description: "URL da foto." },
-          { name: "size", type: '"sm" | "md"', default: '"md"', description: "16 · 20 px." },
+          {
+            name: "size",
+            type: '"sm" | "md" | "lg"',
+            default: '"md"',
+            description: "16 · 20 · 32 px.",
+          },
         ],
         decisions: [
           {
@@ -80,7 +85,8 @@ export function Page() {
             rule: "Figma 1:931 (16 px, object-cover), conferido no nó",
           },
           {
-            decision: "Círculo; ícone de 10 px (sm) e 12 px (md) para caber no círculo com respiro",
+            decision:
+              "Círculo; ícone de 10 px (sm), 12 px (md) e 20 px (lg) para caber no círculo com respiro",
             rule: "Pedido do responsável; o ícone cabe no quadrado inscrito (≈ 0,7 × o diâmetro)",
           },
           {

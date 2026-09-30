@@ -112,6 +112,7 @@ export function AppShell({
   teams,
   workspaceStatus,
   onWorkspaceRetry,
+  inboxUnreadCount,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
@@ -119,6 +120,8 @@ export function AppShell({
   teams?: Team[];
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
+  /** Não lidas da Inbox (contador da sidebar); a rota do produto passa o valor da API. */
+  inboxUnreadCount?: number;
 } = {}) {
   return (
     <AppShellProvider>
@@ -134,6 +137,7 @@ export function AppShell({
             teams={teams}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
+            inboxUnreadCount={inboxUnreadCount}
           />
           <ShellFrame />
         </div>

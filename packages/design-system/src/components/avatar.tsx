@@ -8,7 +8,7 @@ import { Avatar as RadixAvatar } from "radix-ui";
 import { Icon } from "../icons/Icon";
 import { cn } from "../lib/cn";
 
-export type AvatarSize = "sm" | "md";
+export type AvatarSize = "sm" | "md" | "lg";
 
 export type AvatarProps = {
   /** Nome da pessoa (ou do agente/ferramenta): nome acessível do avatar. */
@@ -20,17 +20,26 @@ export type AvatarProps = {
    * Bot (Fase 7, decisão 2: sem os SVGs desses produtos, ícone genérico + nome da ferramenta).
    */
   icon?: LucideIcon;
-  /** sm 16 px (Figma 1:931) · md 20 px. */
+  /** sm 16 px (Figma 1:931) · md 20 px · lg 32 px (linha de notificação da Inbox). */
   size?: AvatarSize;
   className?: string;
 };
 
-const sizeClass: Record<AvatarSize, string> = { sm: "size-icon-sm", md: "size-icon-md" };
+const sizeClass: Record<AvatarSize, string> = {
+  sm: "size-icon-sm",
+  md: "size-icon-md",
+  lg: "size-icon-xl",
+};
 /**
  * Ícone dentro do quadrado inscrito no círculo (≈ 0,7 × o diâmetro): 10 px no sm (3 px de respiro,
- * o glifo do Checkbox) e 12 px no md (4 px). Um ícone de 12 px no sm encostaria na borda.
+ * o glifo do Checkbox), 12 px no md (4 px) e 20 px no lg (6 px). Um ícone de 12 px no sm encostaria
+ * na borda.
  */
-const iconClass: Record<AvatarSize, string> = { sm: "size-2.5", md: "size-icon-xs" };
+const iconClass: Record<AvatarSize, string> = {
+  sm: "size-2.5",
+  md: "size-icon-xs",
+  lg: "size-icon-md",
+};
 
 export function Avatar({
   name,
