@@ -22,6 +22,9 @@ export const createIssueMutationOptions = () => api.issue.create.mutationOptions
 /** Atualiza propriedades de uma Issue ou move-a para outro Team. */
 export const updateIssueMutationOptions = () => api.issue.update.mutationOptions();
 
+/** Define ou remove a Issue pai. */
+export const setIssueParentMutationOptions = () => api.issue.setParent.mutationOptions();
+
 /** Exclui permanentemente uma Issue e seus eventos dependentes. */
 export const deleteIssueMutationOptions = () => api.issue.delete.mutationOptions();
 

@@ -275,6 +275,7 @@ export {
   listWorkspaceIssueEvents,
   listWorkspaceTeamIssues,
   reorderWorkspaceIssue,
+  setWorkspaceIssueParent,
   updateWorkspaceIssue,
 } from "./issues";
 export { issue, issueEvent, member, team, teamMember, workflowStatus, workspace } from "./schema";

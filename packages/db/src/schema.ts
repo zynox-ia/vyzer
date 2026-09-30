@@ -196,6 +196,7 @@ export const issue = pgTable(
     creatorId: uuid("creator_id")
       .notNull()
       .references(() => member.id),
+    parentId: uuid("parent_id").references((): AnyPgColumn => issue.id, { onDelete: "set null" }),
     dueDate: date("due_date", { mode: "string" }),
     sortOrder: integer("sort_order").notNull().default(0),
     startedAt: timestamp("started_at", { withTimezone: true }),
@@ -211,6 +212,7 @@ export const issue = pgTable(
     uniqueIndex("issue_team_number_unique").on(table.teamId, table.number),
     index("issue_workspace_team_index").on(table.workspaceId, table.teamId),
     index("issue_team_status_index").on(table.teamId, table.statusId),
+    index("issue_parent_index").on(table.parentId),
   ],
 );
 
@@ -297,6 +299,12 @@ export const issueRelations = relations(issue, ({ many, one }) => ({
     fields: [issue.statusId],
     references: [workflowStatus.id],
   }),
+  parent: one(issue, {
+    fields: [issue.parentId],
+    references: [issue.id],
+    relationName: "issueParent",
+  }),
+  subIssues: many(issue, { relationName: "issueParent" }),
   assignee: one(member, {
     fields: [issue.assigneeId],
     references: [member.id],

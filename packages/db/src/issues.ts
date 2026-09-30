@@ -4,11 +4,11 @@ import type { SQL } from "drizzle-orm";
 import type { Db } from "./index";
 import * as schema from "./schema";
 
-type DbSession = Pick<Db, "delete" | "insert" | "select" | "update">;
+type DbSession = Pick<Db, "delete" | "execute" | "insert" | "select" | "update">;
 
 export type IssueCreateValues = Pick<
   typeof schema.issue.$inferInsert,
-  "title" | "description" | "priority" | "assigneeId" | "dueDate"
+  "title" | "description" | "priority" | "assigneeId" | "dueDate" | "parentId"
 > & { statusId?: string };
 
 export type IssueUpdateValues = Partial<
@@ -96,6 +96,7 @@ function issueRows(executor: DbSession) {
       priority: schema.issue.priority,
       assigneeId: schema.issue.assigneeId,
       creatorId: schema.issue.creatorId,
+      parentId: schema.issue.parentId,
       dueDate: schema.issue.dueDate,
       startedAt: schema.issue.startedAt,
       completedAt: schema.issue.completedAt,
@@ -151,6 +152,52 @@ function issueRows(executor: DbSession) {
 
 function withIdentifier<T extends { team: { key: string }; number: number }>(issue: T) {
   return { ...issue, identifier: `${issue.team.key}-${issue.number}` };
+}
+
+type IssueSubIssueProgress = { completed: number; total: number };
+
+async function subIssueProgressByRootIds(
+  executor: DbSession,
+  workspaceId: string,
+  rootIssueIds: string[],
+) {
+  if (rootIssueIds.length === 0) return new Map<string, IssueSubIssueProgress>();
+
+  const rootIds = sql.join(
+    rootIssueIds.map((id) => sql`${id}::uuid`),
+    sql`, `,
+  );
+  const rows = await executor.execute<{
+    rootId: string;
+    completed: number;
+    total: number;
+  }>(sql`
+    with recursive descendants(root_id, descendant_id, path) as (
+      select parent_id, id, array[parent_id, id]
+      from issue
+      where workspace_id = ${workspaceId}::uuid and parent_id in (${rootIds})
+      union all
+      select descendants.root_id, child.id, descendants.path || child.id
+      from issue as child
+      inner join descendants on child.parent_id = descendants.descendant_id
+      where child.workspace_id = ${workspaceId}::uuid
+        and not (child.id = any(descendants.path))
+    )
+    select
+      descendants.root_id as "rootId",
+      count(*) filter (where status.category = 'completed')::int as completed,
+      count(*)::int as total
+    from descendants
+    inner join issue as descendant_issue
+      on descendant_issue.id = descendants.descendant_id
+      and descendant_issue.workspace_id = ${workspaceId}::uuid
+    inner join workflow_status as status
+      on status.id = descendant_issue.status_id
+      and status.team_id = descendant_issue.team_id
+    group by descendants.root_id
+  `);
+
+  return new Map(rows.map((row) => [row.rootId, { completed: row.completed, total: row.total }]));
 }
 
 function getStatusTimes(
@@ -449,8 +496,16 @@ export async function listWorkspaceTeamIssues(
   const rows = await issueRows(db)
     .where(and(...conditions))
     .orderBy(...issueOrderTerms(options));
+  const progressByIssueId = await subIssueProgressByRootIds(
+    db,
+    workspaceId,
+    rows.map((row) => row.id),
+  );
 
-  return orderCompletedIssuesByRecency(rows, options).map(withIdentifier);
+  return orderCompletedIssuesByRecency(rows, options).map((row) => ({
+    ...withIdentifier(row),
+    subIssueProgress: progressByIssueId.get(row.id) ?? { completed: 0, total: 0 },
+  }));
 }
 
 export async function listWorkspaceTeamIssueFacets(
@@ -701,24 +756,110 @@ export async function getWorkspaceIssueByIdentifier(
     )
     .limit(1);
 
-  return currentIssue ? withIdentifier(currentIssue) : null;
+  if (!currentIssue) return null;
+
+  const parentIssue = currentIssue.parentId
+    ? await issueRows(db)
+        .where(
+          and(
+            eq(schema.issue.id, currentIssue.parentId),
+            eq(schema.issue.workspaceId, workspaceId),
+          ),
+        )
+        .limit(1)
+        .then(([parent]) => parent)
+    : null;
+  const progressByIssueId = await subIssueProgressByRootIds(db, workspaceId, [currentIssue.id]);
+
+  return {
+    ...withIdentifier(currentIssue),
+    parent: parentIssue
+      ? {
+          id: parentIssue.id,
+          identifier: `${parentIssue.team.key}-${parentIssue.number}`,
+          title: parentIssue.title,
+        }
+      : null,
+    subIssueProgress: progressByIssueId.get(currentIssue.id) ?? { completed: 0, total: 0 },
+  };
 }
 
 export async function createWorkspaceIssue(
   db: Db,
   workspaceId: string,
   actorId: string,
-  teamSlug: string,
+  teamSlug: string | undefined,
   values: IssueCreateValues,
 ) {
   return db.transaction(async (tx) => {
-    const [currentTeam] = await tx
-      .select()
-      .from(schema.team)
-      .where(and(eq(schema.team.workspaceId, workspaceId), eq(schema.team.slug, teamSlug)))
-      .limit(1);
+    let parentIssue: Pick<
+      typeof schema.issue.$inferSelect,
+      "id" | "teamId" | "priority" | "assigneeId"
+    > | null = null;
+    let currentTeam: typeof schema.team.$inferSelect | undefined;
+
+    if (values.parentId) {
+      await tx
+        .select({ id: schema.workspace.id })
+        .from(schema.workspace)
+        .where(eq(schema.workspace.id, workspaceId))
+        .for("update");
+
+      const [matchedParent] = await tx
+        .select({
+          id: schema.issue.id,
+          teamId: schema.issue.teamId,
+          priority: schema.issue.priority,
+          assigneeId: schema.issue.assigneeId,
+        })
+        .from(schema.issue)
+        .where(and(eq(schema.issue.id, values.parentId), eq(schema.issue.workspaceId, workspaceId)))
+        .limit(1)
+        .for("update");
+
+      if (!matchedParent) {
+        throw new IssueRuleError("The parent Issue must belong to the current Workspace.");
+      }
+      parentIssue = matchedParent;
+
+      [currentTeam] = await tx
+        .select()
+        .from(schema.team)
+        .where(
+          and(eq(schema.team.id, matchedParent.teamId), eq(schema.team.workspaceId, workspaceId)),
+        )
+        .limit(1);
+      if (!currentTeam) return null;
+
+      if (teamSlug !== undefined && teamSlug !== currentTeam.slug) {
+        throw new IssueRuleError("A sub-issue inherits its parent's Team.");
+      }
+    } else if (teamSlug !== undefined) {
+      [currentTeam] = await tx
+        .select()
+        .from(schema.team)
+        .where(and(eq(schema.team.workspaceId, workspaceId), eq(schema.team.slug, teamSlug)))
+        .limit(1);
+    }
 
     if (!currentTeam) return null;
+
+    let inheritedAssigneeId: string | null = null;
+    if (parentIssue?.assigneeId) {
+      const existingSubIssues = await tx
+        .select({ assigneeId: schema.issue.assigneeId })
+        .from(schema.issue)
+        .where(
+          and(eq(schema.issue.workspaceId, workspaceId), eq(schema.issue.parentId, parentIssue.id)),
+        );
+      const allExistingSubIssuesShareParentAssignee = existingSubIssues.every(
+        (subIssue) => subIssue.assigneeId === parentIssue.assigneeId,
+      );
+
+      if (actorId === parentIssue.assigneeId || allExistingSubIssuesShareParentAssignee) {
+        inheritedAssigneeId = parentIssue.assigneeId;
+      }
+    }
 
     const statusId = values.statusId ?? currentTeam.defaultStatusId;
     if (!statusId) throw new IssueRuleError("The Team has no default Status.");
@@ -778,9 +919,10 @@ export async function createWorkspaceIssue(
         title: values.title,
         description: values.description ?? null,
         statusId: currentStatus.id,
-        priority: values.priority ?? 0,
-        assigneeId: values.assigneeId ?? null,
+        priority: values.priority ?? parentIssue?.priority ?? 0,
+        assigneeId: values.assigneeId !== undefined ? values.assigneeId : inheritedAssigneeId,
         creatorId: actorId,
+        parentId: parentIssue?.id ?? null,
         dueDate: values.dueDate ?? null,
         createdAt: now,
         updatedAt: now,
@@ -1015,12 +1157,86 @@ export async function updateWorkspaceIssue(
 }
 
 export async function deleteWorkspaceIssue(db: Db, workspaceId: string, id: string) {
-  const [deletedIssue] = await db
-    .delete(schema.issue)
-    .where(and(eq(schema.issue.id, id), eq(schema.issue.workspaceId, workspaceId)))
-    .returning({ id: schema.issue.id });
+  return db.transaction(async (tx) => {
+    await tx
+      .select({ id: schema.workspace.id })
+      .from(schema.workspace)
+      .where(eq(schema.workspace.id, workspaceId))
+      .for("update");
 
-  return deletedIssue ?? null;
+    const [deletedIssue] = await tx
+      .delete(schema.issue)
+      .where(and(eq(schema.issue.id, id), eq(schema.issue.workspaceId, workspaceId)))
+      .returning({ id: schema.issue.id });
+
+    return deletedIssue ?? null;
+  });
+}
+
+export async function setWorkspaceIssueParent(
+  db: Db,
+  workspaceId: string,
+  id: string,
+  parentId: string | null,
+) {
+  return db.transaction(async (tx) => {
+    await tx
+      .select({ id: schema.workspace.id })
+      .from(schema.workspace)
+      .where(eq(schema.workspace.id, workspaceId))
+      .for("update");
+
+    const [currentIssue] = await tx
+      .select({ id: schema.issue.id, parentId: schema.issue.parentId })
+      .from(schema.issue)
+      .where(and(eq(schema.issue.id, id), eq(schema.issue.workspaceId, workspaceId)))
+      .limit(1)
+      .for("update");
+    if (!currentIssue) return null;
+    if (currentIssue.parentId === parentId) return getIssueRow(tx, workspaceId, id);
+    if (parentId === null) {
+      await tx
+        .update(schema.issue)
+        .set({ parentId: null, updatedAt: new Date() })
+        .where(and(eq(schema.issue.id, id), eq(schema.issue.workspaceId, workspaceId)));
+      return getIssueRow(tx, workspaceId, id);
+    }
+    if (parentId === id) throw new IssueRuleError("An Issue cannot be its own parent.");
+
+    const [parentIssue] = await tx
+      .select({ id: schema.issue.id })
+      .from(schema.issue)
+      .where(and(eq(schema.issue.id, parentId), eq(schema.issue.workspaceId, workspaceId)))
+      .limit(1)
+      .for("update");
+    if (!parentIssue) {
+      throw new IssueRuleError("The parent Issue must belong to the current Workspace.");
+    }
+
+    const ancestors = await tx.execute<{ id: string }>(sql`
+      with recursive ancestors(id, parent_id) as (
+        select id, parent_id
+        from issue
+        where id = ${parentId}::uuid and workspace_id = ${workspaceId}::uuid
+        union
+        select parent.id, parent.parent_id
+        from issue as parent
+        inner join ancestors on parent.id = ancestors.parent_id
+        where parent.workspace_id = ${workspaceId}::uuid
+      )
+      select id from ancestors
+    `);
+    if (ancestors.some((ancestor) => ancestor.id === id)) {
+      throw new IssueRuleError("An Issue cannot be moved under one of its descendants.");
+    }
+
+    await tx
+      .update(schema.issue)
+      .set({ parentId, updatedAt: new Date() })
+      .where(and(eq(schema.issue.id, id), eq(schema.issue.workspaceId, workspaceId)));
+
+    return getIssueRow(tx, workspaceId, id);
+  });
 }
 
 export async function listWorkspaceIssueEvents(db: Db, workspaceId: string, id: string) {

@@ -1190,3 +1190,281 @@ describe("Workspace-scoped Issue list filters, ordering, grouping and bulk actio
     expect(ordered).toHaveLength(issues.length);
   });
 });
+
+/**
+ * Stage 3.4: `issue.create` accepts `parentId` (Team becomes optional, inferred from the
+ * parent) and inherits Team/Priority from it, with conditional Assignee inheritance;
+ * `issue.setParent({id, parentId | null})` is new, with cycle detection; every Issue exposes
+ * `parentId` and `subIssueProgress: {completed, total}` counting all descendants; `issue.get`
+ * also returns `parent: {id, identifier, title} | null`; deleting a parent detaches its
+ * children (D4) instead of deleting them.
+ */
+describe("Workspace-scoped Issue Sub-issue procedures (Stage 3.4)", () => {
+  it("issue.create with parentId infers the Team and inherits Priority from the parent", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Inherit Team");
+    const parent = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Parent",
+      priority: 2,
+    });
+
+    const child = await ownerApi.issue.create({ parentId: parent.id, title: "Child" });
+
+    expect(child.teamId).toBe(parent.teamId);
+    expect(child.priority).toBe(2);
+    expect(child.parentId).toBe(parent.id);
+  });
+
+  it("issue.create rejects a team that diverges from the parent's Team", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const teamA = await createFixtureTeam(ownerApi, "Sub-issue Team A");
+    const teamB = await createFixtureTeam(ownerApi, "Sub-issue Team B");
+    const parent = await ownerApi.issue.create({ team: teamA.slug, title: "Parent in A" });
+
+    await expect(
+      ownerApi.issue.create({ team: teamB.slug, parentId: parent.id, title: "Mismatched" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("issue.create with parentId lets an explicit Priority override the inherited one", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Priority Override");
+    const parent = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Parent",
+      priority: 2,
+    });
+
+    const child = await ownerApi.issue.create({
+      parentId: parent.id,
+      title: "Child with its own priority",
+      priority: 4,
+    });
+
+    expect(child.priority).toBe(4);
+  });
+
+  it("issue.create inherits the parent's Assignee when the actor is that Assignee", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Assignee Actor");
+    const parent = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Parent",
+      assigneeId: owner.memberId,
+    });
+
+    const child = await ownerApi.issue.create({ parentId: parent.id, title: "Child" });
+
+    expect(child.assigneeId).toBe(owner.memberId);
+  });
+
+  it("issue.create inherits the parent's Assignee when every existing sibling already has it", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Assignee Siblings");
+    const parentAssignee = await createMemberInWorkspace(owner.workspaceId, "member");
+    const parent = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Parent",
+      assigneeId: parentAssignee.id,
+    });
+    // First sibling already shares the parent's Assignee.
+    await ownerApi.issue.create({
+      parentId: parent.id,
+      title: "First child",
+      assigneeId: parentAssignee.id,
+    });
+    const otherActor = await createMemberInWorkspace(owner.workspaceId, "member");
+    const otherActorApi = createWorkspaceApi(owner.workspaceId, otherActor.id);
+
+    const secondChild = await otherActorApi.issue.create({
+      parentId: parent.id,
+      title: "Second child, actor is not the Assignee",
+    });
+
+    expect(secondChild.assigneeId).toBe(parentAssignee.id);
+  });
+
+  it("issue.create does not inherit the parent's Assignee when neither condition holds", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue No Assignee Inheritance");
+    const parentAssignee = await createMemberInWorkspace(owner.workspaceId, "member");
+    const parent = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Parent",
+      assigneeId: parentAssignee.id,
+    });
+    const differentAssignee = await createMemberInWorkspace(owner.workspaceId, "member");
+    // Existing sibling has a different Assignee than the parent's, breaking the "all siblings
+    // share it" condition.
+    await ownerApi.issue.create({
+      parentId: parent.id,
+      title: "First child",
+      assigneeId: differentAssignee.id,
+    });
+    const thirdActor = await createMemberInWorkspace(owner.workspaceId, "member");
+    const thirdActorApi = createWorkspaceApi(owner.workspaceId, thirdActor.id);
+
+    const secondChild = await thirdActorApi.issue.create({
+      parentId: parent.id,
+      title: "Second child",
+    });
+
+    expect(secondChild.assigneeId).toBeNull();
+  });
+
+  it("issue.setParent rejects a direct cycle", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Direct Cycle");
+    const a = await ownerApi.issue.create({ team: created.slug, title: "A" });
+    const b = await ownerApi.issue.create({ parentId: a.id, title: "B (child of A)" });
+
+    await expect(ownerApi.issue.setParent({ id: a.id, parentId: b.id })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("issue.setParent rejects an Issue becoming its own parent", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Self Parent");
+    const a = await ownerApi.issue.create({ team: created.slug, title: "A" });
+
+    await expect(ownerApi.issue.setParent({ id: a.id, parentId: a.id })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("issue.setParent rejects an indirect cycle three levels deep", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Indirect Cycle");
+    const a = await ownerApi.issue.create({ team: created.slug, title: "A" });
+    const b = await ownerApi.issue.create({ parentId: a.id, title: "B (child of A)" });
+    const c = await ownerApi.issue.create({ parentId: b.id, title: "C (child of B)" });
+
+    await expect(ownerApi.issue.setParent({ id: a.id, parentId: c.id })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("issue.setParent rejects a parentId from a foreign Workspace", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Cross Workspace");
+    const issue = await ownerApi.issue.create({ team: created.slug, title: "Mine" });
+    const foreignOwner = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreignOwner.workspaceId, foreignOwner.memberId);
+    const foreignTeam = await createFixtureTeam(foreignApi, "Sub-issue Foreign Team");
+    const foreignIssue = await foreignApi.issue.create({
+      team: foreignTeam.slug,
+      title: "Not yours",
+    });
+
+    await expect(
+      ownerApi.issue.setParent({ id: issue.id, parentId: foreignIssue.id }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("issue.setParent(null) removes the parent, turning a Sub-issue back into a plain Issue", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Remove Parent");
+    const parent = await ownerApi.issue.create({ team: created.slug, title: "Parent" });
+    const child = await ownerApi.issue.create({ parentId: parent.id, title: "Child" });
+
+    await expect(ownerApi.issue.setParent({ id: child.id, parentId: null })).resolves.toBeDefined();
+
+    const refetchedChild = await ownerApi.issue.get({ identifier: child.identifier });
+    expect(refetchedChild.parentId).toBeNull();
+    const refetchedParent = await ownerApi.issue.get({ identifier: parent.identifier });
+    expect(refetchedParent.subIssueProgress).toEqual({ completed: 0, total: 0 });
+  });
+
+  it("subIssueProgress counts every descendant across three levels, and issue.get returns the parent summary", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Three Levels");
+    const statuses = await statusRowsForTeam(created.id);
+    const done = getStatus(statuses, "Done");
+
+    const grandparent = await ownerApi.issue.create({ team: created.slug, title: "Grandparent" });
+    const parentOne = await ownerApi.issue.create({
+      parentId: grandparent.id,
+      title: "Parent one",
+    });
+    const parentTwo = await ownerApi.issue.create({
+      parentId: grandparent.id,
+      title: "Parent two",
+    });
+    const childOneDone = await ownerApi.issue.create({
+      parentId: parentOne.id,
+      title: "Child one (done)",
+      statusId: done.id,
+    });
+    await ownerApi.issue.create({ parentId: parentOne.id, title: "Child two (todo)" });
+    await ownerApi.issue.create({
+      parentId: parentTwo.id,
+      title: "Child three (done)",
+      statusId: done.id,
+    });
+
+    const refetchedGrandparent = await ownerApi.issue.get({ identifier: grandparent.identifier });
+    expect(refetchedGrandparent.subIssueProgress).toEqual({ completed: 2, total: 5 });
+
+    const refetchedParentOne = await ownerApi.issue.get({ identifier: parentOne.identifier });
+    expect(refetchedParentOne.subIssueProgress).toEqual({ completed: 1, total: 2 });
+
+    const refetchedParentTwo = await ownerApi.issue.get({ identifier: parentTwo.identifier });
+    expect(refetchedParentTwo.subIssueProgress).toEqual({ completed: 1, total: 1 });
+
+    const refetchedChild = await ownerApi.issue.get({ identifier: childOneDone.identifier });
+    expect(refetchedChild.parent).toMatchObject({
+      id: parentOne.id,
+      identifier: parentOne.identifier,
+      title: parentOne.title,
+    });
+
+    const refetchedGrandparentAgain = await ownerApi.issue.get({
+      identifier: grandparent.identifier,
+    });
+    expect(refetchedGrandparentAgain.parent).toBeNull();
+  });
+
+  it("issue.list exposes parentId and subIssueProgress on every row", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue List Fields");
+    const parent = await ownerApi.issue.create({ team: created.slug, title: "Parent" });
+    const child = await ownerApi.issue.create({ parentId: parent.id, title: "Child" });
+
+    const listed = await ownerApi.issue.list({ team: created.slug, view: "all" });
+    const parentRow = listed.find((issue) => issue.id === parent.id);
+    const childRow = listed.find((issue) => issue.id === child.id);
+
+    expect(parentRow?.parentId).toBeNull();
+    expect(parentRow?.subIssueProgress).toEqual({ completed: 0, total: 1 });
+    expect(childRow?.parentId).toBe(parent.id);
+    expect(childRow?.subIssueProgress).toEqual({ completed: 0, total: 0 });
+  });
+
+  it("issue.delete on a parent detaches its children instead of deleting them (D4)", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Sub-issue Delete Parent");
+    const parent = await ownerApi.issue.create({ team: created.slug, title: "Parent" });
+    const child = await ownerApi.issue.create({ parentId: parent.id, title: "Child" });
+
+    await expect(ownerApi.issue.delete({ id: parent.id })).resolves.toBeUndefined();
+
+    const refetchedChild = await ownerApi.issue.get({ identifier: child.identifier });
+    expect(refetchedChild.parentId).toBeNull();
+  });
+});

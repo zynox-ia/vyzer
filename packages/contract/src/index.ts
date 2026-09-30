@@ -245,6 +245,15 @@ const issueStatusSchema = z.object({
 });
 
 const issueMemberSchema = z.object({ id: z.string().uuid(), name: z.string() });
+const issueSubIssueProgressSchema = z.object({
+  completed: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+});
+const issueParentSummarySchema = z.object({
+  id: z.string().uuid(),
+  identifier: z.string(),
+  title: z.string(),
+});
 
 const issueSchema = z.object({
   id: z.string().uuid(),
@@ -261,12 +270,18 @@ const issueSchema = z.object({
   assignee: issueMemberSchema.nullable(),
   creatorId: z.string().uuid(),
   creator: issueMemberSchema,
+  parentId: z.string().uuid().nullable(),
   dueDate: z.iso.date().nullable(),
   startedAt: z.iso.datetime().nullable(),
   completedAt: z.iso.datetime().nullable(),
   canceledAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+});
+const issueListItemSchema = issueSchema.extend({ subIssueProgress: issueSubIssueProgressSchema });
+const issueDetailSchema = issueSchema.extend({
+  parent: issueParentSummarySchema.nullable(),
+  subIssueProgress: issueSubIssueProgressSchema,
 });
 
 const issueEventTypeSchema = z.enum([
@@ -294,6 +309,8 @@ export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
 export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
 export type Issue = z.infer<typeof issueSchema>;
+export type IssueListItem = z.infer<typeof issueListItemSchema>;
+export type IssueDetail = z.infer<typeof issueDetailSchema>;
 export type IssueEvent = z.infer<typeof issueEventSchema>;
 export type IssueFilters = z.infer<typeof issueFiltersSchema>;
 export type IssueListInput = z.infer<typeof issueListInputSchema>;
@@ -417,23 +434,28 @@ export const contract = {
   },
   issue: {
     /** Lista Issues de um Team, filtradas e ordenadas para a view escolhida. */
-    list: oc.input(issueListInputSchema).output(z.array(issueSchema)),
+    list: oc.input(issueListInputSchema).output(z.array(issueListItemSchema)),
     /** Contagens por filtro e grupos, incluindo opções sem Issues. */
     facets: oc.input(issueFacetsInputSchema).output(issueFacetsSchema),
     /** Busca pelo identificador derivado da Team key atual (ex.: VYZ-35). */
-    get: oc.input(z.object({ identifier: z.string().trim().min(1) })).output(issueSchema),
-    /** Cria uma Issue; omitir statusId usa o Status padrão do Team. */
+    get: oc.input(z.object({ identifier: z.string().trim().min(1) })).output(issueDetailSchema),
+    /** Cria uma Issue; com parentId, infere o Team e herda Priority do pai. */
     create: oc
       .input(
-        z.object({
-          team: teamSlugSchema,
-          title: z.string().trim().min(1),
-          description: z.string().nullable().optional(),
-          statusId: z.string().uuid().optional(),
-          priority: issuePrioritySchema.optional(),
-          assigneeId: z.string().uuid().nullable().optional(),
-          dueDate: z.iso.date().nullable().optional(),
-        }),
+        z
+          .object({
+            team: teamSlugSchema.optional(),
+            parentId: z.string().uuid().optional(),
+            title: z.string().trim().min(1),
+            description: z.string().nullable().optional(),
+            statusId: z.string().uuid().optional(),
+            priority: issuePrioritySchema.optional(),
+            assigneeId: z.string().uuid().nullable().optional(),
+            dueDate: z.iso.date().nullable().optional(),
+          })
+          .refine((values) => values.team !== undefined || values.parentId !== undefined, {
+            message: "Choose a Team or a parent Issue.",
+          }),
       )
       .output(issueSchema),
     /** Atualiza propriedades da Issue ou move-a para outro Team do Workspace. */
@@ -450,6 +472,10 @@ export const contract = {
           teamId: z.string().uuid().optional(),
         }),
       )
+      .output(issueSchema),
+    /** Define ou remove o parent Issue; relações entre Workspaces e ciclos são rejeitados. */
+    setParent: oc
+      .input(z.object({ id: z.string().uuid(), parentId: z.string().uuid().nullable() }))
       .output(issueSchema),
     /** Hard-delete da Issue e dos eventos dependentes (D4). */
     delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),

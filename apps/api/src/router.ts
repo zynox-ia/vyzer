@@ -25,6 +25,7 @@ import {
   reorderWorkspaceWorkflowStatus,
   reorderWorkspaceIssue,
   setWorkspaceDefaultWorkflowStatus,
+  setWorkspaceIssueParent,
   updateWorkspaceIssue,
   IssueConflictError,
   IssueRuleError,
@@ -380,6 +381,14 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
 
         return serializeIssue(updatedIssue);
       }),
+      setParent: middleware.workspaceScoped.issue.setParent.handler(async ({ context, input }) => {
+        const updatedIssue = await withIssueErrors(() =>
+          setWorkspaceIssueParent(context.db, context.workspace.id, input.id, input.parentId),
+        );
+        if (!updatedIssue) throw new ORPCError("NOT_FOUND");
+
+        return serializeIssue(updatedIssue);
+      }),
       delete: middleware.workspaceScoped.issue.delete.handler(async ({ context, input }) => {
         const deletedIssue = await deleteWorkspaceIssue(context.db, context.workspace.id, input.id);
         if (!deletedIssue) throw new ORPCError("NOT_FOUND");
@@ -538,6 +547,7 @@ function serializeIssue<
     assignee: { id: string; name: string } | null;
     creatorId: string;
     creator: { id: string; name: string };
+    parentId: string | null;
     team: { id: string; name: string; slug: string; key: string };
     dueDate: string | null;
     startedAt: Date | null;
