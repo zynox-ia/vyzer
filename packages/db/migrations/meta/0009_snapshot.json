@@ -93,12 +93,8 @@
           "name": "api_key_workspace_id_workspace_id_fk",
           "tableFrom": "api_key",
           "tableTo": "workspace",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -106,12 +102,8 @@
           "name": "api_key_member_id_member_id_fk",
           "tableFrom": "api_key",
           "tableTo": "member",
-          "columnsFrom": [
-            "member_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["member_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -193,12 +185,8 @@
           "name": "member_workspace_id_workspace_id_fk",
           "tableFrom": "member",
           "tableTo": "workspace",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -371,12 +359,8 @@
           "name": "team_workspace_id_workspace_id_fk",
           "tableFrom": "team",
           "tableTo": "workspace",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -417,12 +401,8 @@
           "name": "team_member_team_id_team_id_fk",
           "tableFrom": "team_member",
           "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -430,12 +410,8 @@
           "name": "team_member_member_id_member_id_fk",
           "tableFrom": "team_member",
           "tableTo": "member",
-          "columnsFrom": [
-            "member_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["member_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -443,10 +419,7 @@
       "compositePrimaryKeys": {
         "team_member_team_id_member_id_pk": {
           "name": "team_member_team_id_member_id_pk",
-          "columns": [
-            "team_id",
-            "member_id"
-          ]
+          "columns": ["team_id", "member_id"]
         }
       },
       "uniqueConstraints": {},
@@ -537,13 +510,7 @@
     "public.team_estimation": {
       "name": "team_estimation",
       "schema": "public",
-      "values": [
-        "none",
-        "exponential",
-        "fibonacci",
-        "linear",
-        "tshirt"
-      ]
+      "values": ["none", "exponential", "fibonacci", "linear", "tshirt"]
     }
   },
   "schemas": {},
