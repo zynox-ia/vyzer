@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 import { createTeamIssueEmailAddress } from "./team-issue-email";
+import { seedTeamWorkflowStatuses } from "./workflow-status";
 
 /** Segundos para desistir de abrir uma conexão (o padrão do postgres.js é 30). */
 const CONNECT_TIMEOUT_SECONDS = 5;
@@ -277,8 +278,8 @@ export async function listWorkspaceTeams(db: Db, workspaceId: string) {
       issueEmailAddress: schema.team.issueEmailAddress,
       createdAt: schema.team.createdAt,
       updatedAt: schema.team.updatedAt,
-      memberCount: sql<number>`count(${schema.member.id})::int`,
-      issueCount: sql<number>`0`,
+      memberCount: sql<number>`count(distinct ${schema.member.id})::int`,
+      issueCount: sql<number>`count(distinct ${schema.issue.id})::int`,
     })
     .from(schema.team)
     .leftJoin(schema.teamMember, eq(schema.teamMember.teamId, schema.team.id))
@@ -288,6 +289,10 @@ export async function listWorkspaceTeams(db: Db, workspaceId: string) {
         eq(schema.member.id, schema.teamMember.memberId),
         eq(schema.member.workspaceId, workspaceId),
       ),
+    )
+    .leftJoin(
+      schema.issue,
+      and(eq(schema.issue.teamId, schema.team.id), eq(schema.issue.workspaceId, workspaceId)),
     )
     .where(eq(schema.team.workspaceId, workspaceId))
     .groupBy(schema.team.id)
@@ -311,16 +316,27 @@ export async function createWorkspaceTeam(
   workspaceId: string,
   values: Pick<typeof schema.team.$inferInsert, "name" | "slug" | "key" | "icon">,
 ) {
-  const [createdTeam] = await db
-    .insert(schema.team)
-    .values({
-      ...values,
-      workspaceId,
-      issueEmailAddress: createTeamIssueEmailAddress(values.slug),
-    })
-    .returning();
+  return db.transaction(async (tx) => {
+    const [createdTeam] = await tx
+      .insert(schema.team)
+      .values({
+        ...values,
+        workspaceId,
+        issueEmailAddress: createTeamIssueEmailAddress(values.slug),
+      })
+      .returning();
 
-  return createdTeam ?? null;
+    if (!createdTeam) return null;
+
+    await seedTeamWorkflowStatuses(tx, createdTeam.id);
+    const [teamWithDefaultStatus] = await tx
+      .select()
+      .from(schema.team)
+      .where(eq(schema.team.id, createdTeam.id))
+      .limit(1);
+
+    return teamWithDefaultStatus ?? null;
+  });
 }
 
 /** Update mutable Team settings only within the resolved Workspace; slug intentionally stays fixed. */
@@ -419,5 +435,85 @@ export async function checkConnection(db: Db): Promise<void> {
 }
 
 export { MEMBER_ID, VYZER_TEAM_ID, WORKSPACE_ID, WORKSPACE_REGION, ZYNOX_TEAM_ID } from "./seed";
-export { apiKey, member, team, teamMember, workspace } from "./schema";
-export type { ApiKeyPermission, ApiKeyPermissions, ApiKeyPolicy } from "./schema";
+export {
+  DEFAULT_WORKFLOW_STATUSES,
+  VYZER_WORKFLOW_STATUSES,
+  WorkflowStatusRuleError,
+  ZYNOX_WORKFLOW_STATUSES,
+  createWorkspaceTeamWorkflowStatus,
+  deleteWorkspaceWorkflowStatus,
+  listWorkspaceTeamWorkflowStatuses,
+  reorderWorkspaceWorkflowStatus,
+  setWorkspaceDefaultWorkflowStatus,
+  updateWorkspaceWorkflowStatus,
+} from "./workflow-status";
+export {
+  IssueConflictError,
+  IssueRuleError,
+  createWorkspaceIssue,
+  deleteWorkspaceIssue,
+  getWorkspaceIssueByIdentifier,
+  listWorkspaceTeamIssueFacets,
+  listWorkspaceIssueEvents,
+  listWorkspaceTeamIssues,
+  reorderWorkspaceIssue,
+  setWorkspaceIssueParent,
+  updateWorkspaceIssue,
+} from "./issues";
+export {
+  LabelRuleError,
+  archiveWorkspaceLabel,
+  convertWorkspaceLabelToGroup,
+  createWorkspaceLabel,
+  deleteWorkspaceLabel,
+  listWorkspaceIssueLabelSummaries,
+  listWorkspaceLabels,
+  mergeWorkspaceLabels,
+  moveWorkspaceLabel,
+  setWorkspaceIssueLabels,
+  updateWorkspaceLabel,
+} from "./labels";
+export {
+  archiveAllWorkspaceNotifications,
+  archiveWorkspaceNotifications,
+  countUnreadWorkspaceNotifications,
+  listWorkspaceNotifications,
+  markWorkspaceNotificationsRead,
+  markWorkspaceNotificationsUnread,
+  notifyIssueEvent,
+} from "./notifications";
+export {
+  apiKey,
+  issue,
+  issueEvent,
+  issueLabel,
+  label,
+  member,
+  notification,
+  team,
+  teamMember,
+  workflowStatus,
+  workspace,
+} from "./schema";
+export type {
+  IssueCreateValues,
+  IssueFilters,
+  IssueGroupBy,
+  IssueListOptions,
+  IssueOrderBy,
+  IssueUpdateValues,
+  IssueView,
+} from "./issues";
+export type {
+  ApiKeyPermission,
+  ApiKeyPermissions,
+  ApiKeyPolicy,
+  IssueEventType,
+  IssuePriority,
+  LabelColor,
+  NotificationType,
+  WorkflowStatusCategory,
+  WorkflowStatusColor,
+} from "./schema";
+export type { IssueLabelSummary } from "./labels";
+export type { NotificationIssueEvent, NotificationListOptions } from "./notifications";

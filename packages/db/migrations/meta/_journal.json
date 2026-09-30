@@ -71,6 +71,13 @@
       "when": 1790732274066,
       "tag": "0009_brainy_stephen_strange",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790735697043,
+      "tag": "0010_wet_ken_ellis",
+      "breakpoints": true
     }
   ]
 }

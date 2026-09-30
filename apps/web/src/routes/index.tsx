@@ -16,6 +16,7 @@ import {
   TeamOverviewPage,
   TeamSettingsLayout,
   TeamsPage,
+  TeamStatusesPage,
 } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
@@ -135,6 +136,7 @@ export const router = createBrowserRouter([
           { index: true, Component: TeamOverviewPage },
           { path: "general", Component: TeamGeneralPage },
           { path: "members", Component: TeamMembersPage },
+          { path: "statuses", Component: TeamStatusesPage },
         ],
       },
       ...settingsPlaceholderPages.map(({ path, title }) => ({

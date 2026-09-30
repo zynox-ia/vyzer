@@ -1,24 +1,63 @@
 import { createHash, randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import {
+  archiveAllWorkspaceNotifications,
+  archiveWorkspaceLabel,
+  archiveWorkspaceNotifications,
   checkConnection,
   createWorkspaceApiKey,
+  convertWorkspaceLabelToGroup,
+  countUnreadWorkspaceNotifications,
+  createWorkspaceIssue,
+  createWorkspaceLabel,
+  createWorkspaceTeamWorkflowStatus,
   createTeamSlug,
   createWorkspaceTeam,
+  deleteWorkspaceLabel,
+  deleteWorkspaceWorkflowStatus,
+  deleteWorkspaceIssue,
   deleteWorkspace,
   deleteWorkspaceTeam,
   findWorkspaceApiKey,
   getWorkspaceTeamBySlug,
   listWorkspaceApiKeys,
+  listWorkspaceLabels,
   listWorkspaceTeamMembers,
   listWorkspaceTeams,
+  listWorkspaceTeamWorkflowStatuses,
+  listWorkspaceTeamIssues,
+  listWorkspaceIssueEvents,
+  listWorkspaceNotifications,
+  getWorkspaceIssueByIdentifier,
   listWorkspaceMembers,
   resetWorkspaceTeamIssueEmail,
   revokeWorkspaceApiKey,
   updateWorkspaceApiKey,
+  listWorkspaceTeamIssueFacets,
+  mergeWorkspaceLabels,
+  moveWorkspaceLabel,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
   updateWorkspaceTeam,
+  updateWorkspaceWorkflowStatus,
+  updateWorkspaceLabel,
+  reorderWorkspaceWorkflowStatus,
+  reorderWorkspaceIssue,
+  setWorkspaceIssueLabels,
+  setWorkspaceDefaultWorkflowStatus,
+  setWorkspaceIssueParent,
+  markWorkspaceNotificationsRead,
+  markWorkspaceNotificationsUnread,
+  updateWorkspaceIssue,
+  IssueConflictError,
+  IssueRuleError,
+  LabelRuleError,
+  type IssueEventType,
+  type IssuePriority,
+  type LabelColor,
+  WorkflowStatusRuleError,
+  type WorkflowStatusCategory,
+  type WorkflowStatusColor,
   WORKSPACE_REGION,
 } from "@vyzer/db";
 import {
@@ -430,6 +469,396 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         await revokeWorkspaceApiKey(context.db, context.workspace.id, input.id);
       }),
     },
+    status: {
+      list: middleware.workspaceScoped.status.list.handler(async ({ context, input }) => {
+        const statuses = await listWorkspaceTeamWorkflowStatuses(
+          context.db,
+          context.workspace.id,
+          input.team,
+        );
+        if (!statuses) throw new ORPCError("NOT_FOUND");
+
+        return statuses.map(serializeWorkflowStatus);
+      }),
+      create: middleware.adminOnly.status.create.handler(async ({ context, input }) => {
+        const { team: teamSlug, ...values } = input;
+        const createdStatus = await withStatusErrors(() =>
+          createWorkspaceTeamWorkflowStatus(context.db, context.workspace.id, teamSlug, values),
+        );
+        if (!createdStatus) throw new ORPCError("NOT_FOUND");
+
+        return serializeWorkflowStatus(createdStatus);
+      }),
+      update: middleware.adminOnly.status.update.handler(async ({ context, input }) => {
+        const { id, ...values } = input;
+        const updatedStatus = await withStatusErrors(() =>
+          updateWorkspaceWorkflowStatus(context.db, context.workspace.id, id, values),
+        );
+        if (!updatedStatus) throw new ORPCError("NOT_FOUND");
+
+        return serializeWorkflowStatus(updatedStatus);
+      }),
+      delete: middleware.adminOnly.status.delete.handler(async ({ context, input }) => {
+        const result = await withStatusErrors(() =>
+          deleteWorkspaceWorkflowStatus(
+            context.db,
+            context.workspace.id,
+            input.id,
+            context.member.id,
+            input.moveIssuesTo,
+          ),
+        );
+        if (!result) throw new ORPCError("NOT_FOUND");
+      }),
+      reorder: middleware.adminOnly.status.reorder.handler(async ({ context, input }) => {
+        const result = await withStatusErrors(() =>
+          reorderWorkspaceWorkflowStatus(
+            context.db,
+            context.workspace.id,
+            input.id,
+            input.position,
+          ),
+        );
+        if (result === null) throw new ORPCError("NOT_FOUND");
+      }),
+      setDefault: middleware.adminOnly.status.setDefault.handler(async ({ context, input }) => {
+        const result = await withStatusErrors(() =>
+          setWorkspaceDefaultWorkflowStatus(context.db, context.workspace.id, input.id),
+        );
+        if (result === null) throw new ORPCError("NOT_FOUND");
+      }),
+    },
+    label: {
+      list: middleware.workspaceScoped.label.list.handler(async ({ context, input }) => {
+        const labels = await listWorkspaceLabels(context.db, context.workspace.id, input.team);
+        if (!labels) throw new ORPCError("NOT_FOUND");
+
+        return labels.map(serializeLabelListItem);
+      }),
+      create: middleware.adminOnly.label.create.handler(async ({ context, input }) => {
+        const createdLabel = await withLabelErrors(() =>
+          createWorkspaceLabel(context.db, context.workspace.id, input),
+        );
+        if (!createdLabel) throw new ORPCError("NOT_FOUND");
+
+        return serializeLabel(createdLabel);
+      }),
+      update: middleware.adminOnly.label.update.handler(async ({ context, input }) => {
+        const { id, ...values } = input;
+        const updatedLabel = await withLabelErrors(() =>
+          updateWorkspaceLabel(context.db, context.workspace.id, id, values),
+        );
+        if (!updatedLabel) throw new ORPCError("NOT_FOUND");
+
+        return serializeLabel(updatedLabel);
+      }),
+      archive: middleware.adminOnly.label.archive.handler(async ({ context, input }) => {
+        const archivedLabel = await archiveWorkspaceLabel(
+          context.db,
+          context.workspace.id,
+          input.id,
+        );
+        if (!archivedLabel) throw new ORPCError("NOT_FOUND");
+
+        return serializeLabel(archivedLabel);
+      }),
+      delete: middleware.adminOnly.label.delete.handler(async ({ context, input }) => {
+        const result = await deleteWorkspaceLabel(
+          context.db,
+          context.workspace.id,
+          context.member.id,
+          input.id,
+        );
+        if (!result) throw new ORPCError("NOT_FOUND");
+        return result;
+      }),
+      merge: middleware.adminOnly.label.merge.handler(async ({ context, input }) => {
+        const mergedLabel = await withLabelErrors(() =>
+          mergeWorkspaceLabels(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.sourceId,
+            input.targetId,
+          ),
+        );
+        if (!mergedLabel) throw new ORPCError("NOT_FOUND");
+
+        return serializeLabel(mergedLabel);
+      }),
+      convertToGroup: middleware.adminOnly.label.convertToGroup.handler(
+        async ({ context, input }) => {
+          const converted = await withLabelErrors(() =>
+            convertWorkspaceLabelToGroup(
+              context.db,
+              context.workspace.id,
+              context.member.id,
+              input.id,
+              input.childName,
+            ),
+          );
+          if (!converted) throw new ORPCError("NOT_FOUND");
+
+          return converted.map(serializeLabel);
+        },
+      ),
+      move: middleware.adminOnly.label.move.handler(async ({ context, input }) => {
+        const movedLabels = await withLabelErrors(() =>
+          moveWorkspaceLabel(context.db, context.workspace.id, input.id, input.team),
+        );
+        if (!movedLabels) throw new ORPCError("NOT_FOUND");
+
+        return movedLabels.map(serializeLabel);
+      }),
+    },
+    issue: {
+      list: middleware.workspaceScoped.issue.list.handler(async ({ context, input }) => {
+        const issues = await listWorkspaceTeamIssues(
+          context.db,
+          context.workspace.id,
+          input.team,
+          input,
+        );
+        if (!issues) throw new ORPCError("NOT_FOUND");
+
+        return issues.map(serializeIssue);
+      }),
+      facets: middleware.workspaceScoped.issue.facets.handler(async ({ context, input }) => {
+        const facets = await listWorkspaceTeamIssueFacets(
+          context.db,
+          context.workspace.id,
+          input.team,
+          input,
+        );
+        if (!facets) throw new ORPCError("NOT_FOUND");
+
+        return facets;
+      }),
+      get: middleware.workspaceScoped.issue.get.handler(async ({ context, input }) => {
+        const issue = await getWorkspaceIssueByIdentifier(
+          context.db,
+          context.workspace.id,
+          input.identifier,
+        );
+        if (!issue) throw new ORPCError("NOT_FOUND");
+
+        return serializeIssue(issue);
+      }),
+      create: middleware.workspaceScoped.issue.create.handler(async ({ context, input }) => {
+        const { team: teamSlug, ...values } = input;
+        const createdIssue = await withIssueErrors(() =>
+          createWorkspaceIssue(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            teamSlug,
+            values,
+          ),
+        );
+        if (!createdIssue) throw new ORPCError("NOT_FOUND");
+
+        return serializeIssue(createdIssue);
+      }),
+      update: middleware.workspaceScoped.issue.update.handler(async ({ context, input }) => {
+        const { id, ...values } = input;
+        const updatedIssue = await withIssueErrors(() =>
+          updateWorkspaceIssue(context.db, context.workspace.id, context.member.id, id, values),
+        );
+        if (!updatedIssue) throw new ORPCError("NOT_FOUND");
+
+        return serializeIssue(updatedIssue);
+      }),
+      setParent: middleware.workspaceScoped.issue.setParent.handler(async ({ context, input }) => {
+        const updatedIssue = await withIssueErrors(() =>
+          setWorkspaceIssueParent(context.db, context.workspace.id, input.id, input.parentId),
+        );
+        if (!updatedIssue) throw new ORPCError("NOT_FOUND");
+
+        return serializeIssue(updatedIssue);
+      }),
+      setLabels: middleware.workspaceScoped.issue.setLabels.handler(async ({ context, input }) => {
+        const labels = await withLabelErrors(() =>
+          setWorkspaceIssueLabels(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.id,
+            input.labelIds,
+          ),
+        );
+        if (!labels) throw new ORPCError("NOT_FOUND");
+
+        return labels.map(serializeIssueLabel);
+      }),
+      delete: middleware.workspaceScoped.issue.delete.handler(async ({ context, input }) => {
+        const deletedIssue = await deleteWorkspaceIssue(context.db, context.workspace.id, input.id);
+        if (!deletedIssue) throw new ORPCError("NOT_FOUND");
+      }),
+      events: middleware.workspaceScoped.issue.events.handler(async ({ context, input }) => {
+        const events = await listWorkspaceIssueEvents(context.db, context.workspace.id, input.id);
+        if (!events) throw new ORPCError("NOT_FOUND");
+
+        return events.map(serializeIssueEvent);
+      }),
+      reorder: middleware.workspaceScoped.issue.reorder.handler(async ({ context, input }) => {
+        const reorderedIssue = await withIssueErrors(() =>
+          reorderWorkspaceIssue(context.db, context.workspace.id, input.id, input.position, {
+            groupBy: input.groupBy,
+            subgroupBy: input.subgroupBy,
+          }),
+        );
+        if (!reorderedIssue) throw new ORPCError("NOT_FOUND");
+      }),
+      bulkUpdate: middleware.workspaceScoped.issue.bulkUpdate.handler(
+        async ({ context, input }) => {
+          const outcomes = await Promise.all(
+            input.ids.map(async (id) => {
+              try {
+                const updatedIssue = await updateWorkspaceIssue(
+                  context.db,
+                  context.workspace.id,
+                  context.member.id,
+                  id,
+                  input.changes,
+                );
+                return updatedIssue
+                  ? { id, success: true as const }
+                  : {
+                      id,
+                      success: false as const,
+                      code: "NOT_FOUND" as const,
+                      message: "Issue not found in this Workspace.",
+                    };
+              } catch (error) {
+                return { id, success: false as const, ...issueFailureDetails(error) };
+              }
+            }),
+          );
+
+          return {
+            updatedIds: outcomes.filter((outcome) => outcome.success).map((outcome) => outcome.id),
+            failed: outcomes.flatMap((outcome) =>
+              outcome.success
+                ? []
+                : [{ id: outcome.id, code: outcome.code, message: outcome.message }],
+            ),
+          };
+        },
+      ),
+      bulkDelete: middleware.workspaceScoped.issue.bulkDelete.handler(
+        async ({ context, input }) => {
+          const outcomes = await Promise.all(
+            input.ids.map(async (id) => {
+              try {
+                const deletedIssue = await deleteWorkspaceIssue(
+                  context.db,
+                  context.workspace.id,
+                  id,
+                );
+                return deletedIssue
+                  ? { id, success: true as const }
+                  : {
+                      id,
+                      success: false as const,
+                      code: "NOT_FOUND" as const,
+                      message: "Issue not found in this Workspace.",
+                    };
+              } catch (error) {
+                return { id, success: false as const, ...issueFailureDetails(error) };
+              }
+            }),
+          );
+
+          return {
+            deletedIds: outcomes.filter((outcome) => outcome.success).map((outcome) => outcome.id),
+            failed: outcomes.flatMap((outcome) =>
+              outcome.success
+                ? []
+                : [{ id: outcome.id, code: outcome.code, message: outcome.message }],
+            ),
+          };
+        },
+      ),
+    },
+    notification: {
+      list: middleware.workspaceScoped.notification.list.handler(async ({ context, input }) => {
+        const page = await listWorkspaceNotifications(
+          context.db,
+          context.workspace.id,
+          context.member.id,
+          {
+            unreadOnly: input.unreadOnly,
+            order: input.order,
+            cursor: input.cursor
+              ? { id: input.cursor.id, createdAt: new Date(input.cursor.createdAt) }
+              : undefined,
+            limit: input.limit,
+          },
+        );
+
+        return {
+          items: page.items.map((notification) => ({
+            id: notification.id,
+            type: notification.type,
+            actor: notification.actor,
+            issue: notification.issue,
+            projectId: notification.projectId,
+            payload: notification.payload,
+            readAt: notification.readAt?.toISOString() ?? null,
+            snoozedUntil: notification.snoozedUntil?.toISOString() ?? null,
+            createdAt: notification.createdAt.toISOString(),
+            updatedAt: notification.updatedAt.toISOString(),
+          })),
+          nextCursor: page.nextCursor
+            ? { id: page.nextCursor.id, createdAt: page.nextCursor.createdAt.toISOString() }
+            : null,
+        };
+      }),
+      unreadCount: middleware.workspaceScoped.notification.unreadCount.handler(
+        async ({ context }) =>
+          countUnreadWorkspaceNotifications(context.db, context.workspace.id, context.member.id),
+      ),
+      markRead: middleware.workspaceScoped.notification.markRead.handler(
+        async ({ context, input }) => {
+          await markWorkspaceNotificationsRead(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.ids,
+          );
+        },
+      ),
+      markUnread: middleware.workspaceScoped.notification.markUnread.handler(
+        async ({ context, input }) => {
+          await markWorkspaceNotificationsUnread(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.ids,
+          );
+        },
+      ),
+      archive: middleware.workspaceScoped.notification.archive.handler(
+        async ({ context, input }) => {
+          await archiveWorkspaceNotifications(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.ids,
+          );
+        },
+      ),
+      archiveAll: middleware.workspaceScoped.notification.archiveAll.handler(
+        async ({ context, input }) => {
+          await archiveAllWorkspaceNotifications(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.onlyRead,
+          );
+        },
+      ),
+    },
   });
 }
 
@@ -439,4 +868,217 @@ function isUniqueConstraintViolation(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;
   if ("code" in error && error.code === "23505") return true;
   return "cause" in error && isUniqueConstraintViolation(error.cause);
+}
+
+async function withStatusErrors<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof WorkflowStatusRuleError) {
+      throw new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    if (isUniqueConstraintViolation(error)) {
+      throw new ORPCError("CONFLICT", {
+        message: "A Status with this name already exists in the category.",
+      });
+    }
+    throw error;
+  }
+}
+
+async function withLabelErrors<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof LabelRuleError) {
+      throw new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    if (isUniqueConstraintViolation(error)) {
+      throw new ORPCError("CONFLICT", {
+        message: "A Label with this name already exists in the selected scope.",
+      });
+    }
+    throw error;
+  }
+}
+
+function serializeWorkflowStatus<
+  T extends {
+    id: string;
+    teamId: string;
+    name: string;
+    description: string | null;
+    category: WorkflowStatusCategory;
+    color: WorkflowStatusColor;
+    position: number;
+    isDefault: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  },
+>(status: T) {
+  return {
+    ...status,
+    createdAt: status.createdAt.toISOString(),
+    updatedAt: status.updatedAt.toISOString(),
+  };
+}
+
+function serializeLabel<
+  T extends {
+    id: string;
+    workspaceId: string;
+    teamId: string | null;
+    parentId: string | null;
+    isGroup: boolean;
+    name: string;
+    description: string | null;
+    color: LabelColor;
+    archivedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  },
+>(label: T) {
+  return {
+    ...label,
+    archivedAt: label.archivedAt?.toISOString() ?? null,
+    createdAt: label.createdAt.toISOString(),
+    updatedAt: label.updatedAt.toISOString(),
+  };
+}
+
+function serializeLabelListItem<
+  T extends {
+    id: string;
+    workspaceId: string;
+    teamId: string | null;
+    parentId: string | null;
+    isGroup: boolean;
+    name: string;
+    description: string | null;
+    color: LabelColor;
+    archivedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    issueCount: number;
+    lastAppliedAt: Date | null;
+  },
+>(label: T) {
+  return {
+    ...serializeLabel(label),
+    issueCount: label.issueCount,
+    lastAppliedAt: label.lastAppliedAt?.toISOString() ?? null,
+  };
+}
+
+function serializeIssueLabel<
+  T extends {
+    id: string;
+    teamId: string | null;
+    parentId: string | null;
+    isGroup: boolean;
+    name: string;
+    description: string | null;
+    color: LabelColor;
+    archivedAt: Date | null;
+  },
+>(label: T) {
+  return { ...label, archivedAt: label.archivedAt?.toISOString() ?? null };
+}
+
+function serializeIssue<
+  T extends {
+    id: string;
+    teamId: string;
+    number: number;
+    identifier: string;
+    title: string;
+    description: string | null;
+    statusId: string;
+    status: {
+      id: string;
+      name: string;
+      category: WorkflowStatusCategory;
+      color: WorkflowStatusColor;
+    };
+    priority: IssuePriority;
+    assigneeId: string | null;
+    assignee: { id: string; name: string } | null;
+    creatorId: string;
+    creator: { id: string; name: string };
+    parentId: string | null;
+    labels: Array<{
+      id: string;
+      teamId: string | null;
+      parentId: string | null;
+      isGroup: boolean;
+      name: string;
+      description: string | null;
+      color: LabelColor;
+      archivedAt: Date | null;
+    }>;
+    team: { id: string; name: string; slug: string; key: string };
+    dueDate: string | null;
+    startedAt: Date | null;
+    completedAt: Date | null;
+    canceledAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  },
+>(issue: T) {
+  return {
+    ...issue,
+    labels: issue.labels.map(serializeIssueLabel),
+    startedAt: issue.startedAt?.toISOString() ?? null,
+    completedAt: issue.completedAt?.toISOString() ?? null,
+    canceledAt: issue.canceledAt?.toISOString() ?? null,
+    createdAt: issue.createdAt.toISOString(),
+    updatedAt: issue.updatedAt.toISOString(),
+  };
+}
+
+function serializeIssueEvent<
+  T extends {
+    id: string;
+    issueId: string;
+    actorId: string;
+    actor: { id: string; name: string };
+    type: IssueEventType;
+    payload: Record<string, unknown>;
+    createdAt: Date;
+  },
+>(event: T) {
+  return { ...event, createdAt: event.createdAt.toISOString() };
+}
+
+async function withIssueErrors<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof IssueRuleError) {
+      throw new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    if (error instanceof IssueConflictError) {
+      throw new ORPCError("CONFLICT", { message: error.message });
+    }
+    if (isUniqueConstraintViolation(error)) {
+      throw new ORPCError("CONFLICT", { message: "This Issue number is already in use." });
+    }
+    throw error;
+  }
+}
+
+function issueFailureDetails(error: unknown) {
+  if (error instanceof IssueRuleError) {
+    return { code: "BAD_REQUEST" as const, message: error.message };
+  }
+  if (error instanceof IssueConflictError) {
+    return { code: "CONFLICT" as const, message: error.message };
+  }
+  if (isUniqueConstraintViolation(error)) {
+    return { code: "CONFLICT" as const, message: "This Issue number is already in use." };
+  }
+  return {
+    code: "INTERNAL_SERVER_ERROR" as const,
+    message: "This Issue operation failed unexpectedly.",
+  };
 }

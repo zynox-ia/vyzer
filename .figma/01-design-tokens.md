@@ -314,3 +314,15 @@ Settings → Administration → API e Issued keys (API.3), sem frame no Figma; r
 - **"Last used" nunca usada:** mostra "Never" (o Linear não mostrou esse caso).
 - **"Back" para "API"** fica na coluna de conteúdo, como nas telas de chave (sem slot de barra superior no `SettingsLayout`).
 - **Linha "Issued keys":** contagem só de chaves ativas.
+
+Settings → Teams → Issue statuses (3.1), sem frame no Figma; referência é o Linear ao vivo (`/zynox-dev/settings/teams/VYZ/statuses`, medido 29/09):
+
+- **Estrutura medida:** coluna de 640 px, linhas de 60 px com borda inferior, cabeçalho de grupo de 36 px (inset de 12 px, raio 6, fundo sutil) com "+" de 24 px; a página usa `-mx-10` para os cartões ocuparem os 640 px inteiros do slot estreito do `SettingsLayout` (que tem 40 px de padding), com o título e o texto de ajuda recuados 16 px como no Linear.
+- **Edição na própria linha:** o Linear troca a linha por ícone-cor, Name (144 px), Description e Cancel/Save; aqui é a mesma coisa com `TextInput` (h-control-lg, 32 px; Linear 34) e `Button` de tamanho único (28 px; Linear 32).
+- **Cor do Status:** `StatusIcon` ganhou a prop `color` (LabelColor, nove tokens; D18 aprovado). O seletor lista as nove cores do design system, não a paleta maior do Linear.
+- **Reordenar:** menu "Move up / Move down" no lugar da alça de arrastar do Linear (spec D3, sem dependência nova).
+- **Menu da linha:** Linear tem "Make default / Edit / Delete"; aqui soma "Move up / Move down". "Make default" só em Backlog/Unstarted que não sejam o padrão. Triage e Duplicate não têm menu nem "+" (como no Linear).
+- **Contagem "N issues" e "View issues":** ausentes até a etapa 3.2 (não há Issues). Descrição do status aparece sozinha na segunda linha (o Linear a mostra depois da contagem, com um ponto).
+- **Excluir:** `Confirm` danger; o Linear pede para mover as issues do status excluído quando existem (3.2).
+- **Breadcrumb:** link "‹ time" acima do título, dentro da coluna (o Linear o coloca na barra do topo do cartão).
+- **Título:** `type-heading-1` (22 px) no lugar de 24 px/32 do Linear (escala do sistema, ADR-0013).

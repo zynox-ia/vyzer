@@ -67,3 +67,4 @@ export { TeamSettingsLayout } from "./team-settings/layout";
 export { TeamOverviewPage } from "./team-settings/overview";
 export { TeamGeneralPage } from "./team-settings/general";
 export { TeamMembersPage } from "./team-settings/members";
+export { TeamStatusesPage } from "./team-statuses";

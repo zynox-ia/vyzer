@@ -1,5 +1,6 @@
 import type { SVGProps } from "react";
 import { cn } from "../lib/cn";
+import { labelTextClass, type LabelColor } from "../components/color-dot";
 import { iconSizeClass, type IconSize } from "./Icon";
 
 /**
@@ -41,6 +42,8 @@ export type StatusIconProps = Omit<SVGProps<SVGSVGElement>, "type"> & {
   progress?: number;
   /** Tom semântico; o padrão depende do tipo (started = warning, completed = success). */
   tone?: StatusTone;
+  /** Cor do Status escolhida pelo Team (nove tokens do ColorDot); tem prioridade sobre `tone`. */
+  color?: LabelColor;
   size?: IconSize;
   /** Rótulo acessível (ex.: "In Progress"). Sem ele, o ícone é decorativo. */
   label?: string;
@@ -65,6 +68,7 @@ export function StatusIcon({
   type,
   progress = 1 / 3,
   tone,
+  color,
   size = "sm",
   label,
   className,
@@ -77,7 +81,7 @@ export function StatusIcon({
       className={cn(
         "shrink-0",
         iconSizeClass[size],
-        toneClass[tone ?? defaultTone[type]],
+        color ? labelTextClass[color] : toneClass[tone ?? defaultTone[type]],
         className,
       )}
       aria-hidden={label ? undefined : true}
