@@ -281,4 +281,37 @@ export async function checkConnection(db: Db): Promise<void> {
 }
 
 export { MEMBER_ID, VYZER_TEAM_ID, WORKSPACE_ID, WORKSPACE_REGION, ZYNOX_TEAM_ID } from "./seed";
-export { member, team, teamMember, workspace } from "./schema";
+export {
+  addCustomerDomainRule,
+  createCustomerStatus,
+  createCustomerTier,
+  deleteCustomerStatus,
+  deleteCustomerTier,
+  defaultCustomerStatuses,
+  getOrCreateCustomerSettings,
+  listCustomerDomainRules,
+  listCustomerStatuses,
+  listCustomerTiers,
+  removeCustomerDomainRule,
+  reorderCustomerStatuses,
+  reorderCustomerTiers,
+  updateCustomerSettings,
+  updateCustomerStatus,
+  updateCustomerTier,
+  type CustomerSettingsPatch,
+  type CustomerStatusInput,
+  type CustomerStatusPatch,
+  type CustomerTierInput,
+  type CustomerTierPatch,
+  type DeleteCustomerStatusResult,
+} from "./customer-settings";
+export {
+  customerDomainRule,
+  customerSettings,
+  customerStatus,
+  customerTier,
+  member,
+  team,
+  teamMember,
+  workspace,
+} from "./schema";

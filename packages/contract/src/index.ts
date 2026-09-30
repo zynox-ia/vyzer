@@ -90,6 +90,82 @@ const teamListItemSchema = teamSchema.extend({
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
 
+const customerSettingsSchema = z.object({
+  workspaceId: z.string().uuid(),
+  enabled: z.boolean(),
+  defaultTeamId: z.string().uuid().nullable(),
+  revenuePeriod: z.enum(["annual", "monthly"]),
+  revenueCurrency: z.string().regex(/^[A-Z]{3}$/),
+  attributesDataSource: z.string().nullable(),
+  manualEditsEnabled: z.boolean(),
+});
+
+const supportedRevenueCurrencies = new Set(Intl.supportedValuesOf("currency"));
+const customerRevenueCurrencySchema = z
+  .string()
+  .regex(/^[A-Z]{3}$/)
+  .refine((currency) => supportedRevenueCurrencies.has(currency), {
+    message: "Choose a supported ISO 4217 currency code.",
+  });
+
+const customerSettingsUpdateSchema = z.object({
+  enabled: z.boolean().optional(),
+  defaultTeamId: z.string().uuid().nullable().optional(),
+  revenuePeriod: z.enum(["annual", "monthly"]).optional(),
+  revenueCurrency: customerRevenueCurrencySchema.optional(),
+  attributesDataSource: z.string().trim().min(1).max(100).nullable().optional(),
+  manualEditsEnabled: z.boolean().optional(),
+});
+
+const customerDomainRuleKindSchema = z.enum(["excluded", "generic"]);
+const customerDomainPattern =
+  /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+const customerDomainRuleValueSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1)
+  .max(320)
+  .refine((value) => customerDomainPattern.test(value) || z.email().safeParse(value).success, {
+    message: "Enter a valid domain or email address.",
+  });
+
+const customerDomainRuleSchema = z.object({
+  id: z.string().uuid(),
+  kind: customerDomainRuleKindSchema,
+  value: z.string(),
+  createdAt: z.iso.datetime(),
+});
+
+const customerStatusSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  color: z.string(),
+  position: z.number().int().nonnegative(),
+});
+
+const customerStatusNameSchema = z.string().trim().min(1).max(64);
+const customerStatusColorSchema = z.string().trim().min(1).max(64);
+const customerStatusUpdateSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: customerStatusNameSchema.optional(),
+    color: customerStatusColorSchema.optional(),
+  })
+  .refine((value) => value.name !== undefined || value.color !== undefined);
+
+const customerTierSchema = customerStatusSchema;
+const customerTierUpdateSchema = customerStatusUpdateSchema;
+
+function orderedIdsSchema() {
+  return z
+    .array(z.string().uuid())
+    .min(1)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "The ordered list cannot contain duplicate ids.",
+    });
+}
+
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
   health: oc.output(
@@ -176,6 +252,54 @@ export const contract = {
     members: oc.input(z.object({ id: z.string().uuid() })).output(z.array(memberSchema)),
     /** Exclui imediatamente um Team do Workspace resolvido. */
     delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+  },
+  customerSettings: {
+    /** Reads or initializes Customer settings in the current Workspace. */
+    get: oc.output(customerSettingsSchema),
+    /** Updates Customer settings; the Workspace id always comes from middleware. */
+    update: oc.input(customerSettingsUpdateSchema).output(customerSettingsSchema),
+  },
+  customerDomainRule: {
+    /** Lists custom excluded or generic domains and email addresses. */
+    list: oc
+      .input(z.object({ kind: customerDomainRuleKindSchema }))
+      .output(z.array(customerDomainRuleSchema)),
+    /** Adds one normalized domain or email address. */
+    add: oc
+      .input(z.object({ kind: customerDomainRuleKindSchema, value: customerDomainRuleValueSchema }))
+      .output(customerDomainRuleSchema),
+    /** Removes one rule from the current Workspace. */
+    remove: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+  },
+  customerStatus: {
+    /** Lists Customer statuses in display order. */
+    list: oc.output(z.array(customerStatusSchema)),
+    /** Creates a Customer status at the end of the current Workspace's list. */
+    create: oc
+      .input(z.object({ name: customerStatusNameSchema, color: customerStatusColorSchema }))
+      .output(customerStatusSchema),
+    /** Updates one Customer status in the current Workspace. */
+    update: oc.input(customerStatusUpdateSchema).output(customerStatusSchema),
+    /** Deletes one status; moveTo is supplied when existing Customers use it. */
+    delete: oc
+      .input(z.object({ id: z.string().uuid(), moveTo: z.string().uuid().optional() }))
+      .output(z.void()),
+    /** Replaces the complete status order with the supplied ids. */
+    reorder: oc.input(z.object({ ids: orderedIdsSchema() })).output(z.void()),
+  },
+  customerTier: {
+    /** Lists Customer tiers in display order. */
+    list: oc.output(z.array(customerTierSchema)),
+    /** Creates a Customer tier at the end of the current Workspace's list. */
+    create: oc
+      .input(z.object({ name: customerStatusNameSchema, color: customerStatusColorSchema }))
+      .output(customerTierSchema),
+    /** Updates one Customer tier in the current Workspace. */
+    update: oc.input(customerTierUpdateSchema).output(customerTierSchema),
+    /** Deletes one Customer tier in the current Workspace. */
+    delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+    /** Replaces the complete tier order with the supplied ids. */
+    reorder: oc.input(z.object({ ids: orderedIdsSchema() })).output(z.void()),
   },
 };
 

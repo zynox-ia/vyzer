@@ -1,6 +1,7 @@
 import type { Db } from "./index";
-import { ne, or } from "drizzle-orm";
-import { member, team, teamMember, workspace } from "./schema";
+import { eq, ne, or } from "drizzle-orm";
+import { defaultCustomerStatuses } from "./customer-settings";
+import { customerStatus, member, team, teamMember, workspace } from "./schema";
 import { createTeamIssueEmailAddress } from "./team-issue-email";
 
 /** Stable identifiers used while authentication is deferred (ADR-0015). */
@@ -35,6 +36,26 @@ export async function seedWorkspace(db: Db): Promise<void> {
           ne(workspace.fiscalYearStartMonth, 1),
         ),
       });
+
+    const [existingCustomerStatus] = await tx
+      .select({ id: customerStatus.id })
+      .from(customerStatus)
+      .where(eq(customerStatus.workspaceId, WORKSPACE_ID))
+      .limit(1);
+
+    if (!existingCustomerStatus) {
+      await tx
+        .insert(customerStatus)
+        .values(
+          defaultCustomerStatuses.map((status, position) => ({
+            workspaceId: WORKSPACE_ID,
+            name: status.name,
+            color: status.color,
+            position,
+          })),
+        )
+        .onConflictDoNothing();
+    }
 
     await tx
       .insert(member)
