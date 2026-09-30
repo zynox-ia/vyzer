@@ -274,6 +274,23 @@ Settings → Administration → Workspace (1.1/1.1b), sem frame no Figma; refer�
 - **Danger zone:** "Delete workspace" é imediato e sem volta (sem "Schedule workspace to be permanently deleted"), mesma linguagem do ADR-0016; botão com a variante `danger` do design system.
 - **Save:** botão no rodapé dos dois primeiros cartões (spec D16); o Linear salva sozinho.
 
+Sidebar → menu "···" do Team (2.3), medido ao vivo no Linear (`zynox-dev`, 29/09):
+
+- **Chevron:** no Linear ele fica junto do nome e nunca some (a linha encolhe para abrir espaço ao "···"); aqui fica no fim da linha e some enquanto o "···" aparece (spec 2.3: sem dois controles empilhados).
+- **Itens:** só "Team settings" e "Copy URL", sem atalhos (D11); painel de 176 px em vez dos 248 px do Linear, que vêm dos itens adiados.
+
+Settings → Administration → Teams (2.1) e Team settings (2.2), Linear ao vivo (`zynox-dev`, 29/09):
+
+- **Aba/filtro "Active" da tabela de Teams:** omitido, o mesmo raciocínio de Members — sem Team arquivado ainda, não há segundo grupo para filtrar; volta junto com o arquivamento (Retire/arquivar, fora do escopo).
+- **Ordem dos Teams na sidebar:** vem da API (o Linear mostra "Vyzer, Zynox", aqui "Zynox, Vyzer"); a spec não define critério, então fica a ordem do servidor.
+- **Team settings, hub do Overview:** reduzido a General, Members e Danger zone (D9); os cartões de Slack, labels, templates, workflow, cycles e AI entram com os seus domínios.
+- **Team → General:** Name (com o ícone), Identifier e Description; Estimates, Create issues by email, Timezone e Other ficam pendentes da confirmação item a item (D10). Salva sozinho, com toast "Saved" e Undo, como o Workspace.
+
+Team → General, grupos de 29/09 (Estimates, Create issues by email, Timezone, Other):
+
+- **Link "Docs" em Estimates:** o Linear mostra um link para a documentação dele ao lado do subtítulo; omitido porque apontaria para a documentação de outro produto.
+- **Endereço de e-mail do Team:** em `text-secondary` (texto discreto, como no Linear), em fonte de código; só configuração, o Vyzer ainda não recebe e-mail (spec, "Team → General: decisões de 29/09").
+
 Settings → Security & access → Personal API keys (API.2), sem frame no Figma; referência é o Linear ao vivo (`/zynox-dev/settings/account/security` e `/api-keys/...`, medido 29/09):
 
 - **Só a seção "Personal API keys":** Sessions, Passkeys, Commit signing key e Authorized applications dependem de auth/OAuth (ADR-0015) e não aparecem, nem como cabeçalho vazio.

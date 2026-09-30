@@ -2,6 +2,7 @@
  * Todas as páginas de /design-system, nos dois temas, num Chromium real: a página abre e o
  * axe-core não encontra violações de acessibilidade (inclui contraste de texto).
  */
+import { ToastProvider } from "@vyzer/design-system/components";
 import axe from "axe-core";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
@@ -17,12 +18,18 @@ import { allPaths, sections } from "./registry";
 const emptySection = sections.find((s) => s.items.length === 0);
 
 function renderAt(path: string) {
-  return render(
+  const app = (
     <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/design-system/*" element={<DesignSystemApp />} />
       </Routes>
-    </MemoryRouter>,
+    </MemoryRouter>
+  );
+  // O ToastProvider mora em `main.tsx`; as molduras do App Shell usam a sidebar real (menu "···"
+  // do Team, com toast). Só elas o recebem aqui: a página de Toast monta o seu próprio, e dois
+  // viewports de aviso na mesma página acusam violação no axe.
+  return render(
+    path.startsWith("/design-system/app-shell") ? <ToastProvider>{app}</ToastProvider> : app,
   );
 }
 

@@ -3,6 +3,7 @@ import { and, asc, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { createTeamIssueEmailAddress } from "./team-issue-email";
 
 /** Segundos para desistir de abrir uma conexão (o padrão do postgres.js é 30). */
 const CONNECT_TIMEOUT_SECONDS = 5;
@@ -269,6 +270,11 @@ export async function listWorkspaceTeams(db: Db, workspaceId: string) {
       key: schema.team.key,
       icon: schema.team.icon,
       description: schema.team.description,
+      timezone: schema.team.timezone,
+      estimation: schema.team.estimation,
+      detailedIssueHistory: schema.team.detailedIssueHistory,
+      issueEmailEnabled: schema.team.issueEmailEnabled,
+      issueEmailAddress: schema.team.issueEmailAddress,
       createdAt: schema.team.createdAt,
       updatedAt: schema.team.updatedAt,
       memberCount: sql<number>`count(${schema.member.id})::int`,
@@ -288,6 +294,17 @@ export async function listWorkspaceTeams(db: Db, workspaceId: string) {
     .orderBy(asc(schema.team.createdAt), asc(schema.team.id));
 }
 
+/** Find one Team by slug, limited to the resolved Workspace. */
+export async function getWorkspaceTeamBySlug(db: Db, workspaceId: string, slug: string) {
+  const [currentTeam] = await db
+    .select()
+    .from(schema.team)
+    .where(and(eq(schema.team.workspaceId, workspaceId), eq(schema.team.slug, slug)))
+    .limit(1);
+
+  return currentTeam ?? null;
+}
+
 /** Create a Team within a Workspace resolved by the API middleware. */
 export async function createWorkspaceTeam(
   db: Db,
@@ -296,10 +313,94 @@ export async function createWorkspaceTeam(
 ) {
   const [createdTeam] = await db
     .insert(schema.team)
-    .values({ ...values, workspaceId })
+    .values({
+      ...values,
+      workspaceId,
+      issueEmailAddress: createTeamIssueEmailAddress(values.slug),
+    })
     .returning();
 
   return createdTeam ?? null;
+}
+
+/** Update mutable Team settings only within the resolved Workspace; slug intentionally stays fixed. */
+export async function updateWorkspaceTeam(
+  db: Db,
+  workspaceId: string,
+  teamId: string,
+  values: Partial<
+    Pick<
+      typeof schema.team.$inferInsert,
+      | "name"
+      | "key"
+      | "icon"
+      | "description"
+      | "timezone"
+      | "estimation"
+      | "detailedIssueHistory"
+      | "issueEmailEnabled"
+    >
+  >,
+) {
+  const [updatedTeam] = await db
+    .update(schema.team)
+    .set({ ...values, updatedAt: new Date() })
+    .where(and(eq(schema.team.id, teamId), eq(schema.team.workspaceId, workspaceId)))
+    .returning();
+
+  return updatedTeam ?? null;
+}
+
+/** Regenerate a Team's issue email address only within the resolved Workspace. */
+export async function resetWorkspaceTeamIssueEmail(db: Db, workspaceId: string, teamId: string) {
+  const [currentTeam] = await db
+    .select({ slug: schema.team.slug })
+    .from(schema.team)
+    .where(and(eq(schema.team.id, teamId), eq(schema.team.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!currentTeam) return null;
+
+  const [updatedTeam] = await db
+    .update(schema.team)
+    .set({
+      issueEmailAddress: createTeamIssueEmailAddress(currentTeam.slug),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(schema.team.id, teamId), eq(schema.team.workspaceId, workspaceId)))
+    .returning();
+
+  return updatedTeam ?? null;
+}
+
+/** List Members for a Team in the resolved Workspace, or null when the Team is not in it. */
+export async function listWorkspaceTeamMembers(db: Db, workspaceId: string, teamId: string) {
+  const [currentTeam] = await db
+    .select({ id: schema.team.id })
+    .from(schema.team)
+    .where(and(eq(schema.team.id, teamId), eq(schema.team.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!currentTeam) return null;
+
+  return db
+    .select({
+      id: schema.member.id,
+      name: schema.member.name,
+      email: schema.member.email,
+      role: schema.member.role,
+      createdAt: schema.member.createdAt,
+    })
+    .from(schema.teamMember)
+    .innerJoin(
+      schema.member,
+      and(
+        eq(schema.member.id, schema.teamMember.memberId),
+        eq(schema.member.workspaceId, workspaceId),
+      ),
+    )
+    .where(eq(schema.teamMember.teamId, teamId))
+    .orderBy(asc(schema.member.name));
 }
 
 /** Delete one Team only if it belongs to the resolved Workspace. Project guard waits for Stage 3. */

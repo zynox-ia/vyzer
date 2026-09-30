@@ -16,6 +16,7 @@ import { Counter, type CounterProps } from "@vyzer/design-system/components";
 import { Icon } from "@vyzer/design-system/icons";
 import { cn } from "@vyzer/design-system/cn";
 import { nextIndex, useRovingFocus } from "@vyzer/design-system/roving-focus";
+import { TeamMenu } from "./team-menu";
 
 const NAV_ITEM_SELECTOR = "a[data-nav-item], button[data-nav-item]";
 
@@ -173,32 +174,41 @@ export function SidebarSection({
 export function TeamNavGroup({
   icon,
   name,
+  slug,
   defaultOpen = true,
   children,
 }: {
   icon: ReactNode;
   name: string;
+  /** Com o slug, a linha ganha o menu "···" (hover, foco e aberto). */
+  slug?: string;
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <li>
       <Collapsible.Root open={open} onOpenChange={setOpen} className="flex flex-col">
-        <Collapsible.Trigger
-          data-nav-item
-          className="group flex h-6.5 items-center gap-1.5 rounded-control px-2.5 text-left text-label-md text-nav-idle select-none focus-ring hovered:bg-hover hovered:text-primary"
-        >
-          <span aria-hidden className="flex size-3.5 shrink-0 items-center justify-center">
-            {icon}
-          </span>
-          <span className="min-w-0 flex-1 truncate">{name}</span>
-          <Icon
-            icon={ChevronRight}
-            size="xs"
-            className="text-secondary transition-transform duration-fast ease-standard group-data-[state=open]:rotate-90"
-          />
-        </Collapsible.Trigger>
+        {/* O "···" é irmão do gatilho, não filho: a linha é o wrapper (group/row). O chevron some
+            enquanto o botão aparece, para não haver dois controles empilhados. */}
+        <div data-menu-open={menuOpen || undefined} className="group/row relative">
+          <Collapsible.Trigger
+            data-nav-item
+            className="group flex h-6.5 w-full items-center gap-1.5 rounded-control px-2.5 text-left text-label-md text-nav-idle select-none focus-ring hovered:bg-hover hovered:text-primary"
+          >
+            <span aria-hidden className="flex size-3.5 shrink-0 items-center justify-center">
+              {icon}
+            </span>
+            <span className="min-w-0 flex-1 truncate">{name}</span>
+            <Icon
+              icon={ChevronRight}
+              size="xs"
+              className="text-secondary transition-transform duration-fast ease-standard group-data-[state=open]:rotate-90 group-hover/row:opacity-0 group-focus-within/row:opacity-0 group-data-[menu-open]/row:opacity-0"
+            />
+          </Collapsible.Trigger>
+          {slug && <TeamMenu slug={slug} onOpenChange={setMenuOpen} />}
+        </div>
         <Collapsible.Content asChild>
           <ul className="flex flex-col gap-px pt-0.5">{children}</ul>
         </Collapsible.Content>

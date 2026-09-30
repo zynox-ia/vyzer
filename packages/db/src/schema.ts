@@ -1,9 +1,11 @@
 /** Schema do banco. Entidades adicionadas por fatias de domínio; ver ADR-0005. */
 import { relations, sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -97,6 +99,14 @@ export const apiKey = pgTable(
 
 type TeamIconValue = WorkspaceIconValue;
 
+export const teamEstimation = pgEnum("team_estimation", [
+  "none",
+  "exponential",
+  "fibonacci",
+  "linear",
+  "tshirt",
+]);
+
 export const team = pgTable(
   "team",
   {
@@ -109,12 +119,22 @@ export const team = pgTable(
     key: text("key").notNull(),
     icon: jsonb("icon").$type<TeamIconValue>().notNull(),
     description: text("description"),
+    timezone: text("timezone").notNull().default("America/Sao_Paulo"),
+    estimation: teamEstimation("estimation").notNull().default("none"),
+    detailedIssueHistory: boolean("detailed_issue_history").notNull().default(false),
+    issueEmailEnabled: boolean("issue_email_enabled").notNull().default(false),
+    issueEmailAddress: text("issue_email_address")
+      .notNull()
+      .default(
+        sql`('team-' || substr(md5(random()::text || clock_timestamp()::text), 1, 12) || '@intake.vyzer.app.br')`,
+      ),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("team_workspace_slug_unique").on(table.workspaceId, table.slug),
     uniqueIndex("team_workspace_key_unique").on(table.workspaceId, table.key),
+    uniqueIndex("team_issue_email_address_unique").on(table.issueEmailAddress),
   ],
 );
 

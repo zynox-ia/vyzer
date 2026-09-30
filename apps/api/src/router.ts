@@ -8,13 +8,17 @@ import {
   deleteWorkspace,
   deleteWorkspaceTeam,
   findWorkspaceApiKey,
+  getWorkspaceTeamBySlug,
+  listWorkspaceApiKeys,
+  listWorkspaceTeamMembers,
   listWorkspaceTeams,
   listWorkspaceMembers,
-  listWorkspaceApiKeys,
+  resetWorkspaceTeamIssueEmail,
   revokeWorkspaceApiKey,
   updateWorkspaceApiKey,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
+  updateWorkspaceTeam,
   WORKSPACE_REGION,
 } from "@vyzer/db";
 import {
@@ -127,6 +131,11 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           key: currentTeam.key,
           icon: currentTeam.icon,
           description: currentTeam.description,
+          timezone: currentTeam.timezone,
+          estimation: currentTeam.estimation,
+          detailedIssueHistory: currentTeam.detailedIssueHistory,
+          issueEmailEnabled: currentTeam.issueEmailEnabled,
+          issueEmailAddress: currentTeam.issueEmailAddress,
           createdAt: currentTeam.createdAt.toISOString(),
           updatedAt: currentTeam.updatedAt.toISOString(),
           memberCount: currentTeam.memberCount,
@@ -169,10 +178,129 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           key: createdTeam.key,
           icon: createdTeam.icon,
           description: createdTeam.description,
+          timezone: createdTeam.timezone,
+          estimation: createdTeam.estimation,
+          detailedIssueHistory: createdTeam.detailedIssueHistory,
+          issueEmailEnabled: createdTeam.issueEmailEnabled,
+          issueEmailAddress: createdTeam.issueEmailAddress,
           createdAt: createdTeam.createdAt.toISOString(),
           updatedAt: createdTeam.updatedAt.toISOString(),
         };
       }),
+      get: middleware.workspaceScoped.team.get.handler(async ({ context, input }) => {
+        const currentTeam = await getWorkspaceTeamBySlug(
+          context.db,
+          context.workspace.id,
+          input.team,
+        );
+        if (!currentTeam) {
+          throw new ORPCError("NOT_FOUND");
+        }
+
+        return {
+          id: currentTeam.id,
+          name: currentTeam.name,
+          slug: currentTeam.slug,
+          key: currentTeam.key,
+          icon: currentTeam.icon,
+          description: currentTeam.description,
+          timezone: currentTeam.timezone,
+          estimation: currentTeam.estimation,
+          detailedIssueHistory: currentTeam.detailedIssueHistory,
+          issueEmailEnabled: currentTeam.issueEmailEnabled,
+          issueEmailAddress: currentTeam.issueEmailAddress,
+          createdAt: currentTeam.createdAt.toISOString(),
+          updatedAt: currentTeam.updatedAt.toISOString(),
+        };
+      }),
+      update: middleware.adminOnly.team.update.handler(async ({ context, input }) => {
+        let updatedTeam;
+        try {
+          updatedTeam = await updateWorkspaceTeam(context.db, context.workspace.id, input.id, {
+            name: input.name,
+            key: input.key,
+            icon: input.icon,
+            description: input.description,
+            timezone: input.timezone,
+            estimation: input.estimation,
+            detailedIssueHistory: input.detailedIssueHistory,
+            issueEmailEnabled: input.issueEmailEnabled,
+          });
+        } catch (error) {
+          if (isUniqueConstraintViolation(error)) {
+            throw new ORPCError("CONFLICT", {
+              message: "This Team identifier is already taken in the Workspace.",
+            });
+          }
+          throw error;
+        }
+
+        if (!updatedTeam) {
+          throw new ORPCError("NOT_FOUND");
+        }
+
+        return {
+          id: updatedTeam.id,
+          name: updatedTeam.name,
+          slug: updatedTeam.slug,
+          key: updatedTeam.key,
+          icon: updatedTeam.icon,
+          description: updatedTeam.description,
+          timezone: updatedTeam.timezone,
+          estimation: updatedTeam.estimation,
+          detailedIssueHistory: updatedTeam.detailedIssueHistory,
+          issueEmailEnabled: updatedTeam.issueEmailEnabled,
+          issueEmailAddress: updatedTeam.issueEmailAddress,
+          createdAt: updatedTeam.createdAt.toISOString(),
+          updatedAt: updatedTeam.updatedAt.toISOString(),
+        };
+      }),
+      members: middleware.workspaceScoped.team.members.handler(async ({ context, input }) => {
+        const teamMembers = await listWorkspaceTeamMembers(
+          context.db,
+          context.workspace.id,
+          input.id,
+        );
+        if (!teamMembers) {
+          throw new ORPCError("NOT_FOUND");
+        }
+
+        return teamMembers.map((currentMember) => ({
+          id: currentMember.id,
+          name: currentMember.name,
+          email: currentMember.email,
+          role: currentMember.role,
+          createdAt: currentMember.createdAt.toISOString(),
+        }));
+      }),
+      resetIssueEmail: middleware.adminOnly.team.resetIssueEmail.handler(
+        async ({ context, input }) => {
+          const updatedTeam = await resetWorkspaceTeamIssueEmail(
+            context.db,
+            context.workspace.id,
+            input.id,
+          );
+          if (!updatedTeam) {
+            throw new ORPCError("NOT_FOUND");
+          }
+
+          return {
+            id: updatedTeam.id,
+            name: updatedTeam.name,
+            slug: updatedTeam.slug,
+            key: updatedTeam.key,
+            icon: updatedTeam.icon,
+            description: updatedTeam.description,
+            timezone: updatedTeam.timezone,
+            estimation: updatedTeam.estimation,
+            detailedIssueHistory: updatedTeam.detailedIssueHistory,
+            issueEmailEnabled: updatedTeam.issueEmailEnabled,
+            issueEmailAddress: updatedTeam.issueEmailAddress,
+            createdAt: updatedTeam.createdAt.toISOString(),
+            updatedAt: updatedTeam.updatedAt.toISOString(),
+          };
+        },
+      ),
       delete: middleware.adminOnly.team.delete.handler(async ({ context, input }) => {
         const deletedTeam = await deleteWorkspaceTeam(context.db, context.workspace.id, input.id);
         if (!deletedTeam) {

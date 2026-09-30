@@ -1,119 +1,9 @@
 {
-  "id": "7ed64be8-5d2c-4cd9-a45b-9c10ef639941",
+  "id": "a0e71775-7275-4596-801a-c38aa9f92b2d",
   "prevId": "137a30a0-cf34-489c-9391-129a32987eb1",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.api_key": {
-      "name": "api_key",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "workspace_id": {
-          "name": "workspace_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "member_id": {
-          "name": "member_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "token_prefix": {
-          "name": "token_prefix",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "token_hash": {
-          "name": "token_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "permissions": {
-          "name": "permissions",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "last_used_at": {
-          "name": "last_used_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "revoked_at": {
-          "name": "revoked_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "api_key_token_hash_unique": {
-          "name": "api_key_token_hash_unique",
-          "columns": [
-            {
-              "expression": "token_hash",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "api_key_workspace_id_workspace_id_fk": {
-          "name": "api_key_workspace_id_workspace_id_fk",
-          "tableFrom": "api_key",
-          "tableTo": "workspace",
-          "columnsFrom": ["workspace_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "api_key_member_id_member_id_fk": {
-          "name": "api_key_member_id_member_id_fk",
-          "tableFrom": "api_key",
-          "tableTo": "member",
-          "columnsFrom": ["member_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.member": {
       "name": "member",
       "schema": "",
@@ -244,6 +134,41 @@
           "primaryKey": false,
           "notNull": false
         },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'America/Sao_Paulo'"
+        },
+        "estimation": {
+          "name": "estimation",
+          "type": "team_estimation",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'none'"
+        },
+        "detailed_issue_history": {
+          "name": "detailed_issue_history",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "issue_email_enabled": {
+          "name": "issue_email_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "issue_email_address": {
+          "name": "issue_email_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -292,6 +217,21 @@
             },
             {
               "expression": "key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "team_issue_email_address_unique": {
+          "name": "team_issue_email_address_unique",
+          "columns": [
+            {
+              "expression": "issue_email_address",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -419,13 +359,6 @@
           "notNull": true,
           "default": "'{\"kind\":\"icon\",\"name\":\"Zap\",\"color\":\"red\"}'::jsonb"
         },
-        "api_key_policy": {
-          "name": "api_key_policy",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'all_members'"
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -446,16 +379,17 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "workspace_api_key_policy_check": {
-          "name": "workspace_api_key_policy_check",
-          "value": "\"workspace\".\"api_key_policy\" IN ('all_members', 'admins')"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.team_estimation": {
+      "name": "team_estimation",
+      "schema": "public",
+      "values": ["none", "exponential", "fibonacci", "linear", "tshirt"]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},
