@@ -273,3 +273,16 @@ Settings → Administration → Workspace (1.1/1.1b), sem frame no Figma; refer�
 - **Region:** texto só leitura "United States" (constante da API); o link "Read more" da ajuda não existe (sem destino real).
 - **Danger zone:** "Delete workspace" é imediato e sem volta (sem "Schedule workspace to be permanently deleted"), mesma linguagem do ADR-0016; botão com a variante `danger` do design system.
 - **Save:** botão no rodapé dos dois primeiros cartões (spec D16); o Linear salva sozinho.
+
+Settings → Security & access → Personal API keys (API.2), sem frame no Figma; referência é o Linear ao vivo (`/zynox-dev/settings/account/security` e `/api-keys/...`, medido 29/09):
+
+- **Só a seção "Personal API keys":** Sessions, Passkeys, Commit signing key e Authorized applications dependem de auth/OAuth (ADR-0015) e não aparecem, nem como cabeçalho vazio.
+- **Texto de apoio:** "Use API keys to connect your own integrations and tools to Vyzer" no lugar de "Use Linear's GraphQL API…" (a API é oRPC, não GraphQL).
+- **Team access ausente** no formulário e na página da chave até existir o vínculo Team↔chave (spec D6, API.4). A página da chave (`/api-keys/:id`) não estava na spec: existe no Linear e foi incluída, só leitura.
+- **Vazio da lista:** "No API keys" no cabeçalho do cartão com o botão "New API key" (mesmo padrão de "No passkeys registered" do Linear), não o `EmptyState` da spec.
+- **Link "Security settings":** fica na coluna de conteúdo, acima do título; no Linear ele está numa barra de 48 px no canto superior esquerdo do cartão (`SettingsLayout` não tem slot de cabeçalho).
+- **Medidas do DS, não do Linear:** título 22 px (Linear 24), subtítulo de seção 16 px (Linear 15), metadados 11 px (Linear 12), botões e menu 28 px (Linear 32 e 24/32), linha da chave 71 px (Linear 67). São os degraus do design system; não foram ajustados por pixel.
+- **Chave revogada** some da lista pessoal (o Linear não mostra o que acontece; o histórico fica na tabela Issued keys de Settings → API, API.3).
+- **Depois de "Create":** diálogo com o token e "Copy", que só fecha por "Done" ou pelo X (o que o Linear mostra não foi observado, spec D12).
+- **Edit API key** (`/api-keys/:id/edit`, achado da revisão de fidelidade): mesmo formulário do Create, com nome e permissões atuais, "Back" no topo e Cancel/Save. O que o Linear faz depois de "Save" não foi observado (mudaria uma chave real); aqui volta para a página da chave com o toast "API key updated". Team access fora até a API.4.
+- **Menu da chave:** "Edit API key" e "Revoke API key", como no Linear, na linha da lista e na página da chave. Ícone da linha em `text-secondary`.

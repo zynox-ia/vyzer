@@ -9,6 +9,10 @@ import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "@/fea
 import { MembersPage, PreferencesPage, SettingsRoute } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
+import { ApiKeyCreatePage } from "@/features/settings/api-key-create";
+import { ApiKeyDetailPage } from "@/features/settings/api-key-detail";
+import { ApiKeyEditPage } from "@/features/settings/api-key-edit";
+import { SecurityAccessPage } from "@/features/settings/security-access";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 
 /** Rotas só de desenvolvimento: ficam fora do build de produção. */
@@ -39,7 +43,6 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
   { path: "profile", title: "Profile" },
   { path: "notifications", title: "Notifications" },
   { path: "code-reviews", title: "Code & reviews" },
-  { path: "security", title: "Security & access" },
   { path: "connected-accounts", title: "Connected accounts" },
   { path: "issues/labels", title: "Issue labels" },
   { path: "issues/templates", title: "Issue templates" },
@@ -106,6 +109,10 @@ export const router = createBrowserRouter([
       { path: "agent-personalization", Component: AgentPersonalizationPage },
       { path: "workspace", Component: WorkspaceSettingsPage },
       { path: "members", Component: MembersPage },
+      { path: "security", Component: SecurityAccessPage },
+      { path: "security/api-keys/new", Component: ApiKeyCreatePage },
+      { path: "security/api-keys/:keyId", Component: ApiKeyDetailPage },
+      { path: "security/api-keys/:keyId/edit", Component: ApiKeyEditPage },
       ...settingsPlaceholderPages.map(({ path, title }) => ({
         path,
         element: <SettingsPlaceholderPage title={title} />,
