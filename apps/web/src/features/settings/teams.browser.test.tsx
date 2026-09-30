@@ -1,6 +1,6 @@
 /** Teams Administration interaction in a real Chromium browser (spec settings-administration 2.1). */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import {
   mutationOptions,
@@ -131,7 +131,7 @@ function bodyRows(screen: Screen) {
 async function openDeleteConfirm(screen: Screen, name = "Zynox") {
   await screen.getByRole("row", { name: new RegExp(name) }).hover();
   await screen.getByRole("button", { name: `Open menu for ${name}` }).click();
-  await screen.getByRole("menuitem", { name: /Delete team/ }).click();
+  await screen.getByRole("menuitem", { name: "Delete…" }).click();
   await expect.element(screen.getByRole("alertdialog", { name: "Delete team?" })).toBeVisible();
 }
 
@@ -174,9 +174,9 @@ describe("TeamsPage", () => {
     const screen = await render(<Harness />);
 
     const rows = bodyRows(screen);
-    await expect.element(rows.nth(1)).toHaveTextContent("Alpha");
-    await expect.element(rows.nth(2)).toHaveTextContent("Vyzer");
-    await expect.element(rows.nth(3)).toHaveTextContent("Zynox");
+    await expect.element(rows.nth(2)).toHaveTextContent("Alpha");
+    await expect.element(rows.nth(3)).toHaveTextContent("Vyzer");
+    await expect.element(rows.nth(4)).toHaveTextContent("Zynox");
 
     await screen
       .getByRole("columnheader", { name: "Name" })
@@ -185,8 +185,8 @@ describe("TeamsPage", () => {
     await expect
       .element(screen.getByLabelText("Current URL"))
       .toHaveTextContent("/settings/teams?sort=name&dir=desc");
-    await expect.element(rows.nth(1)).toHaveTextContent("Zynox");
-    await expect.element(rows.nth(3)).toHaveTextContent("Alpha");
+    await expect.element(rows.nth(2)).toHaveTextContent("Zynox");
+    await expect.element(rows.nth(4)).toHaveTextContent("Alpha");
 
     await screen
       .getByRole("columnheader", { name: "Members" })
@@ -196,9 +196,63 @@ describe("TeamsPage", () => {
       .element(screen.getByLabelText("Current URL"))
       .toHaveTextContent("/settings/teams?sort=members&dir=asc");
     // Numérico: 2, 5, 12 (textual seria 12, 2, 5).
-    await expect.element(rows.nth(1)).toHaveTextContent("Alpha");
-    await expect.element(rows.nth(2)).toHaveTextContent("Zynox");
-    await expect.element(rows.nth(3)).toHaveTextContent("Vyzer");
+    await expect.element(rows.nth(2)).toHaveTextContent("Alpha");
+    await expect.element(rows.nth(3)).toHaveTextContent("Zynox");
+    await expect.element(rows.nth(4)).toHaveTextContent("Vyzer");
+  });
+
+  it("mostra a barra (filtro, Active, Export CSV, Create team), a coluna Visibility e o grupo Active", async () => {
+    fetchTeams.mockResolvedValue(makeTeams());
+    const screen = await render(<Harness />);
+    await expect.element(bodyRows(screen).nth(2)).toHaveTextContent("Alpha");
+
+    await expect.element(screen.getByPlaceholder("Filter by name...")).toBeVisible();
+    await expect
+      .element(screen.getByRole("combobox", { name: "Team status" }))
+      .toHaveTextContent("Active");
+    await expect.element(screen.getByRole("button", { name: "Export CSV" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Create team" })).toBeVisible();
+    await expect.element(screen.getByRole("columnheader", { name: "Visibility" })).toBeVisible();
+    await expect.element(bodyRows(screen).nth(1)).toHaveTextContent("Active 3");
+    await expect.element(bodyRows(screen).nth(2)).toHaveTextContent("Workspace");
+  });
+
+  it("filtra por nome pelo search param ?q=, com a contagem do grupo", async () => {
+    fetchTeams.mockResolvedValue(makeTeams());
+    const screen = await render(<Harness />);
+    await expect.element(bodyRows(screen).nth(2)).toHaveTextContent("Alpha");
+
+    await screen.getByPlaceholder("Filter by name...").fill("zyn");
+    await expect.element(screen.getByLabelText("Current URL")).toHaveTextContent("?q=zyn");
+    await expect.element(bodyRows(screen).nth(1)).toHaveTextContent("Active 1");
+    await expect.element(bodyRows(screen).nth(2)).toHaveTextContent("Zynox");
+    await expect.element(screen.getByRole("row", { name: /Alpha/ })).not.toBeInTheDocument();
+
+    await screen.getByPlaceholder("Filter by name...").fill("nothing-here");
+    await expect.element(screen.getByText("No teams found")).toBeVisible();
+  });
+
+  it("Export CSV baixa teams.csv com os Teams listados", async () => {
+    fetchTeams.mockResolvedValue(makeTeams());
+    const blobs: Blob[] = [];
+    vi.spyOn(URL, "createObjectURL").mockImplementation((blob) => {
+      blobs.push(blob as Blob);
+      return "blob:teams";
+    });
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    const screen = await render(<Harness />);
+    await expect.element(bodyRows(screen).nth(2)).toHaveTextContent("Alpha");
+
+    await screen.getByRole("button", { name: "Export CSV" }).click();
+
+    expect(click).toHaveBeenCalledTimes(1);
+    const text = await blobs[0]!.text();
+    const lines = text.split("\n");
+    expect(lines[0]).toBe("Name,Key,Visibility,Members,Issues,Created");
+    expect(lines).toHaveLength(4);
+    expect(text).toContain("Alpha");
+    expect(text).toContain(",Workspace,");
   });
 
   it("sort inválido cai em name", async () => {
@@ -206,8 +260,8 @@ describe("TeamsPage", () => {
     const screen = await render(<Harness initialPath="/settings/teams?sort=bogus&dir=asc" />);
 
     const rows = bodyRows(screen);
-    await expect.element(rows.nth(1)).toHaveTextContent("Alpha");
-    await expect.element(rows.nth(3)).toHaveTextContent("Zynox");
+    await expect.element(rows.nth(2)).toHaveTextContent("Alpha");
+    await expect.element(rows.nth(4)).toHaveTextContent("Zynox");
   });
 
   it("clicar na linha, fora do menu, navega para a configuração do Team", async () => {
@@ -253,21 +307,51 @@ describe("TeamsPage", () => {
       .toHaveTextContent("/settings/teams/zynox");
   });
 
-  it("o menu da linha tem dois itens e Team settings navega", async () => {
+  it("o menu da linha tem Settings (submenu), Leave team… e Delete…", async () => {
     fetchTeams.mockResolvedValue(makeTeams());
     const screen = await render(<Harness />);
 
     await expect.element(screen.getByRole("link", { name: "Vyzer" })).toBeVisible();
     await screen.getByRole("row", { name: /Vyzer/ }).hover();
     await screen.getByRole("button", { name: "Open menu for Vyzer" }).click();
-    await expect.element(screen.getByRole("menuitem")).toHaveLength(2);
-    await expect.element(screen.getByRole("menuitem", { name: "Team settings" })).toBeVisible();
-    await expect.element(screen.getByRole("menuitem", { name: "Delete team…" })).toBeVisible();
-    await screen.getByRole("menuitem", { name: "Team settings" }).click();
+    await expect.element(screen.getByRole("menuitem", { name: "Settings" })).toBeVisible();
+    await expect.element(screen.getByRole("menuitem", { name: "Leave team…" })).toBeVisible();
+    await expect.element(screen.getByRole("menuitem", { name: "Delete…" })).toBeVisible();
+  });
+
+  it("o submenu Settings lista os destinos do Team, filtra e navega", async () => {
+    fetchTeams.mockResolvedValue(makeTeams());
+    const screen = await render(<Harness />);
+
+    await expect.element(screen.getByRole("link", { name: "Vyzer" })).toBeVisible();
+    await screen.getByRole("row", { name: /Vyzer/ }).hover();
+    await screen.getByRole("button", { name: "Open menu for Vyzer" }).click();
+    await userEvent.keyboard("{ArrowDown}");
+    await expect.element(screen.getByRole("menuitem", { name: "Settings" })).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    await expect.element(screen.getByPlaceholder("Filter…")).toHaveFocus();
+    const panel = screen;
+    for (const label of [
+      "Overview",
+      "General",
+      "Access and permissions",
+      "Members",
+      "Issue labels",
+      "Project labels",
+      "Parent team",
+    ]) {
+      await expect.element(panel.getByRole("option", { name: label })).toBeInTheDocument();
+    }
+
+    await userEvent.keyboard("triage");
+    await expect.element(panel.getByRole("option", { name: "Triage" })).toBeVisible();
+    await expect.element(panel.getByRole("option", { name: "General" })).not.toBeInTheDocument();
+    await userEvent.keyboard("{Enter}");
 
     await expect
       .element(screen.getByLabelText("Current URL"))
-      .toHaveTextContent("/settings/teams/vyzer");
+      .toHaveTextContent("/settings/teams/vyzer/triage");
   });
 
   it("Delete team… abre o Confirm com foco em Cancel; Cancel não exclui", async () => {

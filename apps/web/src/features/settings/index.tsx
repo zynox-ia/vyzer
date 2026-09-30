@@ -51,7 +51,9 @@ export function SettingsRoute() {
       contentWidth={
         WIDE_PATHS.includes(pathname) || /^\/settings\/teams\/[^/]+\/members$/.test(pathname)
           ? "wide"
-          : "narrow"
+          : /^\/settings\/teams\/[^/]+$/.test(pathname) && pathname !== "/settings/teams/new"
+            ? "medium"
+            : "narrow"
       }
     >
       <Outlet />
@@ -68,3 +70,4 @@ export { TeamOverviewPage } from "./team-settings/overview";
 export { TeamGeneralPage } from "./team-settings/general";
 export { TeamMembersPage } from "./team-settings/members";
 export { TeamStatusesPage } from "./team-statuses";
+export { TeamPlaceholderPage, teamPlaceholderPages } from "./team-settings/placeholder";

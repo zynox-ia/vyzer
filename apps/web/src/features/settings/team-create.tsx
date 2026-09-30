@@ -1,5 +1,7 @@
 /**
- * Settings → Administration → Teams → Create team (spec `settings-administration.md`, sub-etapa
+ * "Create a new team" dentro de Settings (Linear ao vivo, 29/09: a nav de Settings continua; "Back"
+ * no topo do conteúdo, título com subtítulo, cartão com Icon & Name e Identifier e o botão abaixo,
+ * à direita; sem o aviso de limite de plano, que o Vyzer não tem). Origem: Settings → Administration → Teams → Create team (spec `settings-administration.md`, sub-etapa
  * 2.1; sem frame no Figma e o formulário real do Linear estava bloqueado pelo limite de times do
  * plano, então segue o pattern Settings Form do design system com os campos da spec): ícone e
  * Name na mesma linha, e Identifier (a key, "Used as a prefix for team issues"). O slug vem do
@@ -11,7 +13,8 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
+import { ChevronLeft } from "lucide-react";
+import { Link, useNavigate } from "react-router";
 import {
   Button,
   IconPicker,
@@ -19,6 +22,7 @@ import {
   useToast,
   type ProjectIconValue,
 } from "@vyzer/design-system/components";
+import { Icon } from "@vyzer/design-system/icons";
 import { createTeamMutationOptions, teamsQueryOptions } from "@/services/teams";
 import { SettingsGroup, SettingsRow } from "./settings-row";
 
@@ -88,11 +92,24 @@ export function TeamCreatePage() {
   };
 
   return (
-    <div className="flex flex-col gap-1">
-      <h1 className="type-heading-1 pb-6 text-primary">Create a new team</h1>
+    <div className="flex flex-col gap-6 pt-10">
+      {/* No canto do painel, fora da coluna de conteúdo (como o Linear). */}
+      <Link
+        to="/settings/teams"
+        className="absolute top-3 left-4 flex h-control-md w-fit items-center gap-1.5 rounded-full pr-3 pl-2 text-label-md text-secondary no-underline transition-colors select-none focus-ring hovered:bg-hover hovered:text-primary"
+      >
+        <Icon icon={ChevronLeft} size="sm" />
+        Back
+      </Link>
+      <div className="flex flex-col gap-1">
+        <h1 className="type-heading-1 text-primary">Create a new team</h1>
+        <p className="text-body-md text-secondary">
+          Create a new team to manage separate cycles, workflows, and notifications
+        </p>
+      </div>
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
         <SettingsGroup>
-          <SettingsRow label="Icon & name" error={nameError}>
+          <SettingsRow label="Icon & Name" error={nameError}>
             {(id) => (
               <div className="flex items-center gap-2">
                 <IconPicker value={icon} onValueChange={setIcon} triggerLabel="Choose team icon" />
@@ -101,7 +118,7 @@ export function TeamCreatePage() {
                   value={name}
                   maxLength={48}
                   invalid={Boolean(nameError)}
-                  placeholder="Team name"
+                  placeholder="e.g. Engineering"
                   autoComplete="off"
                   onChange={(event) => changeName(event.target.value)}
                   className="w-52"
@@ -120,13 +137,14 @@ export function TeamCreatePage() {
                 value={key}
                 maxLength={7}
                 invalid={Boolean(keyError)}
+                placeholder="e.g. ENG"
                 autoComplete="off"
                 onChange={(event) => {
                   setKeyEdited(true);
                   setServerKeyError(undefined);
                   setKey(event.target.value.toUpperCase());
                 }}
-                className="w-64"
+                className="w-52"
               />
             )}
           </SettingsRow>

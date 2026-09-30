@@ -65,7 +65,7 @@ export function SettingsLayout({
   label?: string;
   landmark?: boolean;
   /** Wider slot for Settings tables; narrow pages keep the 640 px form column. */
-  contentWidth?: "narrow" | "wide";
+  contentWidth?: "narrow" | "medium" | "wide";
   children: ReactNode;
 }) {
   const Content = landmark ? "main" : "div";
@@ -92,11 +92,15 @@ export function SettingsLayout({
         {/* Cartão único cobrindo toda a área de conteúdo, como o Linear ao vivo (o Figma 33:20615
             não mostra esse cartão externo — divergência registrada em .figma/01-design-tokens.md,
             decisão do responsável de seguir o Linear aqui). */}
-        <div className="min-h-full rounded-container border border-default bg-sidebar">
+        <div className="relative min-h-full rounded-container border border-default bg-sidebar">
           <div
             className={cn(
               "mx-auto flex flex-col px-10 py-8",
-              contentWidth === "wide" ? "max-w-content" : "max-w-160",
+              contentWidth === "wide"
+                ? "max-w-content"
+                : contentWidth === "medium"
+                  ? "max-w-180"
+                  : "max-w-160",
             )}
           >
             {children}
