@@ -1,17 +1,22 @@
 import { ORPCError } from "@orpc/server";
 import {
   checkConnection,
+  createWorkspaceProject,
   createTeamSlug,
   createWorkspaceTeam,
+  deleteWorkspaceProject,
   deleteWorkspace,
   deleteWorkspaceTeam,
+  getWorkspaceProject,
   getWorkspaceTeamBySlug,
   listWorkspaceTeamMembers,
   listWorkspaceTeams,
+  listWorkspaceProjects,
   listWorkspaceMembers,
   resetWorkspaceTeamIssueEmail,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
+  updateWorkspaceProject,
   updateWorkspaceTeam,
   WORKSPACE_REGION,
 } from "@vyzer/db";
@@ -290,8 +295,118 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         },
       ),
       delete: middleware.adminOnly.team.delete.handler(async ({ context, input }) => {
-        const deletedTeam = await deleteWorkspaceTeam(context.db, context.workspace.id, input.id);
+        let deletedTeam;
+        try {
+          deletedTeam = await deleteWorkspaceTeam(context.db, context.workspace.id, input.id);
+        } catch (error) {
+          if (isForeignKeyViolation(error)) {
+            throw new ORPCError("CONFLICT", {
+              message: "A Team linked to a Project cannot be deleted.",
+            });
+          }
+          throw error;
+        }
+
         if (!deletedTeam) {
+          throw new ORPCError("NOT_FOUND");
+        }
+
+        if (deletedTeam.kind === "hasProjects") {
+          throw new ORPCError("CONFLICT", {
+            message: "A Team linked to a Project cannot be deleted.",
+          });
+        }
+      }),
+    },
+    project: {
+      list: middleware.workspaceScoped.project.list.handler(async ({ context, input }) => {
+        const projects = await listWorkspaceProjects(
+          context.db,
+          context.workspace.id,
+          input.teamSlug,
+        );
+        if (!projects) {
+          throw new ORPCError("NOT_FOUND");
+        }
+
+        return projects.map(serializeProject);
+      }),
+      detail: middleware.workspaceScoped.project.detail.handler(async ({ context, input }) => {
+        const currentProject = await getWorkspaceProject(
+          context.db,
+          context.workspace.id,
+          input.id,
+        );
+        if (!currentProject) {
+          throw new ORPCError("NOT_FOUND");
+        }
+
+        return serializeProject(currentProject);
+      }),
+      create: middleware.workspaceScoped.project.create.handler(async ({ context, input }) => {
+        const { teamIds, ...values } = input;
+        const result = await createWorkspaceProject(
+          context.db,
+          context.workspace.id,
+          values,
+          teamIds,
+        );
+        if (result.kind === "invalidReferences") {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Choose Teams and a lead Member from the current Workspace.",
+          });
+        }
+        if (result.kind === "failed") {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "The Project could not be created.",
+          });
+        }
+
+        const createdProject = await getWorkspaceProject(
+          context.db,
+          context.workspace.id,
+          result.id,
+        );
+        if (!createdProject) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "The created Project could not be read.",
+          });
+        }
+
+        return serializeProject(createdProject);
+      }),
+      update: middleware.workspaceScoped.project.update.handler(async ({ context, input }) => {
+        const { id, ...values } = input;
+        const result = await updateWorkspaceProject(context.db, context.workspace.id, id, values);
+        if (result.kind === "notFound") {
+          throw new ORPCError("NOT_FOUND");
+        }
+        if (result.kind === "invalidReferences") {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Choose Teams and a lead Member from the current Workspace.",
+          });
+        }
+
+        const updatedProject = await getWorkspaceProject(
+          context.db,
+          context.workspace.id,
+          result.id,
+        );
+        if (!updatedProject) {
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "The updated Project could not be read.",
+          });
+        }
+
+        return serializeProject(updatedProject);
+      }),
+      delete: middleware.workspaceScoped.project.delete.handler(async ({ context, input }) => {
+        const deletedProject = await deleteWorkspaceProject(
+          context.db,
+          context.workspace.id,
+          input.id,
+        );
+        if (!deletedProject) {
           throw new ORPCError("NOT_FOUND");
         }
       }),
@@ -301,8 +416,35 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
 
 export const router = createRouter();
 
+type WorkspaceProject = NonNullable<Awaited<ReturnType<typeof getWorkspaceProject>>>;
+
+function serializeProject(currentProject: WorkspaceProject) {
+  return {
+    id: currentProject.id,
+    name: currentProject.name,
+    icon: currentProject.icon,
+    status: currentProject.status,
+    health: currentProject.health,
+    healthNote: currentProject.healthNote,
+    priority: currentProject.priority,
+    lead: currentProject.lead,
+    targetDate: currentProject.targetDate,
+    teams: currentProject.teams,
+    issues: currentProject.issues,
+    progress: currentProject.progress,
+    createdAt: currentProject.createdAt.toISOString(),
+    updatedAt: currentProject.updatedAt.toISOString(),
+  };
+}
+
 function isUniqueConstraintViolation(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;
   if ("code" in error && error.code === "23505") return true;
   return "cause" in error && isUniqueConstraintViolation(error.cause);
+}
+
+function isForeignKeyViolation(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  if ("code" in error && error.code === "23503") return true;
+  return "cause" in error && isForeignKeyViolation(error.cause);
 }

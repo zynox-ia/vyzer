@@ -64,6 +64,27 @@
       "when": 1790729166461,
       "tag": "0008_parallel_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790731631889,
+      "tag": "0009_burly_shinko_yamashiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790733378399,
+      "tag": "0010_icy_silver_samurai",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790733657425,
+      "tag": "0011_fantastic_starjammers",
+      "breakpoints": true
     }
   ]
 }

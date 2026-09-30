@@ -1,5 +1,5 @@
 /** Acesso ao banco (Drizzle + postgres.js). Ver ADR-0005. */
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
@@ -67,9 +67,13 @@ export async function updateWorkspaceSettings(
   return updatedWorkspace ?? null;
 }
 
-/** Permanently delete a Workspace; Member rows cascade through the foreign key. */
+/** Permanently delete a Workspace, clearing Project-Team links before dependent rows cascade. */
 export async function deleteWorkspace(db: Db, workspaceId: string): Promise<void> {
-  await db.delete(schema.workspace).where(eq(schema.workspace.id, workspaceId));
+  await db.transaction(async (tx) => {
+    await tx.delete(schema.projectTeam).where(eq(schema.projectTeam.workspaceId, workspaceId));
+    await tx.delete(schema.project).where(eq(schema.project.workspaceId, workspaceId));
+    await tx.delete(schema.workspace).where(eq(schema.workspace.id, workspaceId));
+  });
 }
 
 /** List only the Members of the resolved Workspace in name order, including their Team count. */
@@ -265,14 +269,293 @@ export async function listWorkspaceTeamMembers(db: Db, workspaceId: string, team
     .orderBy(asc(schema.member.name));
 }
 
-/** Delete one Team only if it belongs to the resolved Workspace. Project guard waits for Stage 3. */
+type ProjectWrite = Pick<
+  typeof schema.project.$inferInsert,
+  "name" | "icon" | "status" | "health"
+> &
+  Partial<
+    Pick<
+      typeof schema.project.$inferInsert,
+      "healthNote" | "priority" | "leadMemberId" | "targetDate"
+    >
+  >;
+
+type ProjectSummaryTeam = Pick<
+  typeof schema.team.$inferSelect,
+  "id" | "name" | "slug" | "key" | "icon"
+>;
+
+async function hydrateWorkspaceProjects(
+  db: Db,
+  workspaceId: string,
+  rows: Array<{ project: typeof schema.project.$inferSelect; leadName: string | null }>,
+) {
+  if (rows.length === 0) return [];
+
+  const projectIds = rows.map(({ project: current }) => current.id);
+  const relatedTeams = await db
+    .select({
+      projectId: schema.projectTeam.projectId,
+      team: {
+        id: schema.team.id,
+        name: schema.team.name,
+        slug: schema.team.slug,
+        key: schema.team.key,
+        icon: schema.team.icon,
+      },
+    })
+    .from(schema.projectTeam)
+    .innerJoin(
+      schema.team,
+      and(eq(schema.team.id, schema.projectTeam.teamId), eq(schema.team.workspaceId, workspaceId)),
+    )
+    .where(
+      and(
+        eq(schema.projectTeam.workspaceId, workspaceId),
+        inArray(schema.projectTeam.projectId, projectIds),
+      ),
+    )
+    .orderBy(asc(schema.team.createdAt), asc(schema.team.id));
+
+  const teamsByProject = new Map<string, ProjectSummaryTeam[]>();
+  for (const { projectId, team: currentTeam } of relatedTeams) {
+    const projectTeams = teamsByProject.get(projectId) ?? [];
+    projectTeams.push(currentTeam);
+    teamsByProject.set(projectId, projectTeams);
+  }
+
+  return rows.map(({ project: currentProject, leadName }) => ({
+    ...currentProject,
+    lead:
+      currentProject.leadMemberId !== null && leadName !== null
+        ? { id: currentProject.leadMemberId, name: leadName }
+        : null,
+    teams: teamsByProject.get(currentProject.id) ?? [],
+    issues: 0,
+    progress: 0,
+  }));
+}
+
+/** List Projects from the resolved Workspace, optionally scoped to a Team slug. */
+export async function listWorkspaceProjects(db: Db, workspaceId: string, teamSlug?: string) {
+  let teamId: string | undefined;
+  if (teamSlug !== undefined) {
+    const [resolvedTeam] = await db
+      .select({ id: schema.team.id })
+      .from(schema.team)
+      .where(and(eq(schema.team.workspaceId, workspaceId), eq(schema.team.slug, teamSlug)))
+      .limit(1);
+
+    if (!resolvedTeam) return null;
+    teamId = resolvedTeam.id;
+  }
+
+  let projectIds: string[] | undefined;
+  if (teamId) {
+    projectIds = (
+      await db
+        .select({ projectId: schema.projectTeam.projectId })
+        .from(schema.projectTeam)
+        .where(
+          and(
+            eq(schema.projectTeam.workspaceId, workspaceId),
+            eq(schema.projectTeam.teamId, teamId),
+          ),
+        )
+    ).map(({ projectId }) => projectId);
+
+    if (projectIds.length === 0) return [];
+  }
+
+  const rows = await db
+    .select({ project: schema.project, leadName: schema.member.name })
+    .from(schema.project)
+    .leftJoin(
+      schema.member,
+      and(
+        eq(schema.member.id, schema.project.leadMemberId),
+        eq(schema.member.workspaceId, workspaceId),
+      ),
+    )
+    .where(
+      and(
+        eq(schema.project.workspaceId, workspaceId),
+        projectIds ? inArray(schema.project.id, projectIds) : undefined,
+      ),
+    )
+    .orderBy(asc(schema.project.createdAt), asc(schema.project.id));
+
+  return hydrateWorkspaceProjects(db, workspaceId, rows);
+}
+
+/** Find one Project only within the resolved Workspace. */
+export async function getWorkspaceProject(db: Db, workspaceId: string, projectId: string) {
+  const [row] = await db
+    .select({ project: schema.project, leadName: schema.member.name })
+    .from(schema.project)
+    .leftJoin(
+      schema.member,
+      and(
+        eq(schema.member.id, schema.project.leadMemberId),
+        eq(schema.member.workspaceId, workspaceId),
+      ),
+    )
+    .where(and(eq(schema.project.id, projectId), eq(schema.project.workspaceId, workspaceId)))
+    .limit(1);
+
+  if (!row) return null;
+  const [currentProject] = await hydrateWorkspaceProjects(db, workspaceId, [row]);
+  return currentProject ?? null;
+}
+
+/** Create a Project and its Team links atomically inside the resolved Workspace. */
+export async function createWorkspaceProject(
+  db: Db,
+  workspaceId: string,
+  values: ProjectWrite,
+  teamIds: string[],
+) {
+  return db.transaction(async (tx) => {
+    const uniqueTeamIds = [...new Set(teamIds)];
+    if (uniqueTeamIds.length !== teamIds.length || teamIds.length === 0) {
+      return { kind: "invalidReferences" as const };
+    }
+
+    const workspaceTeams = await tx
+      .select({ id: schema.team.id })
+      .from(schema.team)
+      .where(and(eq(schema.team.workspaceId, workspaceId), inArray(schema.team.id, teamIds)));
+    if (workspaceTeams.length !== teamIds.length) {
+      return { kind: "invalidReferences" as const };
+    }
+
+    if (values.leadMemberId) {
+      const [workspaceLead] = await tx
+        .select({ id: schema.member.id })
+        .from(schema.member)
+        .where(
+          and(
+            eq(schema.member.workspaceId, workspaceId),
+            eq(schema.member.id, values.leadMemberId),
+          ),
+        )
+        .limit(1);
+      if (!workspaceLead) return { kind: "invalidReferences" as const };
+    }
+
+    const [createdProject] = await tx
+      .insert(schema.project)
+      .values({ ...values, workspaceId })
+      .returning({ id: schema.project.id });
+    if (!createdProject) return { kind: "failed" as const };
+
+    await tx
+      .insert(schema.projectTeam)
+      .values(teamIds.map((teamId) => ({ projectId: createdProject.id, teamId, workspaceId })));
+
+    return { kind: "created" as const, id: createdProject.id };
+  });
+}
+
+/** Update a Project and optionally replace its Team links atomically within the Workspace. */
+export async function updateWorkspaceProject(
+  db: Db,
+  workspaceId: string,
+  projectId: string,
+  values: Partial<ProjectWrite> & { teamIds?: string[] },
+) {
+  return db.transaction(async (tx) => {
+    const [currentProject] = await tx
+      .select()
+      .from(schema.project)
+      .where(and(eq(schema.project.id, projectId), eq(schema.project.workspaceId, workspaceId)))
+      .limit(1);
+
+    if (!currentProject) return { kind: "notFound" as const };
+
+    const { teamIds, ...projectValues } = values;
+    if (teamIds !== undefined) {
+      const uniqueTeamIds = [...new Set(teamIds)];
+      if (uniqueTeamIds.length !== teamIds.length || teamIds.length === 0) {
+        return { kind: "invalidReferences" as const };
+      }
+
+      const workspaceTeams = await tx
+        .select({ id: schema.team.id })
+        .from(schema.team)
+        .where(and(eq(schema.team.workspaceId, workspaceId), inArray(schema.team.id, teamIds)));
+      if (workspaceTeams.length !== teamIds.length) {
+        return { kind: "invalidReferences" as const };
+      }
+    }
+
+    const leadMemberId =
+      projectValues.leadMemberId === undefined
+        ? currentProject.leadMemberId
+        : projectValues.leadMemberId;
+    if (leadMemberId) {
+      const [workspaceLead] = await tx
+        .select({ id: schema.member.id })
+        .from(schema.member)
+        .where(and(eq(schema.member.workspaceId, workspaceId), eq(schema.member.id, leadMemberId)))
+        .limit(1);
+      if (!workspaceLead) return { kind: "invalidReferences" as const };
+    }
+
+    const [updatedProject] = await tx
+      .update(schema.project)
+      .set({ ...projectValues, updatedAt: new Date() })
+      .where(and(eq(schema.project.id, projectId), eq(schema.project.workspaceId, workspaceId)))
+      .returning({ id: schema.project.id });
+
+    if (!updatedProject) return { kind: "notFound" as const };
+
+    if (teamIds !== undefined) {
+      await tx
+        .delete(schema.projectTeam)
+        .where(
+          and(
+            eq(schema.projectTeam.projectId, projectId),
+            eq(schema.projectTeam.workspaceId, workspaceId),
+          ),
+        );
+      await tx
+        .insert(schema.projectTeam)
+        .values(teamIds.map((teamId) => ({ projectId, teamId, workspaceId })));
+    }
+
+    return { kind: "updated" as const, id: updatedProject.id };
+  });
+}
+
+/** Delete a Project in the resolved Workspace; its Team links cascade. */
+export async function deleteWorkspaceProject(db: Db, workspaceId: string, projectId: string) {
+  const [deletedProject] = await db
+    .delete(schema.project)
+    .where(and(eq(schema.project.id, projectId), eq(schema.project.workspaceId, workspaceId)))
+    .returning({ id: schema.project.id });
+
+  return deletedProject ?? null;
+}
+
+/** Delete one Team only if it belongs to the resolved Workspace and has no linked Projects. */
 export async function deleteWorkspaceTeam(db: Db, workspaceId: string, teamId: string) {
+  const [associatedProject] = await db
+    .select({ id: schema.projectTeam.projectId })
+    .from(schema.projectTeam)
+    .where(
+      and(eq(schema.projectTeam.teamId, teamId), eq(schema.projectTeam.workspaceId, workspaceId)),
+    )
+    .limit(1);
+
+  if (associatedProject) return { kind: "hasProjects" as const };
+
   const [deletedTeam] = await db
     .delete(schema.team)
     .where(and(eq(schema.team.id, teamId), eq(schema.team.workspaceId, workspaceId)))
     .returning({ id: schema.team.id });
 
-  return deletedTeam ?? null;
+  return deletedTeam ? { kind: "deleted" as const, id: deletedTeam.id } : null;
 }
 
 /** Faz uma consulta trivial; lança erro se o banco não responder. */
@@ -281,4 +564,4 @@ export async function checkConnection(db: Db): Promise<void> {
 }
 
 export { MEMBER_ID, VYZER_TEAM_ID, WORKSPACE_ID, WORKSPACE_REGION, ZYNOX_TEAM_ID } from "./seed";
-export { member, team, teamMember, workspace } from "./schema";
+export { member, project, projectTeam, team, teamMember, workspace } from "./schema";
