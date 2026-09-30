@@ -7,6 +7,7 @@
     "dev": "pnpm -r --parallel --if-present dev",
     "db:generate": "pnpm --filter @vyzer/db generate",
     "db:migrate": "pnpm --filter @vyzer/db migrate",
+    "db:seed-dev": "pnpm --filter @vyzer/db seed-dev",
     "build": "pnpm -r --if-present build",
     "check": "pnpm check:format && pnpm check:lint && pnpm check:types",
     "check:format": "oxfmt --check .",

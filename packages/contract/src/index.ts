@@ -305,6 +305,48 @@ const issueEventSchema = z.object({
   createdAt: z.iso.datetime(),
 });
 
+export const notificationTypeSchema = z.enum(["assigned", "unassigned"]);
+export type NotificationType = z.infer<typeof notificationTypeSchema>;
+
+/** The contract is the single source for notification type labels and summaries. */
+export const notificationTypeMetadata = {
+  assigned: { category: "Assignments", summary: "assigned you" },
+  unassigned: { category: "Assignments", summary: "unassigned you" },
+} as const satisfies Record<NotificationType, { category: string; summary: string }>;
+
+const notificationCursorSchema = z.object({ id: z.string().uuid(), createdAt: z.iso.datetime() });
+const notificationListInputSchema = z.object({
+  unreadOnly: z.boolean().optional(),
+  order: z.enum(["newest", "oldest"]).optional(),
+  cursor: notificationCursorSchema.optional(),
+  limit: z.number().int().min(1).max(100),
+});
+const notificationIdsInputSchema = z.object({
+  ids: z
+    .array(z.string().uuid())
+    .min(1)
+    .refine((ids) => new Set(ids).size === ids.length, "Notification ids must be unique."),
+});
+const notificationIssueSummarySchema = z.object({
+  id: z.string().uuid(),
+  identifier: z.string(),
+  title: z.string(),
+  priority: issuePrioritySchema,
+  status: issueStatusSchema.nullable(),
+});
+const notificationItemSchema = z.object({
+  id: z.string().uuid(),
+  type: notificationTypeSchema,
+  actor: issueMemberSchema.nullable(),
+  issue: notificationIssueSummarySchema.nullable(),
+  projectId: z.string().uuid().nullable(),
+  payload: z.record(z.string(), z.unknown()),
+  readAt: z.iso.datetime().nullable(),
+  snoozedUntil: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
 export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
@@ -315,6 +357,8 @@ export type IssueEvent = z.infer<typeof issueEventSchema>;
 export type IssueFilters = z.infer<typeof issueFiltersSchema>;
 export type IssueListInput = z.infer<typeof issueListInputSchema>;
 export type IssueFacetsInput = z.infer<typeof issueFacetsInputSchema>;
+export type Notification = z.infer<typeof notificationItemSchema>;
+export type NotificationListInput = z.input<typeof notificationListInputSchema>;
 
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
@@ -522,6 +566,27 @@ export const contract = {
         failed: z.array(issueBulkFailureSchema),
       }),
     ),
+  },
+  notification: {
+    /** Lista as notificações ativas do Member resolvido, por padrão das mais novas. */
+    list: oc.input(notificationListInputSchema).output(
+      z.object({
+        items: z.array(notificationItemSchema),
+        nextCursor: notificationCursorSchema.nullable(),
+      }),
+    ),
+    /** Conta as notificações não lidas do Member atual. */
+    unreadCount: oc.output(z.number().int().nonnegative()),
+    /** Marca como lidas somente notificações que pertencem ao Member atual. */
+    markRead: oc.input(notificationIdsInputSchema).output(z.void()),
+    /** Marca como não lidas somente notificações que pertencem ao Member atual. */
+    markUnread: oc.input(notificationIdsInputSchema).output(z.void()),
+    /** Arquiva as notificações do Inbox sem alterar as Issues. */
+    archive: oc.input(notificationIdsInputSchema).output(z.void()),
+    /** Arquiva todas as notificações ativas; onlyRead limita a ação às já lidas. */
+    archiveAll: oc
+      .input(z.object({ onlyRead: z.boolean().optional().default(false) }))
+      .output(z.void()),
   },
 };
 

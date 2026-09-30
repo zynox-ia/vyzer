@@ -1,6 +1,9 @@
 import { ORPCError } from "@orpc/server";
 import {
+  archiveAllWorkspaceNotifications,
+  archiveWorkspaceNotifications,
   checkConnection,
+  countUnreadWorkspaceNotifications,
   createWorkspaceIssue,
   createWorkspaceTeamWorkflowStatus,
   createTeamSlug,
@@ -15,6 +18,7 @@ import {
   listWorkspaceTeamWorkflowStatuses,
   listWorkspaceTeamIssues,
   listWorkspaceIssueEvents,
+  listWorkspaceNotifications,
   getWorkspaceIssueByIdentifier,
   listWorkspaceMembers,
   listWorkspaceTeamIssueFacets,
@@ -26,6 +30,8 @@ import {
   reorderWorkspaceIssue,
   setWorkspaceDefaultWorkflowStatus,
   setWorkspaceIssueParent,
+  markWorkspaceNotificationsRead,
+  markWorkspaceNotificationsUnread,
   updateWorkspaceIssue,
   IssueConflictError,
   IssueRuleError,
@@ -476,6 +482,85 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
                 : [{ id: outcome.id, code: outcome.code, message: outcome.message }],
             ),
           };
+        },
+      ),
+    },
+    notification: {
+      list: middleware.workspaceScoped.notification.list.handler(async ({ context, input }) => {
+        const page = await listWorkspaceNotifications(
+          context.db,
+          context.workspace.id,
+          context.member.id,
+          {
+            unreadOnly: input.unreadOnly,
+            order: input.order,
+            cursor: input.cursor
+              ? { id: input.cursor.id, createdAt: new Date(input.cursor.createdAt) }
+              : undefined,
+            limit: input.limit,
+          },
+        );
+
+        return {
+          items: page.items.map((notification) => ({
+            id: notification.id,
+            type: notification.type,
+            actor: notification.actor,
+            issue: notification.issue,
+            projectId: notification.projectId,
+            payload: notification.payload,
+            readAt: notification.readAt?.toISOString() ?? null,
+            snoozedUntil: notification.snoozedUntil?.toISOString() ?? null,
+            createdAt: notification.createdAt.toISOString(),
+            updatedAt: notification.updatedAt.toISOString(),
+          })),
+          nextCursor: page.nextCursor
+            ? { id: page.nextCursor.id, createdAt: page.nextCursor.createdAt.toISOString() }
+            : null,
+        };
+      }),
+      unreadCount: middleware.workspaceScoped.notification.unreadCount.handler(
+        async ({ context }) =>
+          countUnreadWorkspaceNotifications(context.db, context.workspace.id, context.member.id),
+      ),
+      markRead: middleware.workspaceScoped.notification.markRead.handler(
+        async ({ context, input }) => {
+          await markWorkspaceNotificationsRead(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.ids,
+          );
+        },
+      ),
+      markUnread: middleware.workspaceScoped.notification.markUnread.handler(
+        async ({ context, input }) => {
+          await markWorkspaceNotificationsUnread(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.ids,
+          );
+        },
+      ),
+      archive: middleware.workspaceScoped.notification.archive.handler(
+        async ({ context, input }) => {
+          await archiveWorkspaceNotifications(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.ids,
+          );
+        },
+      ),
+      archiveAll: middleware.workspaceScoped.notification.archiveAll.handler(
+        async ({ context, input }) => {
+          await archiveAllWorkspaceNotifications(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.onlyRead,
+          );
         },
       ),
     },

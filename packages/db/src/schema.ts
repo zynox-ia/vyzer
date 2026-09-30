@@ -175,6 +175,8 @@ export type IssueEventType =
 
 export type IssueEventPayload = Record<string, unknown>;
 
+export type NotificationType = "assigned" | "unassigned";
+
 export const issue = pgTable(
   "issue",
   {
@@ -246,11 +248,58 @@ export const issueEvent = pgTable(
   ],
 );
 
+export const notification = pgTable(
+  "notification",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    recipientId: uuid("recipient_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    type: text("type").$type<NotificationType>().notNull(),
+    actorId: uuid("actor_id").references(() => member.id, { onDelete: "set null" }),
+    issueId: uuid("issue_id").references(() => issue.id, { onDelete: "cascade" }),
+    // Project notifications arrive with the Project domain; the FK is added when that table lands.
+    projectId: uuid("project_id"),
+    issueEventId: uuid("issue_event_id").references(() => issueEvent.id, {
+      onDelete: "set null",
+    }),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    snoozedUntil: timestamp("snoozed_until", { withTimezone: true }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check("notification_type_check", sql`${table.type} in ('assigned', 'unassigned')`),
+    check(
+      "notification_target_check",
+      sql`(${table.issueId} is not null and ${table.projectId} is null) or (${table.issueId} is null and ${table.projectId} is not null)`,
+    ),
+    uniqueIndex("notification_recipient_issue_event_unique")
+      .on(table.recipientId, table.issueEventId)
+      .where(sql`${table.issueEventId} is not null`),
+    index("notification_recipient_archived_created_index").on(
+      table.recipientId,
+      table.archivedAt,
+      sql`${table.createdAt} desc`,
+    ),
+    index("notification_unread_recipient_index")
+      .on(table.recipientId, table.createdAt)
+      .where(sql`${table.readAt} is null and ${table.archivedAt} is null`),
+    index("notification_issue_index").on(table.issueId),
+  ],
+);
+
 export const workspaceRelations = relations(workspace, ({ many }) => ({
   members: many(member),
   teams: many(team),
   issues: many(issue),
   issueEvents: many(issueEvent),
+  notifications: many(notification),
 }));
 
 export const memberRelations = relations(member, ({ many, one }) => ({
@@ -262,6 +311,8 @@ export const memberRelations = relations(member, ({ many, one }) => ({
   assignedIssues: many(issue, { relationName: "issueAssignee" }),
   createdIssues: many(issue, { relationName: "issueCreator" }),
   authoredIssueEvents: many(issueEvent, { relationName: "issueEventActor" }),
+  receivedNotifications: many(notification, { relationName: "notificationRecipient" }),
+  notificationsAsActor: many(notification, { relationName: "notificationActor" }),
 }));
 
 export const teamRelations = relations(team, ({ many, one }) => ({
@@ -316,9 +367,10 @@ export const issueRelations = relations(issue, ({ many, one }) => ({
     relationName: "issueCreator",
   }),
   events: many(issueEvent),
+  notifications: many(notification),
 }));
 
-export const issueEventRelations = relations(issueEvent, ({ one }) => ({
+export const issueEventRelations = relations(issueEvent, ({ one, many }) => ({
   workspace: one(workspace, {
     fields: [issueEvent.workspaceId],
     references: [workspace.id],
@@ -331,6 +383,32 @@ export const issueEventRelations = relations(issueEvent, ({ one }) => ({
     fields: [issueEvent.actorId],
     references: [member.id],
     relationName: "issueEventActor",
+  }),
+  notifications: many(notification),
+}));
+
+export const notificationRelations = relations(notification, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [notification.workspaceId],
+    references: [workspace.id],
+  }),
+  recipient: one(member, {
+    fields: [notification.recipientId],
+    references: [member.id],
+    relationName: "notificationRecipient",
+  }),
+  actor: one(member, {
+    fields: [notification.actorId],
+    references: [member.id],
+    relationName: "notificationActor",
+  }),
+  issue: one(issue, {
+    fields: [notification.issueId],
+    references: [issue.id],
+  }),
+  issueEvent: one(issueEvent, {
+    fields: [notification.issueEventId],
+    references: [issueEvent.id],
   }),
 }));
 

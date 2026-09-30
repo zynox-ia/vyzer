@@ -1,6 +1,6 @@
 # Spec: Notification e Inbox
 
-Próximo domínio depois de Issue/Workflow ([`issue-workflow.md`](./issue-workflow.md), Time B). **Proposta, sem aprovação.** Nada foi implementado nem alterado em código; só este arquivo.
+Próximo domínio depois de Issue/Workflow ([`issue-workflow.md`](./issue-workflow.md), Time B). **Spec definitiva, aprovada pelo responsável.**
 
 ## Dependência real (leia antes de planejar a implementação)
 
@@ -173,16 +173,17 @@ Convenções de `packages/db`: `uuid` id, `workspaceId` em toda tabela (ADR-0007
 
 **Tipos finos (`notification.type`) e a categoria de cada um** (a categoria é o que o filtro "Notification type" e os textos do Linear usam; o mapa tipo→categoria fica no `packages/contract`, uma única fonte):
 
-| Categoria (Linear)      | Tipos finos                                                                            | Etapa |
-| ----------------------- | -------------------------------------------------------------------------------------- | ----- |
-| Assignments             | `assigned`, `unassigned`                                                               | 4.1   |
-| Status changes          | `status_changed`, `priority_changed`, `blocking_changed`                               | 4.1   |
-| Reminders and deadlines | `reminder` (lembretes do usuário; prazos/SLA: 4.12)                                    | 4.2   |
-| Comments and replies    | `comment`, `reply`, `thread_resolved`                                                  | 4.4   |
-| Mentions                | `mention`                                                                              | 4.4   |
-| Reactions               | `reaction`                                                                             | 4.4   |
-| Subscriptions           | `team_issue_added`, `team_issue_closed`, `project_issue_added`, `project_issue_closed` | 4.5   |
-| Triage                  | `triage_added`                                                                         | 4.5   |
+| Categoria (Linear)      | Tipos finos                                                                            | Etapa                                                                        |
+| ----------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Assignments             | `assigned`, `unassigned`                                                               | 4.1                                                                          |
+| Status changes          | `status_changed`, `priority_changed`                                                   | 4.1b (depende de `issue_subscriber`, Time B 3.7)                             |
+| Status changes          | `blocking_changed`                                                                     | 4.1b (depende de `issue_relation`, Time B 3.6, e de `issue_subscriber`, 3.7) |
+| Reminders and deadlines | `reminder` (lembretes do usuário; prazos/SLA: 4.12)                                    | 4.2                                                                          |
+| Comments and replies    | `comment`, `reply`, `thread_resolved`                                                  | 4.4                                                                          |
+| Mentions                | `mention`                                                                              | 4.4                                                                          |
+| Reactions               | `reaction`                                                                             | 4.4                                                                          |
+| Subscriptions           | `team_issue_added`, `team_issue_closed`, `project_issue_added`, `project_issue_closed` | 4.5                                                                          |
+| Triage                  | `triage_added`                                                                         | 4.5                                                                          |
 
 **Reservados, sem tipo fino ainda**, cada um numa etapa do backlog sequenciado (não são "fora do escopo"): Document changes (4.11, Time E), Updates de projeto/iniciativa (4.10), Loops, Apps and integrations, Billing, Reviews e agentes (4.15, aguardam credencial/infra externa) e **System notifications** (4.16). O enum é aberto: cada etapa acrescenta seus tipos e a linha da tabela acima.
 
@@ -237,25 +238,29 @@ Com o Priority inbox ligado (4.8) a lista vive em **`/inbox/priority`** e **`/in
 
 **Sequenciais, não paralelas**, como nas specs anteriores: cada etapa é uma fatia vertical completa (banco → API → services → tela), fechada, testada e revisada antes da próxima; nenhuma toca arquivos da seguinte; ao fim, `pnpm check`/`build`/`test` verdes, commit local, mensagem ao coordenador. **Pré-condição de todas: `issue` e `issue_event` publicados (Time B, 3.2).** Toda procedure passa pelo middleware (ADR-0007/0015) e tem teste de isolamento.
 
-| Etapa | Entra                                                                    | Depende de                              |
-| ----- | ------------------------------------------------------------------------ | --------------------------------------- |
-| 4.1   | Inbox base: Assignments e Status changes, ler/não lida, apagar, contador | Time B 3.2                              |
-| 4.2   | Snooze e Remind me                                                       | 4.1                                     |
-| 4.3   | Filtros e Display options                                                | 4.1 (4.2 para "Show snoozed")           |
-| 4.4   | Comentários, respostas, menções, reações                                 | 4.1, Time B 3.7                         |
-| 4.5   | Assinaturas: Team ▶ Subscribe, Project, Triage                           | 4.1, Time A (Team/Project), Time B 3.10 |
-| 4.6   | Agrupamento por issue                                                    | 4.1 (idealmente depois de 4.4)          |
-| 4.7   | Tempo real (só se D1 aprovar SSE)                                        | 4.1                                     |
-| 4.8   | Priority inbox e Settings → Notifications                                | 4.1, 4.3 (observado ao vivo, D7)        |
+| Etapa | Entra                                                                    | Depende de                                                                                               |
+| ----- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| 4.1   | Inbox base: Assignments e Status changes, ler/não lida, apagar, contador | Time B 3.2; Status changes aguardam `issue_subscriber` (3.7), e bloqueios também aguardam relações (3.6) |
+| 4.2   | Snooze e Remind me                                                       | 4.1                                                                                                      |
+| 4.3   | Filtros e Display options                                                | 4.1 (4.2 para "Show snoozed")                                                                            |
+| 4.4   | Comentários, respostas, menções, reações                                 | 4.1, Time B 3.7                                                                                          |
+| 4.5   | Assinaturas: Team ▶ Subscribe, Project, Triage                           | 4.1, Time A (Team/Project), Time B 3.10                                                                  |
+| 4.6   | Agrupamento por issue                                                    | 4.1 (idealmente depois de 4.4)                                                                           |
+| 4.7   | Tempo real (só se D1 aprovar SSE)                                        | 4.1                                                                                                      |
+| 4.8   | Priority inbox e Settings → Notifications                                | 4.1, 4.3 (observado ao vivo, D7)                                                                         |
 
 4.2 a 4.5 são independentes entre si depois de 4.1. As etapas **4.9 a 4.16 são o backlog sequenciado** (seção própria, mais abaixo), não fazem parte da entrega desta rodada e entram quando o gatilho de cada uma existir. 4.6 vem depois porque muda a semântica de ler/apagar (age no grupo) e o agrupamento **não foi observado**: se o Linear ao vivo mostrar outra coisa, só esta etapa muda.
 
 ### 4.1 Inbox base
 
+**Sequenciamento explícito da entrega:** a fatia **4.1a** implementa a Inbox e os tipos `assigned`/`unassigned`, que dependem apenas de `issue` e `issue_event` (Time B 3.2). Os tipos `status_changed` e `priority_changed` ficam pendentes dentro da 4.1 até existir `issue_subscriber` (Time B 3.7); `blocking_changed` depende também de `issue_relation` (Time B 3.6). Isso mantém o escopo aprovado e sequencia só o que ainda não tem fonte/destinatários no banco.
+
+O alvo `projectId` fica reservado no schema com o check de alvo exclusivo, mas seu FK e a leitura de notificações de Project aguardam a tabela `project` do Time A, ainda ausente deste branch. A 4.1a só emite notificações com `issueId`.
+
 | Camada   | O que entra                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Banco    | `notification` (a coluna `snoozedUntil` já existe aqui, mas só é usada na 4.2), tipos `assigned`, `unassigned`, `status_changed`, `priority_changed`, `blocking_changed` (esse último só se a 3.6 de relações já existir; senão entra com ela). Seed de desenvolvimento (D5): um segundo Member e algumas notificações lidas/não lidas, **fora** do seed de produção                                                                                                                                                                                                                                                                                              |
-| API      | `notifyIssueEvent` (gancho, regras gerais acima) chamado nas mutações do Time B; `notification.list` (ordenação "Newest"), `unreadCount`, `markRead/markUnread`, `archive`, `archiveAll`. Abrir uma notificação na tela chama `markRead`                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Banco    | `notification` (a coluna `snoozedUntil` já existe aqui, mas só é usada na 4.2), tipos `assigned` e `unassigned` na 4.1a; `status_changed`/`priority_changed` (após Time B 3.7) e `blocking_changed` (após Time B 3.6 e 3.7) continuam pendentes dentro da 4.1. Seed de desenvolvimento (D5): um segundo Member e algumas notificações lidas/não lidas, **fora** do seed de produção                                                                                                                                                                                                                                                                               |
+| API      | `notifyIssueEvent` (gancho, regras gerais acima), com `assigned`/`unassigned` em 4.1a; integração e fan-out de status/prioridade/bloqueios ficam pendentes com as dependências acima. `notification.list` (ordenação "Newest"), `unreadCount`, `markRead/markUnread`, `archive`, `archiveAll`. Abrir uma notificação na tela chama `markRead`                                                                                                                                                                                                                                                                                                                     |
 | Services | `apps/web/src/services/notifications.ts` (`api.notification.*.queryOptions`); mutações invalidam `list` e `unreadCount`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Tela     | `/inbox` e `/inbox/:notificationId` (mestre-detalhe), `NotificationRow` (peça 1), painel com o Issue Detail do Time B mais **Delete notification** no cabeçalho, botão **Show unreads only**, menu **Notification actions** (Delete all, Delete all read `⇧ ⌫`, Go to settings), `Counter tone="accent"` no item Inbox da sidebar (oculto com zero), item **Inbox** do command menu (`G I`) já existe. Teclado: setas navegam, `Enter` abre, **`U` alterna lida/não lida** (observado), `⌫` apaga (**[docs]**); **ao apagar ou adiar, a seleção avança para a próxima notificação**. Painel sem seleção: "No notification selected" ou "N unread notification(s)" |
 

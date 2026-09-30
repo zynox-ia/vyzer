@@ -278,7 +278,25 @@ export {
   setWorkspaceIssueParent,
   updateWorkspaceIssue,
 } from "./issues";
-export { issue, issueEvent, member, team, teamMember, workflowStatus, workspace } from "./schema";
+export {
+  archiveAllWorkspaceNotifications,
+  archiveWorkspaceNotifications,
+  countUnreadWorkspaceNotifications,
+  listWorkspaceNotifications,
+  markWorkspaceNotificationsRead,
+  markWorkspaceNotificationsUnread,
+  notifyIssueEvent,
+} from "./notifications";
+export {
+  issue,
+  issueEvent,
+  member,
+  notification,
+  team,
+  teamMember,
+  workflowStatus,
+  workspace,
+} from "./schema";
 export type {
   IssueCreateValues,
   IssueFilters,
@@ -291,6 +309,8 @@ export type {
 export type {
   IssueEventType,
   IssuePriority,
+  NotificationType,
   WorkflowStatusCategory,
   WorkflowStatusColor,
 } from "./schema";
+export type { NotificationIssueEvent, NotificationListOptions } from "./notifications";
