@@ -20,6 +20,7 @@ type UpdateInput = { id: string } & Record<string, unknown>;
 type Current = { workspace: { id: string }; member: { role: string } };
 
 const updateTeam = vi.fn<(input: UpdateInput) => Promise<unknown>>();
+const resetTeamIssueEmail = vi.fn<(input: { id: string }) => Promise<unknown>>();
 const fetchCurrent = vi.fn<() => Promise<Current>>();
 let team: Team;
 
@@ -29,6 +30,8 @@ vi.mock("@/services/teams", () => ({
   teamsQueryOptions: () => queryOptions({ queryKey: ["teams"], queryFn: async () => [] }),
   updateTeamMutationOptions: () =>
     mutationOptions({ mutationFn: (input: UpdateInput) => updateTeam(input) }),
+  resetTeamIssueEmailMutationOptions: () =>
+    mutationOptions({ mutationFn: (input: { id: string }) => resetTeamIssueEmail(input) }),
 }));
 
 vi.mock("@/services/workspace", () => ({
@@ -43,6 +46,11 @@ const makeTeam = (): Team => ({
   key: "VYZ",
   icon: { kind: "icon", name: "Layers", color: "purple" },
   description: "Ships the product",
+  timezone: "America/Sao_Paulo",
+  estimation: "none",
+  detailedIssueHistory: false,
+  issueEmailEnabled: false,
+  issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
   createdAt: "2026-08-15T12:00:00.000Z",
   updatedAt: "2026-08-15T12:00:00.000Z",
 });
@@ -96,6 +104,8 @@ beforeEach(async () => {
     team = { ...team, ...patch } as Team;
     return team;
   });
+  resetTeamIssueEmail.mockReset();
+  resetTeamIssueEmail.mockResolvedValue({});
   fetchCurrent.mockReset();
   await page.viewport(1280, 720);
 });
@@ -252,6 +262,148 @@ describe("TeamGeneralPage", () => {
     await expect.element(descField(screen)).toBeDisabled();
     await expect
       .element(screen.getByRole("button", { name: "Choose team icon" }))
+      .not.toBeInTheDocument();
+    expect(updateTeam).not.toHaveBeenCalled();
+  });
+
+  describe("Estimates", () => {
+    it("o Select Issue estimation tem as 5 opções exatas", async () => {
+      const screen = await renderAdmin();
+
+      await screen.getByLabelText("Issue estimation").click();
+      await expect.element(page.getByRole("option").first()).toBeVisible();
+      const options = Array.from(document.querySelectorAll('[role="option"]')).map((o) =>
+        o.textContent?.trim(),
+      );
+      expect(options).toEqual([
+        "Not in use",
+        "Exponential (1, 2, 4, 8, 16 Points)",
+        "Fibonacci (1, 2, 3, 5, 8 Points)",
+        "Linear (1, 2, 3, 4, 5 Points)",
+        "T-Shirt (XS, S, M, L, XL)",
+      ]);
+    });
+
+    it("escolher uma salva { id, estimation } e o Undo regrava none", async () => {
+      const screen = await renderAdmin();
+
+      await screen.getByLabelText("Issue estimation").click();
+      await page.getByRole("option", { name: "Fibonacci (1, 2, 3, 5, 8 Points)" }).click();
+
+      await vi.waitFor(() =>
+        expect(updateTeam).toHaveBeenCalledWith({ id: team.id, estimation: "fibonacci" }),
+      );
+      await expect.element(screen.getByText("Saved", { exact: true })).toBeVisible();
+      await screen.getByRole("button", { name: "Undo" }).click();
+      await vi.waitFor(() => expect(updateTeam).toHaveBeenCalledTimes(2));
+      expect(updateTeam).toHaveBeenLastCalledWith({ id: team.id, estimation: "none" });
+    });
+  });
+
+  describe("Create issues by email", () => {
+    const toggle = (s: Screen) => s.getByRole("switch", { name: "Enable issue creation by email" });
+    const ADDRESS = "vyzer-4c7872ac31b0@intake.vyzer.app.br";
+
+    it("desligado não mostra o endereço; ligar salva { issueEmailEnabled: true }", async () => {
+      const screen = await renderAdmin();
+
+      await expect.element(screen.getByText(ADDRESS)).not.toBeInTheDocument();
+      await toggle(screen).click();
+
+      await vi.waitFor(() =>
+        expect(updateTeam).toHaveBeenCalledWith({ id: team.id, issueEmailEnabled: true }),
+      );
+      await expect.element(screen.getByText(ADDRESS)).toBeVisible();
+      await expect.element(screen.getByText(/not available yet/)).toBeVisible();
+    });
+
+    it("Copy escreve o endereço na área de transferência e vira Copied", async () => {
+      team = { ...team, issueEmailEnabled: true };
+      const writeText = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
+      const screen = await renderAdmin();
+
+      await screen.getByRole("button", { name: "Copy" }).click();
+
+      expect(writeText).toHaveBeenCalledWith(ADDRESS);
+      await expect.element(screen.getByRole("button", { name: "Copied" })).toBeVisible();
+      writeText.mockRestore();
+    });
+
+    it("Reset abre o Confirm com foco em Cancel; Cancel não chama", async () => {
+      team = { ...team, issueEmailEnabled: true };
+      const screen = await renderAdmin();
+
+      await screen.getByRole("button", { name: "Reset", exact: true }).click();
+      await expect
+        .element(screen.getByRole("alertdialog", { name: "Reset email address?" }))
+        .toBeVisible();
+      await expect.element(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+      await screen.getByRole("button", { name: "Cancel" }).click();
+
+      await expect.element(screen.getByRole("alertdialog")).not.toBeInTheDocument();
+      expect(resetTeamIssueEmail).not.toHaveBeenCalled();
+    });
+
+    it("confirmar chama resetTeamIssueEmail({ id }) e mostra Email address reset", async () => {
+      team = { ...team, issueEmailEnabled: true };
+      const screen = await renderAdmin();
+
+      await screen.getByRole("button", { name: "Reset", exact: true }).click();
+      await screen.getByRole("button", { name: "Reset address" }).click();
+
+      await vi.waitFor(() => expect(resetTeamIssueEmail).toHaveBeenCalledWith({ id: team.id }));
+      await expect.element(screen.getByText("Email address reset")).toBeVisible();
+    });
+  });
+
+  describe("Timezone", () => {
+    it("mostra o fuso atual e troca por busca, salvando { id, timezone }", async () => {
+      const screen = await renderAdmin();
+
+      const trigger = screen.getByRole("button", { name: "Timezone" });
+      await expect.element(trigger).toBeVisible();
+      await expect.element(trigger).toHaveTextContent(/GMT-3:00 – Brasilia/);
+      await trigger.click();
+      await page.getByPlaceholder("Search timezones…").fill("Tokyo");
+      // O rótulo é o fuso por extenso (GMT+9:00 – Japan Time); "Tokyo" só casa pelo nome IANA.
+      await page.getByRole("option").first().click();
+
+      await vi.waitFor(() =>
+        expect(updateTeam).toHaveBeenCalledWith({ id: team.id, timezone: "Asia/Tokyo" }),
+      );
+    });
+  });
+
+  describe("Other", () => {
+    it("Enable detailed issue history salva { id, detailedIssueHistory: true } com Saved", async () => {
+      const screen = await renderAdmin();
+
+      await screen.getByRole("switch", { name: "Enable detailed issue history" }).click();
+
+      await vi.waitFor(() =>
+        expect(updateTeam).toHaveBeenCalledWith({ id: team.id, detailedIssueHistory: true }),
+      );
+      await expect.element(screen.getByText("Saved", { exact: true })).toBeVisible();
+    });
+  });
+
+  it("não-admin: os novos controles ficam desabilitados e o Reset some", async () => {
+    team = { ...team, issueEmailEnabled: true };
+    fetchCurrent.mockResolvedValue(current("member"));
+    const screen = await render(<Harness />);
+
+    await expect.element(nameField(screen)).toBeDisabled();
+    await expect.element(screen.getByLabelText("Issue estimation")).toBeDisabled();
+    await expect
+      .element(screen.getByRole("switch", { name: "Enable issue creation by email" }))
+      .toBeDisabled();
+    await expect
+      .element(screen.getByRole("switch", { name: "Enable detailed issue history" }))
+      .toBeDisabled();
+    await expect.element(screen.getByRole("button", { name: "Timezone" })).toBeDisabled();
+    await expect.element(screen.getByRole("button", { name: "Copy" })).toBeVisible();
+    await expect
+      .element(screen.getByRole("button", { name: "Reset", exact: true }))
       .not.toBeInTheDocument();
     expect(updateTeam).not.toHaveBeenCalled();
   });

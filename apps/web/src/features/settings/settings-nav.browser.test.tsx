@@ -22,6 +22,7 @@ vi.mock("@/services/teams", () => ({
   deleteTeamMutationOptions: () => mutationOptions({ mutationFn: async () => ({}) }),
   createTeamMutationOptions: () => mutationOptions({ mutationFn: async () => ({}) }),
   updateTeamMutationOptions: () => mutationOptions({ mutationFn: async () => ({}) }),
+  resetTeamIssueEmailMutationOptions: () => mutationOptions({ mutationFn: async () => ({}) }),
   teamQueryOptions: (slug: string) =>
     queryOptions({ queryKey: ["team", slug], queryFn: async () => ({}) }),
   teamMembersQueryOptions: (id: string) =>
@@ -36,6 +37,11 @@ function team(name: string, slug: string, color: "cyan" | "purple"): TeamListIte
     key: name.slice(0, 3).toUpperCase(),
     icon: { kind: "icon", name: color === "cyan" ? "Navigation" : "Layers", color },
     description: null,
+    timezone: "America/Sao_Paulo",
+    estimation: "none",
+    detailedIssueHistory: false,
+    issueEmailEnabled: false,
+    issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
     createdAt: "2026-09-29T12:00:00.000Z",
     updatedAt: "2026-09-29T12:00:00.000Z",
     memberCount: 1,

@@ -25,6 +25,11 @@ const TEAM: Team = {
   key: "VYZ",
   icon: { kind: "icon", name: "Layers", color: "purple" },
   description: null,
+  timezone: "America/Sao_Paulo",
+  estimation: "none",
+  detailedIssueHistory: false,
+  issueEmailEnabled: false,
+  issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
   createdAt: "2026-08-15T12:00:00.000Z",
   updatedAt: "2026-08-15T12:00:00.000Z",
 };

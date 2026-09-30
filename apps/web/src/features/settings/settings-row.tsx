@@ -5,6 +5,7 @@
  */
 import { useId, type ReactNode } from "react";
 import { FormLabel, FormMessage, HelperText } from "@vyzer/design-system/components";
+import { cn } from "@vyzer/design-system/cn";
 
 export function SettingsRow({
   label,
@@ -36,10 +37,24 @@ export function SettingsRow({
   );
 }
 
-export function SettingsGroup({ title, children }: { title?: string; children: ReactNode }) {
+export function SettingsGroup({
+  title,
+  description,
+  children,
+}: {
+  title?: string;
+  /** Subtítulo do grupo, sob o título (ex.: "Used for team schedules, dates…"). */
+  description?: string;
+  children: ReactNode;
+}) {
   return (
     <section className="flex flex-col gap-1 pt-8 first:pt-0">
-      {title && <h2 className="type-heading-3 pb-2 text-primary">{title}</h2>}
+      {title && (
+        <h2 className={cn("type-heading-3 text-primary", description ? "pb-0" : "pb-2")}>
+          {title}
+        </h2>
+      )}
+      {description && <p className="pb-2 text-body-sm text-secondary">{description}</p>}
       <div className="flex flex-col rounded-container border border-subtle px-4">{children}</div>
     </section>
   );
