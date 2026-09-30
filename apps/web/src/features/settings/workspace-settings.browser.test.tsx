@@ -377,7 +377,7 @@ describe("WorkspaceSettingsPage", () => {
     const toggle = (screen: Awaited<ReturnType<typeof render>>, name: string) =>
       screen.getByRole("radio", { name });
 
-    it("sem logo abre em Icon com o IconPicker; com logo abre em Upload logo com prévia", async () => {
+    it("sem logo abre em Icon com o IconPicker; com logo abre em Logo com prévia", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent());
       const screen = await render(<Harness />);
       await expect.element(toggle(screen, "Icon")).toBeChecked();
@@ -388,7 +388,7 @@ describe("WorkspaceSettingsPage", () => {
 
       fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "admin", LOGO));
       const withLogo = await render(<Harness />);
-      await expect.element(toggle(withLogo, "Upload logo")).toBeChecked();
+      await expect.element(toggle(withLogo, "Logo")).toBeChecked();
       await expect.element(withLogo.getByRole("button", { name: "Change" })).toBeVisible();
       await expect.element(withLogo.getByRole("button", { name: "Remove" })).toBeVisible();
       expect(document.querySelector(`img[src="${LOGO}"]`)).not.toBeNull();
@@ -397,10 +397,10 @@ describe("WorkspaceSettingsPage", () => {
         .not.toBeInTheDocument();
     });
 
-    it("alternar para Upload logo sem logo não chama update", async () => {
+    it("alternar para Logo sem logo não chama update", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent());
       const screen = await render(<Harness />);
-      await toggle(screen, "Upload logo").click();
+      await toggle(screen, "Logo").click();
 
       await expect.element(screen.getByRole("button", { name: "Upload" })).toBeVisible();
       expect(saveWorkspace).not.toHaveBeenCalled();
@@ -411,7 +411,7 @@ describe("WorkspaceSettingsPage", () => {
       saveWorkspace.mockResolvedValue({});
       uploadLogo.mockResolvedValue({ logoUrl: LOGO });
       const screen = await render(<Harness />);
-      await toggle(screen, "Upload logo").click();
+      await toggle(screen, "Logo").click();
 
       const file = new File(["x"], "logo.png", { type: "image/png" });
       await userEvent.upload(screen.getByLabelText("Workspace logo file"), file);
@@ -427,7 +427,7 @@ describe("WorkspaceSettingsPage", () => {
       fetchCurrent.mockResolvedValue(makeCurrent());
       uploadLogo.mockRejectedValue(new Error("Choose a PNG, JPG, WebP, or SVG image."));
       const screen = await render(<Harness />);
-      await toggle(screen, "Upload logo").click();
+      await toggle(screen, "Logo").click();
 
       await userEvent.upload(
         screen.getByLabelText("Workspace logo file"),

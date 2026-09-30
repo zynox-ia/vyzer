@@ -5,7 +5,7 @@
  * desabilitado: quatro cartões, cada linha com rótulo e ajuda à esquerda e controle à direita
  * (input de 256 px), como o `SettingsGroup`/`SettingsRow` de Preferences.
  *
- * - Sem título: Logo (alternador Icon com `IconPicker` / Upload logo, ver `WorkspaceLogoField`),
+ * - Sem título: Logo (alternador Icon com `IconPicker` / Logo, ver `WorkspaceLogoField`),
  *   Name e URL (prefixo + slug).
  * - Time & region: primeiro mês do ano fiscal (Select) e Region, só leitura.
  * - Member onboarding: Welcome message e Default home view, sempre desabilitados com "Available
@@ -84,10 +84,10 @@ type LogoMode = "icon" | "logo";
 const LOGO_TYPES = "image/png,image/jpeg,image/webp,image/svg+xml";
 
 /**
- * Linha "Logo": alternador Icon / Upload logo (aprovado 29/09, "melhor dos dois mundos"). Icon é o
- * IconPicker; Upload logo envia uma imagem, mostra a prévia e a grava no Workspace. Com um logo
+ * Linha "Logo": alternador Icon / Logo (aprovado 29/09, "melhor dos dois mundos"). Icon é o
+ * IconPicker; Logo envia uma imagem, mostra a prévia e a grava no Workspace. Com um logo
  * gravado ele aparece no lugar do ícone na sidebar; voltar para Icon remove o logo (o Undo do
- * toast "Saved" o restaura). Escolher Upload logo sozinho não muda nada até a imagem subir.
+ * toast "Saved" o restaura). Escolher Logo sozinho não muda nada até a imagem subir.
  */
 function WorkspaceLogoField({
   canEdit,
@@ -125,12 +125,9 @@ function WorkspaceLogoField({
     });
   };
 
-  const description =
-    mode === "icon" && canEdit
-      ? "Shown next to the workspace name in the sidebar"
-      : canEdit
-        ? "Recommended size is 256x256px. PNG, JPG, WebP or SVG, up to 5 MB."
-        : "Shown next to the workspace name in the sidebar";
+  const description = canEdit
+    ? "Recommended size is 256x256px."
+    : "Shown next to the workspace name in the sidebar";
 
   return (
     <SettingsRow label="Logo" description={description} error={uploadError}>
@@ -138,14 +135,14 @@ function WorkspaceLogoField({
         !canEdit ? (
           <WorkspaceMark icon={icon} logoUrl={logoUrl} className="size-icon-md" />
         ) : (
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-start gap-2">
             <SegmentedControl<LogoMode>
               label="Workspace logo type"
               value={mode}
               onValueChange={changeMode}
               options={[
                 { value: "icon", label: "Icon" },
-                { value: "logo", label: "Upload logo" },
+                { value: "logo", label: "Logo" },
               ]}
             />
             {mode === "icon" ? (
