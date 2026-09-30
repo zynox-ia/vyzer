@@ -46,7 +46,11 @@ export function SettingsRoute() {
       backTo={readLastShellPath("/projects")}
       groups={groups}
       contentWidth={
-        pathname === "/settings/members" || pathname === "/settings/teams" ? "wide" : "narrow"
+        pathname === "/settings/members" ||
+        pathname === "/settings/teams" ||
+        /^\/settings\/teams\/[^/]+\/members$/.test(pathname)
+          ? "wide"
+          : "narrow"
       }
     >
       <Outlet />
@@ -58,3 +62,7 @@ export { PreferencesPage } from "./preferences";
 export { MembersPage } from "./members";
 export { TeamsPage } from "./teams";
 export { TeamCreatePage } from "./team-create";
+export { TeamSettingsLayout } from "./team-settings/layout";
+export { TeamOverviewPage } from "./team-settings/overview";
+export { TeamGeneralPage } from "./team-settings/general";
+export { TeamMembersPage } from "./team-settings/members";

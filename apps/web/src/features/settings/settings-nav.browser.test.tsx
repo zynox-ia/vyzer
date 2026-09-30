@@ -21,6 +21,11 @@ vi.mock("@/services/teams", () => ({
   // SettingsRoute importa as páginas de Teams pelo mesmo módulo.
   deleteTeamMutationOptions: () => mutationOptions({ mutationFn: async () => ({}) }),
   createTeamMutationOptions: () => mutationOptions({ mutationFn: async () => ({}) }),
+  updateTeamMutationOptions: () => mutationOptions({ mutationFn: async () => ({}) }),
+  teamQueryOptions: (slug: string) =>
+    queryOptions({ queryKey: ["team", slug], queryFn: async () => ({}) }),
+  teamMembersQueryOptions: (id: string) =>
+    queryOptions({ queryKey: ["team-members", id], queryFn: async () => [] }),
 }));
 
 function team(name: string, slug: string, color: "cyan" | "purple"): TeamListItem {

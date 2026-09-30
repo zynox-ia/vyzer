@@ -11,6 +11,10 @@ import {
   PreferencesPage,
   SettingsRoute,
   TeamCreatePage,
+  TeamGeneralPage,
+  TeamMembersPage,
+  TeamOverviewPage,
+  TeamSettingsLayout,
   TeamsPage,
 } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
@@ -114,8 +118,15 @@ export const router = createBrowserRouter([
       { path: "members", Component: MembersPage },
       { path: "teams", Component: TeamsPage },
       { path: "teams/new", Component: TeamCreatePage },
-      // Configuração do Team (2.2): placeholder até a sub-etapa 2.2 construir a tela.
-      { path: "teams/:team", element: <SettingsPlaceholderPage title="Team settings" /> },
+      {
+        path: "teams/:team",
+        Component: TeamSettingsLayout,
+        children: [
+          { index: true, Component: TeamOverviewPage },
+          { path: "general", Component: TeamGeneralPage },
+          { path: "members", Component: TeamMembersPage },
+        ],
+      },
       ...settingsPlaceholderPages.map(({ path, title }) => ({
         path,
         element: <SettingsPlaceholderPage title={title} />,

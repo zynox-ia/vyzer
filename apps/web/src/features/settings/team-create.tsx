@@ -99,6 +99,7 @@ export function TeamCreatePage() {
                 <TextInput
                   id={id}
                   value={name}
+                  maxLength={48}
                   invalid={Boolean(nameError)}
                   placeholder="Team name"
                   autoComplete="off"
@@ -117,6 +118,7 @@ export function TeamCreatePage() {
               <TextInput
                 id={id}
                 value={key}
+                maxLength={7}
                 invalid={Boolean(keyError)}
                 autoComplete="off"
                 onChange={(event) => {

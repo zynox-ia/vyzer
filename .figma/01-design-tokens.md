@@ -278,3 +278,10 @@ Sidebar → menu "···" do Team (2.3), medido ao vivo no Linear (`zynox-dev`, 
 
 - **Chevron:** no Linear ele fica junto do nome e nunca some (a linha encolhe para abrir espaço ao "···"); aqui fica no fim da linha e some enquanto o "···" aparece (spec 2.3: sem dois controles empilhados).
 - **Itens:** só "Team settings" e "Copy URL", sem atalhos (D11); painel de 176 px em vez dos 248 px do Linear, que vêm dos itens adiados.
+
+Settings → Administration → Teams (2.1) e Team settings (2.2), Linear ao vivo (`zynox-dev`, 29/09):
+
+- **Aba/filtro "Active" da tabela de Teams:** omitido, o mesmo raciocínio de Members — sem Team arquivado ainda, não há segundo grupo para filtrar; volta junto com o arquivamento (Retire/arquivar, fora do escopo).
+- **Ordem dos Teams na sidebar:** vem da API (o Linear mostra "Vyzer, Zynox", aqui "Zynox, Vyzer"); a spec não define critério, então fica a ordem do servidor.
+- **Team settings, hub do Overview:** reduzido a General, Members e Danger zone (D9); os cartões de Slack, labels, templates, workflow, cycles e AI entram com os seus domínios.
+- **Team → General:** Name (com o ícone), Identifier e Description; Estimates, Create issues by email, Timezone e Other ficam pendentes da confirmação item a item (D10). Salva sozinho, com toast "Saved" e Undo, como o Workspace.
