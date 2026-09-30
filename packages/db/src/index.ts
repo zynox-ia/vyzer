@@ -436,6 +436,30 @@ export async function checkConnection(db: Db): Promise<void> {
 
 export { MEMBER_ID, VYZER_TEAM_ID, WORKSPACE_ID, WORKSPACE_REGION, ZYNOX_TEAM_ID } from "./seed";
 export {
+  addCustomerDomainRule,
+  createCustomerStatus,
+  createCustomerTier,
+  deleteCustomerStatus,
+  deleteCustomerTier,
+  defaultCustomerStatuses,
+  getOrCreateCustomerSettings,
+  listCustomerDomainRules,
+  listCustomerStatuses,
+  listCustomerTiers,
+  removeCustomerDomainRule,
+  reorderCustomerStatuses,
+  reorderCustomerTiers,
+  updateCustomerSettings,
+  updateCustomerStatus,
+  updateCustomerTier,
+  type CustomerSettingsPatch,
+  type CustomerStatusInput,
+  type CustomerStatusPatch,
+  type CustomerTierInput,
+  type CustomerTierPatch,
+  type DeleteCustomerStatusResult,
+} from "./customer-settings";
+export {
   DEFAULT_WORKFLOW_STATUSES,
   VYZER_WORKFLOW_STATUSES,
   WorkflowStatusRuleError,
@@ -493,6 +517,10 @@ export {
 } from "./notifications";
 export {
   apiKey,
+  customerDomainRule,
+  customerSettings,
+  customerStatus,
+  customerTier,
   issue,
   issueEvent,
   issueLink,

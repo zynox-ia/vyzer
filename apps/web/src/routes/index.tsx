@@ -20,6 +20,7 @@ import {
   TeamStatusesPage,
 } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
+import { CustomerRequestsPage } from "@/features/settings/customer-requests";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
 import { ApiKeysTablePage } from "@/features/settings/api-keys-table";
 import { ApiSettingsPage } from "@/features/settings/api-settings";
@@ -70,7 +71,6 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
   { path: "loops", title: "Loops" },
   { path: "initiatives", title: "Initiatives" },
   { path: "documents", title: "Documents" },
-  { path: "customer-requests", title: "Customer requests" },
   { path: "releases", title: "Releases" },
   { path: "pulse", title: "Pulse" },
   { path: "asks", title: "Asks" },
@@ -135,6 +135,7 @@ export const router = createBrowserRouter([
       { path: "security/api-keys/new", Component: ApiKeyCreatePage },
       { path: "security/api-keys/:keyId", Component: ApiKeyDetailPage },
       { path: "security/api-keys/:keyId/edit", Component: ApiKeyEditPage },
+      { path: "customer-requests", Component: CustomerRequestsPage },
       { path: "teams", Component: TeamsPage },
       { path: "teams/new", Component: TeamCreatePage },
       {

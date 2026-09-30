@@ -218,6 +218,101 @@ export const teamMember = pgTable(
   (table) => [primaryKey({ columns: [table.teamId, table.memberId] })],
 );
 
+export const customerSettings = pgTable(
+  "customer_settings",
+  {
+    workspaceId: uuid("workspace_id")
+      .primaryKey()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    enabled: boolean("enabled").notNull().default(false),
+    defaultTeamId: uuid("default_team_id").references(() => team.id, { onDelete: "set null" }),
+    revenuePeriod: text("revenue_period").$type<"annual" | "monthly">().notNull().default("annual"),
+    revenueCurrency: text("revenue_currency").notNull().default("USD"),
+    attributesDataSource: text("attributes_data_source"),
+    manualEditsEnabled: boolean("manual_edits_enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check(
+      "customer_settings_revenue_period_check",
+      sql`${table.revenuePeriod} in ('annual', 'monthly')`,
+    ),
+    check("customer_settings_revenue_currency_check", sql`${table.revenueCurrency} ~ '^[A-Z]{3}$'`),
+  ],
+);
+
+export const customerStatus = pgTable(
+  "customer_status",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color").notNull(),
+    position: integer("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("customer_status_workspace_name_unique").on(
+      table.workspaceId,
+      sql`lower(${table.name})`,
+    ),
+    check("customer_status_name_not_empty", sql`length(trim(${table.name})) > 0`),
+    check("customer_status_position_nonnegative", sql`${table.position} >= 0`),
+  ],
+);
+
+export const customerTier = pgTable(
+  "customer_tier",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color").notNull(),
+    position: integer("position").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("customer_tier_workspace_name_unique").on(
+      table.workspaceId,
+      sql`lower(${table.name})`,
+    ),
+    check("customer_tier_name_not_empty", sql`length(trim(${table.name})) > 0`),
+    check("customer_tier_position_nonnegative", sql`${table.position} >= 0`),
+  ],
+);
+
+export const customerDomainRule = pgTable(
+  "customer_domain_rule",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<"excluded" | "generic">().notNull(),
+    value: text("value").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("customer_domain_rule_workspace_kind_value_unique").on(
+      table.workspaceId,
+      table.kind,
+      table.value,
+    ),
+    check("customer_domain_rule_kind_check", sql`${table.kind} in ('excluded', 'generic')`),
+    check(
+      "customer_domain_rule_value_normalized",
+      sql`${table.value} = lower(${table.value}) and length(trim(${table.value})) > 0`,
+    ),
+  ],
+);
+
 export const label = pgTable(
   "label",
   {

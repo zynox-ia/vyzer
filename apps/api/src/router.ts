@@ -76,6 +76,7 @@ import {
   writeScoped,
   workspaceScoped,
 } from "./orpc";
+import { createCustomerSettingsRouter } from "./customer-settings";
 
 export function createRouter(resolveContext?: WorkspaceContextResolver) {
   const middleware = resolveContext
@@ -83,6 +84,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
     : { workspaceResolved, workspaceScoped, writeScoped, adminOnly };
 
   return base.router({
+    ...createCustomerSettingsRouter(middleware),
     health: middleware.workspaceScoped.health.handler(async ({ context }) => {
       await checkConnection(context.db);
       return { status: "ok" as const, database: "ok" as const };
