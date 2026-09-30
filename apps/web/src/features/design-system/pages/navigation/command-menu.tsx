@@ -328,8 +328,8 @@ export function Page() {
         ),
         anatomy: (
           <p className="max-w-prose text-body-md text-secondary">
-            Janela de até 640 px a 15% do topo, sobre bg-scrim, com a superfície do menu
-            &quot;/&quot; (raio 10, borda border-strong, bg-popover, sombra md). Busca de 48 px com
+            Janela de até 640 px centralizada na tela, sobre bg-scrim, com a superfície do menu
+            &quot;/&quot; (raio 10, borda border-strong, bg-surface, sombra md). Busca de 48 px com
             texto de 16 px e, acima dela, a trilha em chips: a issue aberta (ID · título) e as
             páginas abertas; hairline border-default. Lista de até 400 px com as linhas do menu
             &quot;/&quot;: 36 px, slot de ícone de 20, rótulo de 13 px, atalho em Kbd à direita e

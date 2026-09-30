@@ -33,10 +33,12 @@ import { menuStyles } from "./menu";
 /** Classes do menu, exportadas para montar a aparência fora do cmdk (documentação). */
 export const commandMenuStyles = {
   /**
-   * Superfície do menu "/" (raio 10, borda forte, bg-popover, sombra md: Foundations → Shadows,
-   * "command menu") sobre a base do Dialog, com 640 px de largura máxima.
+   * Superfície do menu "/" (raio 10, borda forte, bg-surface, sombra md: Foundations → Shadows,
+   * "command menu") sobre a base do Dialog, com 640 px de largura máxima. bg-surface (não mais
+   * bg-popover) e centralizado (não mais "top") desde 30/09, pedido do responsável: a superfície
+   * ficava um degrau mais clara que a dos modais comuns e a janela parecia fora do centro.
    */
-  surface: "max-w-160 overflow-hidden rounded-container bg-popover shadow-md",
+  surface: "max-w-160 overflow-hidden rounded-container bg-surface shadow-md",
   header: "flex flex-col border-b border-default px-4",
   trail: "flex flex-wrap gap-1 pt-3",
   /** Busca de 48 px com texto de 16 px: a entrada principal da tela. */
@@ -254,7 +256,7 @@ export function CommandMenu({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPanel
-        placement="top"
+        placement="center"
         portal={portal}
         aria-describedby={undefined}
         className={commandMenuStyles.surface}

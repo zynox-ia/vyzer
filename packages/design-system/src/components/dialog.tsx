@@ -25,13 +25,15 @@ import { focusFirst } from "./popover";
 /**
  * Classes do Dialog, exportadas para montar a aparência fora do Radix (documentação).
  * - overlay: fundo escurecido que também centraliza e rola a janela (padrão "scrollable overlay"
- *   do Radix), com 16 px de folga até a borda da tela.
+ *   do Radix), com 16 px de folga até a borda da tela. Desfoque de 4 px (backdrop-blur-sm) no
+ *   conteúdo por trás, pedido do responsável em 30/09 (efeito "vidro fosco" nos modais e no
+ *   Command Menu, que reaproveita este overlay).
  * - content: raio de superfície (12), borda forte, fundo de card (bg-surface) e sombra lg, a
  *   maior elevação (§9). Entra com a escala de modal (240 ms) e sai junto com o fundo (140 ms).
  */
 export const dialogStyles = {
   overlay:
-    "fixed inset-0 z-modal flex overflow-y-auto bg-scrim p-4 data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out",
+    "fixed inset-0 z-modal flex overflow-y-auto bg-scrim backdrop-blur-sm p-4 data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out",
   content:
     "relative flex w-full flex-col rounded-surface border border-strong bg-surface text-primary shadow-lg outline-none data-[state=open]:animate-dialog-in data-[state=closed]:animate-scale-out",
   header: "flex flex-col gap-1 px-5 py-4",

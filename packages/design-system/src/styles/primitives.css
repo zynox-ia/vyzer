@@ -24,6 +24,32 @@
   --vz-warm-100: #f0eee6;
   --vz-warm-50: #faf9f5;
 
+  /* Neutros frios (leve azul), só para o tema escuro: mesmos L e C de cada degrau warm
+   * correspondente, matiz girado de ~107° para 265° (medido ao vivo no Linear — sidebar,
+   * painel e divisor convergem em H 264,6–265,1° nas superfícies escuras dele, com o mesmo
+   * L e o mesmo croma ~0 que os nossos, ou seja, a diferença real nunca foi profundidade, só
+   * direção do matiz). Decisão do responsável 2026-09-30: trocar o "marrom" do escuro por um
+   * preto mais frio e premium. Não usado no tema claro nem nas superfícies "inverse"/botão
+   * primário do escuro, que ficam de propósito com o creme quente (ADR-0013). */
+  --vz-cool-990: #090a0b;
+  --vz-cool-975: #0d0e0f;
+  --vz-cool-950: #131415;
+  --vz-cool-925: #191a1c;
+  --vz-cool-900: #1e1e1f;
+  --vz-cool-850: #252628;
+  --vz-cool-800: #2f3032;
+  --vz-cool-750: #3b3d40;
+  --vz-cool-600: #5b5d61;
+  --vz-cool-580: #64676c;
+  --vz-cool-550: #797c82;
+  --vz-cool-500: #83868c;
+  /* cool-400 (fg-secondary): L subiu de 0,750 para 0,788 sobre o giro de matiz original — a
+   * mesma L do warm-400 batia 8,9:1 WCAG mas só Lc 55–58 em APCA (meta 60, skill §3) contra
+   * as superfícies do escuro; o WCAG do tema escuro superestima esse par, como a skill avisa.
+   * Novo valor: pior caso Lc 60,5, WCAG sobe para 10,2:1 contra bg-app. */
+  --vz-cool-400: #b6bac2;
+  --vz-cool-50: #f7f9fd;
+
   /* Terracota (#d97757). L ajustado por tema: indicador ≥ 3:1; como texto ≥ 4,5:1 */
   --vz-terracotta-dark: oklch(0.672 0.131 38.8);
   --vz-terracotta-light: oklch(0.597 0.131 38.8);
@@ -80,4 +106,8 @@
   --vz-overlay-ink: 20 20 19;
   /* Bege da seleção no claro: a 20% sobre #faf9f5 resulta em #e3dacc (seleção atual) */
   --vz-overlay-beige: 135 94 40;
+  /* Overlay frio (cool-50), só para o tema escuro: o branco do hover/seleção/anel de relevo
+   * era o warm-50 (quente) mesmo depois do giro de matiz das superfícies — o anel ficava
+   * "estranho" contra o fundo frio, perdendo definição (achado do responsável, 30/09). */
+  --vz-overlay-cool: 247 249 253;
 }

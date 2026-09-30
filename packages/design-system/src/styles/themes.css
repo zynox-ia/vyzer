@@ -14,20 +14,29 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Superfícies opacas: elevação = superfície mais clara (skill §3) */
-  --bg-app: var(--vz-warm-990);
-  --bg-sidebar: var(--vz-warm-975);
-  --bg-panel: var(--vz-warm-950);
-  --bg-surface: var(--vz-warm-925);
-  --bg-subtle: var(--vz-warm-925);
-  --bg-popover: var(--vz-warm-900);
-  --bg-control: var(--vz-warm-925);
-  --bg-input: var(--vz-warm-925);
-  --bg-control-strong: var(--vz-warm-900);
+  /* Superfícies opacas: elevação = superfície mais clara (skill §3). Neutros frios (--vz-cool-*):
+   * pedido do responsável 2026-09-30 para tirar o "marrom" do escuro, calibrado ao vivo contra
+   * o Linear — mesmo L e C de antes, só o matiz girou de quente para frio. */
+  --bg-app: var(--vz-cool-990);
+  --bg-sidebar: var(--vz-cool-975);
+  --bg-panel: var(--vz-cool-950);
+  --bg-surface: var(--vz-cool-925);
+  --bg-subtle: var(--vz-cool-925);
+  /* Um degrau mais escuro que antes (era cool-900): pedido do responsável, 30/09 — os menus
+   * suspensos (dropdown, listbox, icon picker, toast, tooltip) ficavam claros demais. Agora no
+   * mesmo tom de bg-surface, como os modais e o Command Menu já usam. */
+  --bg-popover: var(--vz-cool-925);
+  --bg-control: var(--vz-cool-925);
+  --bg-input: var(--vz-cool-925);
+  --bg-control-strong: var(--vz-cool-900);
   --bg-inverse: var(--vz-warm-50);
   --bg-inverse-hover: var(--vz-warm-150);
   --bg-inverse-pressed: var(--vz-warm-250);
-  --bg-scrim: rgb(var(--vz-shadow-ink) / 0.7);
+  /* Preto puro (não o grafite quente --vz-shadow-ink, que era o warm-950 disfarçado): o scrim
+   * ficava com um resíduo do palette antigo por trás dos modais/Command Menu, ainda mais visível
+   * agora que o resto do escuro é frio. 0,85 (primeira tentativa) ficou escuro demais, segundo o
+   * responsável; 0,75 é o meio-termo entre o 0,7 original (que ele achou "muito claro") e isso. */
+  --bg-scrim: rgb(var(--vz-shadow-black) / 0.75);
 
   /* Botão primário chapado (pedido do responsável: #f0eee6); hover um degrau abaixo */
   --bg-primary-button: var(--vz-warm-100);
@@ -36,41 +45,44 @@
    * 28/09, medido ao vivo no Linear — o painel dele não tem o anel claro). É a mesma camada de
    * baixo do --raised; --raised compõe esta variável em vez de repetir o valor. */
   --contact: 0 0.5px 1px 1px rgb(var(--vz-shadow-black) / 0.3);
-  /* Relevo (Figma 1:6366, 1:6404): anel de 1 px a 9% + contato curto. Borda de chips e botões */
-  --raised: 0 0 0 1px rgb(var(--vz-overlay-light) / 0.09), var(--contact);
+  /* Relevo (Figma 1:6366, 1:6404): anel de 1 px a 9% + contato curto. Borda de chips e botões.
+   * Overlay frio (--vz-overlay-cool) desde 30/09: o anel branco quente perdia definição contra
+   * as novas superfícies frias (achado do responsável). */
+  --raised: 0 0 0 1px rgb(var(--vz-overlay-cool) / 0.09), var(--contact);
 
-  /* Estados como camadas translúcidas: funcionam sobre qualquer superfície (skill §12) */
-  --bg-hover: rgb(var(--vz-overlay-light) / 0.04);
-  --bg-selected: rgb(var(--vz-overlay-light) / 0.07);
-  --bg-pressed: rgb(var(--vz-overlay-light) / 0.1);
+  /* Estados como camadas translúcidas: funcionam sobre qualquer superfície (skill §12).
+   * Overlay frio desde 30/09, pelo mesmo motivo do --raised acima. */
+  --bg-hover: rgb(var(--vz-overlay-cool) / 0.04);
+  --bg-selected: rgb(var(--vz-overlay-cool) / 0.07);
+  --bg-pressed: rgb(var(--vz-overlay-cool) / 0.1);
   /* Barra de rolagem dos componentes: discreta, um pouco mais visível no hover */
-  --scrollbar-thumb: rgb(var(--vz-overlay-light) / 0.12);
-  --scrollbar-thumb-hover: rgb(var(--vz-overlay-light) / 0.2);
+  --scrollbar-thumb: rgb(var(--vz-overlay-cool) / 0.12);
+  --scrollbar-thumb-hover: rgb(var(--vz-overlay-cool) / 0.2);
 
   /* Texto e ícones */
   --fg-primary: var(--vz-warm-50);
-  --fg-secondary: var(--vz-warm-400);
-  --fg-tertiary: var(--vz-warm-500);
+  --fg-secondary: var(--vz-cool-400);
+  --fg-tertiary: var(--vz-cool-500);
   /* Texto/ícone dos itens não selecionados da sidebar — cinza quase neutro (não vem da escala
    * warm, croma perto de zero), um degrau mais claro que fg-secondary. Aprovado pelo responsável
    * em 28/09, medido ao vivo contra o Linear (ele usa lch(60,6 1,2 272) ali). ≥ 4,5:1 sobre
    * bg-app confirmado (10,21:1). Só na sidebar — fg-secondary global não muda. */
   --fg-nav: #bababa;
   /* Placeholder: ≥ 4,5:1 nas superfícies onde há campos (WCAG 1.4.3 vale para placeholder) */
-  --fg-placeholder: var(--vz-warm-500);
+  --fg-placeholder: var(--vz-cool-500);
   --fg-inverse: var(--vz-warm-975);
 
   /* Bordas (hairline de 1 px) */
-  --line-subtle: var(--vz-warm-900);
-  --line-default: var(--vz-warm-850);
-  --line-strong: var(--vz-warm-800);
+  --line-subtle: var(--vz-cool-900);
+  --line-default: var(--vz-cool-850);
+  --line-strong: var(--vz-cool-800);
   /* Borda de controles de formulário (input, checkbox, radio, switch): ≥ 3:1 também sobre a
    * seleção (checkbox numa linha selecionada); warm-575 dava 2,8:1 ali */
-  --line-control: var(--vz-warm-550);
+  --line-control: var(--vz-cool-550);
   /* Hover de controle: um degrau mais forte que a borda de controle */
-  --line-control-hover: var(--vz-warm-500);
+  --line-control-hover: var(--vz-cool-500);
   /* Borda de campo de texto (input, text area, select): Figma 13:2010, #2f3033 em 1 px */
-  --line-field: var(--vz-warm-800);
+  --line-field: var(--vz-cool-800);
 
   /* Acento terracota: foco, indicador ativo da sidebar, contadores de destaque */
   --accent: var(--vz-terracotta-dark);
