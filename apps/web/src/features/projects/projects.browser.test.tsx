@@ -12,15 +12,65 @@
  *   Issues como colunas não ordenáveis.
  * - Navegação da lista para o projeto pelo `href` do link do nome.
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
+import { useState } from "react";
+import { queryOptions, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import type { TeamListItem } from "@vyzer/contract";
 import { ToastProvider } from "@vyzer/design-system/components";
 import "@/index.css";
 import { AppShell } from "@/layouts/app-shell";
 import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "./index";
 import { PROJECTS } from "./project-data";
+
+function apiTeam(
+  slug: string,
+  name: string,
+  key: string,
+  icon: TeamListItem["icon"],
+  id: string,
+): TeamListItem {
+  return {
+    id,
+    name,
+    slug,
+    key,
+    icon,
+    description: null,
+    timezone: "America/Sao_Paulo",
+    estimation: "none",
+    detailedIssueHistory: false,
+    issueEmailEnabled: false,
+    issueEmailAddress: "x@intake.vyzer.app.br",
+    createdAt: "2026-08-15T12:00:00.000Z",
+    updatedAt: "2026-08-15T12:00:00.000Z",
+    memberCount: 1,
+    issueCount: 0,
+  };
+}
+
+const API_TEAMS: TeamListItem[] = [
+  apiTeam(
+    "zynox",
+    "Zynox",
+    "ZYN",
+    { kind: "icon", name: "Navigation", color: "cyan" },
+    "11111111-1111-4111-8111-111111111111",
+  ),
+  apiTeam(
+    "vyzer",
+    "Vyzer",
+    "VYZ",
+    { kind: "icon", name: "Layers", color: "purple" },
+    "22222222-2222-4222-8222-222222222222",
+  ),
+];
+
+vi.mock("@/services/teams", () => ({
+  teamsQueryOptions: () => queryOptions({ queryKey: ["teams"], queryFn: async () => API_TEAMS }),
+}));
 
 /**
  * MemoryRouter não sincroniza com `window.location`: para ler a URL "de fora" (o que os testes de
@@ -43,19 +93,24 @@ function currentLocation(): string {
 
 /** A mesma composição de rotas de `routes/index.tsx` para a fatia de Projects. */
 function ProjectsHarness({ initialEntries }: { initialEntries: string[] }) {
+  const [client] = useState(
+    () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+  );
   return (
-    <ToastProvider>
-      <MemoryRouter initialEntries={initialEntries}>
-        <LocationProbe />
-        <Routes>
-          <Route path="/" element={<AppShell />}>
-            <Route path="projects" element={<ProjectsListPage />} />
-            <Route path="projects/:projectId" element={<ProjectDetailPage />} />
-            <Route path="teams/:team/projects" element={<TeamProjectsListPage />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </ToastProvider>
+    <QueryClientProvider client={client}>
+      <ToastProvider>
+        <MemoryRouter initialEntries={initialEntries}>
+          <LocationProbe />
+          <Routes>
+            <Route path="/" element={<AppShell />}>
+              <Route path="projects" element={<ProjectsListPage />} />
+              <Route path="projects/:projectId" element={<ProjectDetailPage />} />
+              <Route path="teams/:team/projects" element={<TeamProjectsListPage />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -101,7 +156,7 @@ describe("Split de rotas: /projects vs. /teams/:team/projects", () => {
 
     // Título acessível (sr-only, sem h2 visível: a linha 1 vira breadcrumb + estrela).
     await expect
-      .element(screen.getByRole("heading", { name: "Zynox › Projects", level: 1 }))
+      .element(screen.getByRole("heading", { name: "Zynox › Projects", level: 1, exact: true }))
       .toBeInTheDocument();
 
     // Breadcrumb: "Zynox" (link para o time) › "Projects", e a estrela de favorito. Escopado ao
@@ -127,6 +182,19 @@ describe("Split de rotas: /projects vs. /teams/:team/projects", () => {
         .element(screen.getByRole("link", { name: new RegExp(project.name) }))
         .not.toBeInTheDocument();
     }
+  });
+});
+
+describe("Team fora da API", () => {
+  it("slug que a API não devolve mostra o próprio slug como nome, sem quebrar", async () => {
+    document.documentElement.dataset.theme = "dark";
+    const screen = await render(<ProjectsHarness initialEntries={["/teams/ghost/projects"]} />);
+
+    await expect
+      .element(screen.getByRole("heading", { name: "ghost › Projects", level: 1, exact: true }))
+      .toBeInTheDocument();
+    const breadcrumb = document.querySelector('nav[aria-label="Breadcrumb"]');
+    expect(breadcrumb?.textContent?.trim()).toBe("ghostProjects");
   });
 });
 

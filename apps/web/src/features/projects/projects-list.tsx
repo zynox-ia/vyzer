@@ -78,7 +78,8 @@ import {
 import { cn } from "@vyzer/design-system/cn";
 import { Breadcrumbs } from "@/layouts/app-shell/top-bar";
 import { useAppShell } from "@/layouts/app-shell/use-app-shell";
-import { projectsForTeam, teamByslug, type Project } from "./project-data";
+import { projectsForTeam, type Project } from "./project-data";
+import { useWorkspaceTeam } from "./use-workspace-team";
 
 /** Rótulo e ícone de cada saúde (o mesmo texto e os mesmos ícones do `HealthBadge`, que não
  * exporta o mapa — os quatro valores lucide são os dela, badge.tsx). */
@@ -299,7 +300,7 @@ export function ProjectsListPage({
   // Mesmo mecanismo da estrela do projeto aberto (project-detail.tsx): estado na URL.
   const favorite = params.get("favorite") === "1";
   const setFavorite = (value: boolean) => updateParams({ favorite: value ? "1" : null });
-  const team = teamSlug ? teamByslug(teamSlug) : undefined;
+  const team = useWorkspaceTeam(teamSlug);
 
   const leadOptions: ListOption[] = Array.from(
     new Set(scoped.map((p) => p.lead).filter((l): l is string => Boolean(l))),
@@ -511,6 +512,6 @@ export function ProjectsListPage({
 /** `/teams/:team/projects`: a mesma lista, com o escopo do time da URL. */
 export function TeamProjectsListPage() {
   const { team } = useParams<{ team: string }>();
-  const found = team ? teamByslug(team) : undefined;
+  const found = useWorkspaceTeam(team);
   return <ProjectsListPage teamSlug={team} teamName={found?.name ?? team} />;
 }

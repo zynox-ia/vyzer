@@ -9,7 +9,7 @@ import type { Priority } from "@vyzer/design-system/icons";
 import type { ProjectIconValue } from "@vyzer/design-system/components";
 import type { ProjectStatusType } from "@vyzer/design-system/icons";
 
-export type Team = { slug: string; name: string; icon: ProjectIconValue };
+export type Team = { slug: string; name: string; icon: ProjectIconValue; key?: string };
 
 /**
  * Ícone + cor do time (como no Linear, medido ao vivo: o Zynox tem cor própria, ciano, fixa —
