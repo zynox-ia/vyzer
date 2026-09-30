@@ -18,12 +18,12 @@ import { render } from "vitest-browser-react";
 import { useState } from "react";
 import { queryOptions, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
-import type { TeamListItem } from "@vyzer/contract";
+import type { Project as ApiProject, TeamListItem } from "@vyzer/contract";
 import { ToastProvider } from "@vyzer/design-system/components";
 import "@/index.css";
 import { AppShell } from "@/layouts/app-shell";
 import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "./index";
-import { PROJECTS } from "./project-data";
+import { toProjectRow } from "./project-adapter";
 
 function apiTeam(
   slug: string,
@@ -72,6 +72,101 @@ vi.mock("@/services/teams", () => ({
   teamsQueryOptions: () => queryOptions({ queryKey: ["teams"], queryFn: async () => API_TEAMS }),
 }));
 
+const ZYNOX_TEAM = {
+  id: "11111111-1111-4111-8111-111111111111",
+  name: "Zynox",
+  slug: "zynox",
+  key: "ZYN",
+  icon: { kind: "icon", name: "Navigation", color: "cyan" },
+} as const;
+const VYZER_TEAM = {
+  id: "22222222-2222-4222-8222-222222222222",
+  name: "Vyzer",
+  slug: "vyzer",
+  key: "VYZ",
+  icon: { kind: "icon", name: "Layers", color: "purple" },
+} as const;
+
+let nextId = 0;
+function apiProject(
+  name: string,
+  team: typeof ZYNOX_TEAM | typeof VYZER_TEAM,
+  overrides: Partial<ApiProject> = {},
+): ApiProject {
+  nextId += 1;
+  return {
+    id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(nextId).padStart(12, "0")}`,
+    name,
+    icon: { kind: "icon", name: "Box", color: "grey" },
+    status: "started",
+    health: "none",
+    healthNote: null,
+    priority: null,
+    lead: null,
+    targetDate: null,
+    teams: [team],
+    issues: 0,
+    progress: 0,
+    createdAt: "2026-08-15T12:00:00.000Z",
+    updatedAt: "2026-08-15T12:00:00.000Z",
+    ...overrides,
+  };
+}
+
+const API_PROJECTS: ApiProject[] = [
+  apiProject("Aname CRM", ZYNOX_TEAM, { priority: "medium", issues: 106, progress: 4 }),
+  apiProject("Plugga OS", ZYNOX_TEAM, {
+    icon: { kind: "icon", name: "Box", color: "green" },
+    health: "off-track",
+    healthNote: "2w",
+    issues: 18,
+    progress: 8,
+  }),
+  apiProject("Mv School", ZYNOX_TEAM, { issues: 1, progress: 25 }),
+  apiProject("ZynCloud", ZYNOX_TEAM),
+  apiProject("Zynox OS", ZYNOX_TEAM, {
+    health: "on-track",
+    healthNote: "20min",
+    priority: "medium",
+    lead: { id: "33333333-3333-4333-8333-333333333333", name: "André Júnio" },
+    targetDate: "2026-12-18",
+    issues: 9,
+    progress: 33,
+  }),
+  apiProject("Teste", VYZER_TEAM, { status: "backlog" }),
+];
+
+/** As linhas que a tela mostra (o mesmo adaptador de produção), para as asserções. */
+const PROJECTS = API_PROJECTS.map(toProjectRow);
+
+const fetchProjects = vi.fn<(teamSlug?: string) => Promise<ApiProject[]>>();
+const fetchProject = vi.fn<(id: string) => Promise<ApiProject>>();
+
+vi.mock("@/services/projects", () => ({
+  projectsQueryOptions: (teamSlug?: string) =>
+    queryOptions({
+      queryKey: ["projects", teamSlug ?? null],
+      queryFn: () => fetchProjects(teamSlug),
+    }),
+  projectQueryOptions: (id: string) =>
+    queryOptions({ queryKey: ["project", id], queryFn: () => fetchProject(id) }),
+}));
+
+const withCode = (code: string) => Object.assign(new Error(code), { code });
+
+function resetProjectMocks() {
+  fetchProjects.mockReset();
+  fetchProjects.mockImplementation(async (teamSlug) =>
+    teamSlug ? API_PROJECTS.filter((p) => p.teams.some((t) => t.slug === teamSlug)) : API_PROJECTS,
+  );
+  fetchProject.mockReset();
+  fetchProject.mockImplementation(async (id) => {
+    const found = API_PROJECTS.find((p) => p.id === id);
+    if (!found) throw withCode("NOT_FOUND");
+    return found;
+  });
+}
+
 /**
  * MemoryRouter não sincroniza com `window.location`: para ler a URL "de fora" (o que os testes de
  * ordenação precisam) expomos o `pathname + search` atual num nó escondido, lido via
@@ -115,6 +210,7 @@ function ProjectsHarness({ initialEntries }: { initialEntries: string[] }) {
 }
 
 beforeEach(async () => {
+  resetProjectMocks();
   await page.viewport(1280, 720);
 });
 
@@ -198,6 +294,124 @@ describe("Team fora da API", () => {
   });
 });
 
+describe("Lista de Projects: dados da API", () => {
+  it("mostra Loading Projects. enquanto carrega e depois a tabela", async () => {
+    document.documentElement.dataset.theme = "dark";
+    let resolve: (projects: ApiProject[]) => void = () => {};
+    fetchProjects.mockReturnValue(new Promise((r) => (resolve = r)));
+    const screen = await render(<ProjectsHarness initialEntries={["/projects"]} />);
+
+    await expect.element(screen.getByText("Loading Projects.")).toBeInTheDocument();
+    resolve(API_PROJECTS);
+    await expect.element(screen.getByRole("link", { name: /Aname CRM/ })).toBeVisible();
+    await expect.element(screen.getByText("Loading Projects.")).not.toBeInTheDocument();
+  });
+
+  it("erro de leitura mostra o Alert e o Retry refaz e mostra a tabela", async () => {
+    document.documentElement.dataset.theme = "dark";
+    fetchProjects.mockRejectedValueOnce(new Error("network"));
+    const screen = await render(<ProjectsHarness initialEntries={["/projects"]} />);
+
+    await expect.element(screen.getByText("Could not load Projects")).toBeVisible();
+    await screen.getByRole("button", { name: "Retry" }).click();
+
+    await expect.element(screen.getByRole("link", { name: /Aname CRM/ })).toBeVisible();
+    await expect.element(screen.getByText("Could not load Projects")).not.toBeInTheDocument();
+    expect(fetchProjects).toHaveBeenCalledTimes(2);
+  });
+
+  it("lista vazia mostra No projects yet.", async () => {
+    document.documentElement.dataset.theme = "dark";
+    fetchProjects.mockResolvedValue([]);
+    const screen = await render(<ProjectsHarness initialEntries={["/projects"]} />);
+
+    await expect.element(screen.getByText("No projects yet.")).toBeVisible();
+  });
+
+  it("/teams/vyzer/projects chama a query com o teamSlug e mostra só os do time", async () => {
+    document.documentElement.dataset.theme = "dark";
+    const screen = await render(<ProjectsHarness initialEntries={["/teams/vyzer/projects"]} />);
+
+    await expect.element(screen.getByRole("link", { name: /Teste/ })).toBeVisible();
+    expect(fetchProjects).toHaveBeenCalledWith("vyzer");
+    await expect.element(screen.getByRole("link", { name: /Aname CRM/ })).not.toBeInTheDocument();
+  });
+
+  it("Target date mostra Dec 18 e a ordenação segue a ordem cronológica (ISO)", async () => {
+    document.documentElement.dataset.theme = "dark";
+    fetchProjects.mockResolvedValue([
+      apiProject("Later", ZYNOX_TEAM, { targetDate: "2027-01-05" }),
+      apiProject("Sooner", ZYNOX_TEAM, { targetDate: "2026-12-18" }),
+      apiProject("Sooner still", ZYNOX_TEAM, { targetDate: "2026-02-03" }),
+    ]);
+    const screen = await render(<ProjectsHarness initialEntries={["/projects"]} />);
+
+    await expect
+      .element(screen.getByRole("row", { name: /Sooner still/ }))
+      .toHaveTextContent("Feb 3");
+    await expect
+      .element(screen.getByRole("row", { name: /^Sooner Sooner/ }))
+      .not.toBeInTheDocument();
+    await expect.element(screen.getByRole("cell", { name: "Dec 18", exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "Target date" }).click();
+    const names = () =>
+      Array.from(document.querySelectorAll("tbody tr"))
+        .map((row) => row.querySelector("a")?.textContent?.trim())
+        .filter(Boolean);
+    await expect.poll(names).toEqual(["Sooner still", "Sooner", "Later"]);
+  });
+});
+
+describe("ProjectDetailPage: dados da API", () => {
+  const project = PROJECTS[4]!;
+
+  it("mostra Loading Project. e depois o nome no breadcrumb", async () => {
+    document.documentElement.dataset.theme = "dark";
+    let resolve: (p: ApiProject) => void = () => {};
+    fetchProject.mockReturnValue(new Promise((r) => (resolve = r)));
+    const screen = await render(<ProjectsHarness initialEntries={[`/projects/${project.id}`]} />);
+
+    await expect.element(screen.getByText("Loading Project.")).toBeInTheDocument();
+    resolve(API_PROJECTS[4]!);
+    await expect
+      .element(screen.getByRole("heading", { name: project.name, level: 1, exact: true }))
+      .toBeInTheDocument();
+    const breadcrumb = document.querySelector('nav[aria-label="Breadcrumb"]');
+    expect(breadcrumb?.textContent?.trim()).toBe(project.name);
+    expect(fetchProject).toHaveBeenCalledWith(project.id);
+  });
+
+  it.each(["NOT_FOUND", "BAD_REQUEST"])(
+    "%s mostra Project not found, sem repetir a chamada",
+    async (code) => {
+      document.documentElement.dataset.theme = "dark";
+      fetchProject.mockRejectedValue(withCode(code));
+      const screen = await render(
+        <ProjectsHarness initialEntries={["/projects/00000000-0000-4000-8000-000000000000"]} />,
+      );
+
+      await expect.element(screen.getByText("Project not found")).toBeVisible();
+      await expect.element(screen.getByRole("link", { name: "Back to Projects" })).toBeVisible();
+      expect(fetchProject).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("erro genérico mostra o Alert e o Retry refaz", async () => {
+    document.documentElement.dataset.theme = "dark";
+    fetchProject.mockRejectedValue(new Error("network"));
+    const screen = await render(<ProjectsHarness initialEntries={[`/projects/${project.id}`]} />);
+
+    await expect.element(screen.getByText("Could not load Project")).toBeVisible();
+    fetchProject.mockImplementation(async () => API_PROJECTS[4]!);
+    await screen.getByRole("button", { name: "Retry" }).click();
+
+    await expect
+      .element(screen.getByRole("heading", { name: project.name, level: 1, exact: true }))
+      .toBeInTheDocument();
+  });
+});
+
 describe("Ordenação por URL na tabela de Projects", () => {
   function orderParam(): string | null {
     const search = currentLocation().split("?")[1];
@@ -231,6 +445,7 @@ describe("Ordenação por URL na tabela de Projects", () => {
     const screen = await render(<ProjectsHarness initialEntries={["/projects"]} />);
     const nameButton = screen.getByRole("button", { name: "Name" });
 
+    await expect.element(nameButton).toBeVisible();
     (nameButton.element() as HTMLElement).focus();
     await expect.element(nameButton).toHaveFocus();
     await userEvent.keyboard("{Enter}");
