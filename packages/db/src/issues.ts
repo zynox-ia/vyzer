@@ -898,161 +898,183 @@ export async function createWorkspaceIssue(
   teamSlug: string | undefined,
   values: IssueCreateValues,
 ) {
-  return db.transaction(async (tx) => {
-    let parentIssue: Pick<
-      typeof schema.issue.$inferSelect,
-      "id" | "teamId" | "priority" | "assigneeId"
-    > | null = null;
-    let currentTeam: typeof schema.team.$inferSelect | undefined;
+  return db.transaction((tx) =>
+    createWorkspaceIssueInTransaction(tx, workspaceId, actorId, teamSlug, values),
+  );
+}
 
-    if (values.parentId) {
-      await tx
-        .select({ id: schema.workspace.id })
-        .from(schema.workspace)
-        .where(eq(schema.workspace.id, workspaceId))
-        .for("update");
+export async function createWorkspaceIssueInTransaction(
+  tx: DbSession,
+  workspaceId: string,
+  actorId: string,
+  teamSlug: string | undefined,
+  values: IssueCreateValues,
+) {
+  let parentIssue: Pick<
+    typeof schema.issue.$inferSelect,
+    "id" | "teamId" | "priority" | "assigneeId"
+  > | null = null;
+  let currentTeam: typeof schema.team.$inferSelect | undefined;
 
-      const [matchedParent] = await tx
-        .select({
-          id: schema.issue.id,
-          teamId: schema.issue.teamId,
-          priority: schema.issue.priority,
-          assigneeId: schema.issue.assigneeId,
-        })
-        .from(schema.issue)
-        .where(and(eq(schema.issue.id, values.parentId), eq(schema.issue.workspaceId, workspaceId)))
-        .limit(1)
-        .for("update");
+  if (values.parentId) {
+    await tx
+      .select({ id: schema.workspace.id })
+      .from(schema.workspace)
+      .where(eq(schema.workspace.id, workspaceId))
+      .for("update");
 
-      if (!matchedParent) {
-        throw new IssueRuleError("The parent Issue must belong to the current Workspace.");
-      }
-      parentIssue = matchedParent;
+    const [matchedParent] = await tx
+      .select({
+        id: schema.issue.id,
+        teamId: schema.issue.teamId,
+        priority: schema.issue.priority,
+        assigneeId: schema.issue.assigneeId,
+      })
+      .from(schema.issue)
+      .where(and(eq(schema.issue.id, values.parentId), eq(schema.issue.workspaceId, workspaceId)))
+      .limit(1)
+      .for("update");
 
-      [currentTeam] = await tx
-        .select()
-        .from(schema.team)
-        .where(
-          and(eq(schema.team.id, matchedParent.teamId), eq(schema.team.workspaceId, workspaceId)),
-        )
-        .limit(1);
-      if (!currentTeam) return null;
-
-      if (teamSlug !== undefined && teamSlug !== currentTeam.slug) {
-        throw new IssueRuleError("A sub-issue inherits its parent's Team.");
-      }
-    } else if (teamSlug !== undefined) {
-      [currentTeam] = await tx
-        .select()
-        .from(schema.team)
-        .where(and(eq(schema.team.workspaceId, workspaceId), eq(schema.team.slug, teamSlug)))
-        .limit(1);
+    if (!matchedParent) {
+      throw new IssueRuleError("The parent Issue must belong to the current Workspace.");
     }
+    parentIssue = matchedParent;
 
+    [currentTeam] = await tx
+      .select()
+      .from(schema.team)
+      .where(
+        and(eq(schema.team.id, matchedParent.teamId), eq(schema.team.workspaceId, workspaceId)),
+      )
+      .limit(1);
     if (!currentTeam) return null;
 
-    let inheritedAssigneeId: string | null = null;
-    if (parentIssue?.assigneeId) {
-      const existingSubIssues = await tx
-        .select({ assigneeId: schema.issue.assigneeId })
-        .from(schema.issue)
-        .where(
-          and(eq(schema.issue.workspaceId, workspaceId), eq(schema.issue.parentId, parentIssue.id)),
-        );
-      const allExistingSubIssuesShareParentAssignee = existingSubIssues.every(
-        (subIssue) => subIssue.assigneeId === parentIssue.assigneeId,
-      );
-
-      if (actorId === parentIssue.assigneeId || allExistingSubIssuesShareParentAssignee) {
-        inheritedAssigneeId = parentIssue.assigneeId;
-      }
+    if (teamSlug !== undefined && teamSlug !== currentTeam.slug) {
+      throw new IssueRuleError("A sub-issue inherits its parent's Team.");
     }
-
-    const statusId = values.statusId ?? currentTeam.defaultStatusId;
-    if (!statusId) throw new IssueRuleError("The Team has no default Status.");
-
-    const [currentStatus] = await tx
+  } else if (teamSlug !== undefined) {
+    [currentTeam] = await tx
       .select()
-      .from(schema.workflowStatus)
+      .from(schema.team)
+      .where(and(eq(schema.team.workspaceId, workspaceId), eq(schema.team.slug, teamSlug)))
+      .limit(1);
+  }
+
+  if (!currentTeam) return null;
+
+  let inheritedAssigneeId: string | null = null;
+  if (parentIssue?.assigneeId) {
+    const existingSubIssues = await tx
+      .select({ assigneeId: schema.issue.assigneeId })
+      .from(schema.issue)
+      .where(
+        and(eq(schema.issue.workspaceId, workspaceId), eq(schema.issue.parentId, parentIssue.id)),
+      );
+    const allExistingSubIssuesShareParentAssignee = existingSubIssues.every(
+      (subIssue) => subIssue.assigneeId === parentIssue.assigneeId,
+    );
+
+    if (actorId === parentIssue.assigneeId || allExistingSubIssuesShareParentAssignee) {
+      inheritedAssigneeId = parentIssue.assigneeId;
+    }
+  }
+
+  let assignedMemberId = values.assigneeId !== undefined ? values.assigneeId : inheritedAssigneeId;
+  if (assignedMemberId === null) {
+    const [preference] = await tx
+      .select({ autoAssignToSelf: schema.memberPreference.autoAssignToSelf })
+      .from(schema.memberPreference)
       .where(
         and(
-          eq(schema.workflowStatus.id, statusId),
-          eq(schema.workflowStatus.teamId, currentTeam.id),
+          eq(schema.memberPreference.workspaceId, workspaceId),
+          eq(schema.memberPreference.memberId, actorId),
         ),
       )
-      .limit(1)
-      .for("share");
+      .limit(1);
+    if (preference?.autoAssignToSelf) assignedMemberId = actorId;
+  }
 
-    if (!currentStatus) {
-      throw new IssueRuleError("The Status must belong to the selected Team.");
-    }
+  const statusId = values.statusId ?? currentTeam.defaultStatusId;
+  if (!statusId) throw new IssueRuleError("The Team has no default Status.");
 
-    if (values.assigneeId) {
-      const [assignee] = await tx
-        .select({ id: schema.member.id })
-        .from(schema.member)
-        .where(
-          and(eq(schema.member.id, values.assigneeId), eq(schema.member.workspaceId, workspaceId)),
-        )
-        .limit(1);
-      if (!assignee) throw new IssueRuleError("The Assignee must belong to the current Workspace.");
-    }
+  const [currentStatus] = await tx
+    .select()
+    .from(schema.workflowStatus)
+    .where(
+      and(eq(schema.workflowStatus.id, statusId), eq(schema.workflowStatus.teamId, currentTeam.id)),
+    )
+    .limit(1)
+    .for("share");
 
-    const [allocatedTeam] = await tx
-      .update(schema.team)
-      .set({ issueCounter: sql`${schema.team.issueCounter} + 1` })
-      .where(and(eq(schema.team.id, currentTeam.id), eq(schema.team.workspaceId, workspaceId)))
-      .returning({
-        id: schema.team.id,
-        key: schema.team.key,
-        issueCounter: schema.team.issueCounter,
-      });
+  if (!currentStatus) {
+    throw new IssueRuleError("The Status must belong to the selected Team.");
+  }
 
-    if (!allocatedTeam) return null;
+  if (values.assigneeId) {
+    const [assignee] = await tx
+      .select({ id: schema.member.id })
+      .from(schema.member)
+      .where(
+        and(eq(schema.member.id, values.assigneeId), eq(schema.member.workspaceId, workspaceId)),
+      )
+      .limit(1);
+    if (!assignee) throw new IssueRuleError("The Assignee must belong to the current Workspace.");
+  }
 
-    const now = new Date();
-    const statusTimes = getStatusTimes(
-      currentStatus.category,
-      null,
-      { startedAt: null, completedAt: null, canceledAt: null },
-      now,
-    );
-    const [createdIssue] = await tx
-      .insert(schema.issue)
-      .values({
-        workspaceId,
-        teamId: currentTeam.id,
-        number: allocatedTeam.issueCounter,
-        title: values.title,
-        description: values.description ?? null,
-        statusId: currentStatus.id,
-        priority: values.priority ?? parentIssue?.priority ?? 0,
-        assigneeId: values.assigneeId !== undefined ? values.assigneeId : inheritedAssigneeId,
-        creatorId: actorId,
-        parentId: parentIssue?.id ?? null,
-        dueDate: values.dueDate ?? null,
-        createdAt: now,
-        updatedAt: now,
-        ...statusTimes,
-      })
-      .returning({ id: schema.issue.id });
-
-    if (!createdIssue) return null;
-
-    await insertIssueEvent(tx, {
-      workspaceId,
-      issueId: createdIssue.id,
-      actorId,
-      type: "created",
-      payload: {
-        identifier: `${allocatedTeam.key}-${allocatedTeam.issueCounter}`,
-        title: values.title,
-      },
-      createdAt: now,
+  const [allocatedTeam] = await tx
+    .update(schema.team)
+    .set({ issueCounter: sql`${schema.team.issueCounter} + 1` })
+    .where(and(eq(schema.team.id, currentTeam.id), eq(schema.team.workspaceId, workspaceId)))
+    .returning({
+      id: schema.team.id,
+      key: schema.team.key,
+      issueCounter: schema.team.issueCounter,
     });
 
-    return getIssueRow(tx, workspaceId, createdIssue.id);
+  if (!allocatedTeam) return null;
+
+  const now = new Date();
+  const statusTimes = getStatusTimes(
+    currentStatus.category,
+    null,
+    { startedAt: null, completedAt: null, canceledAt: null },
+    now,
+  );
+  const [createdIssue] = await tx
+    .insert(schema.issue)
+    .values({
+      workspaceId,
+      teamId: currentTeam.id,
+      number: allocatedTeam.issueCounter,
+      title: values.title,
+      description: values.description ?? null,
+      statusId: currentStatus.id,
+      priority: values.priority ?? parentIssue?.priority ?? 0,
+      assigneeId: assignedMemberId,
+      creatorId: actorId,
+      parentId: parentIssue?.id ?? null,
+      dueDate: values.dueDate ?? null,
+      createdAt: now,
+      updatedAt: now,
+      ...statusTimes,
+    })
+    .returning({ id: schema.issue.id });
+
+  if (!createdIssue) return null;
+
+  await insertIssueEvent(tx, {
+    workspaceId,
+    issueId: createdIssue.id,
+    actorId,
+    type: "created",
+    payload: {
+      identifier: `${allocatedTeam.key}-${allocatedTeam.issueCounter}`,
+      title: values.title,
+    },
+    createdAt: now,
   });
+
+  return getIssueRow(tx, workspaceId, createdIssue.id);
 }
 
 export async function updateWorkspaceIssue(
@@ -1177,7 +1199,7 @@ export async function updateWorkspaceIssue(
     const nextDescription =
       values.description !== undefined ? values.description : currentIssue.description;
     const nextPriority = values.priority ?? currentIssue.priority;
-    const nextAssigneeId =
+    let nextAssigneeId =
       values.assigneeId !== undefined ? values.assigneeId : currentIssue.assigneeId;
     const nextDueDate = values.dueDate !== undefined ? values.dueDate : currentIssue.dueDate;
     const nextStatus =
@@ -1185,6 +1207,25 @@ export async function updateWorkspaceIssue(
     const statusChanged = nextStatus.id !== currentIssue.statusId;
     const teamChanged = isMovingTeam;
     const now = new Date();
+
+    if (
+      statusChanged &&
+      initial.status.category !== "started" &&
+      nextStatus.category === "started" &&
+      nextAssigneeId === null
+    ) {
+      const [preference] = await tx
+        .select({ autoAssignOnMoveToStarted: schema.memberPreference.autoAssignOnMoveToStarted })
+        .from(schema.memberPreference)
+        .where(
+          and(
+            eq(schema.memberPreference.workspaceId, workspaceId),
+            eq(schema.memberPreference.memberId, actorId),
+          ),
+        )
+        .limit(1);
+      if (preference?.autoAssignOnMoveToStarted) nextAssigneeId = actorId;
+    }
 
     const patch: Partial<typeof schema.issue.$inferInsert> = {};
     const events: Array<{ type: schema.IssueEventType; payload: schema.IssueEventPayload }> = [];

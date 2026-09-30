@@ -542,6 +542,151 @@ const customerSettingsUpdateSchema = z.object({
   manualEditsEnabled: z.boolean().optional(),
 });
 
+const sidebarItemKeySchema = z.enum([
+  "inbox",
+  "reviews",
+  "my-issues",
+  "agent",
+  "drafts",
+  "projects",
+  "views",
+  "members",
+  "teams",
+]);
+const sidebarVisibilitySchema = z.enum(["always", "when-badged", "hidden"]);
+const sidebarItemPreferenceSchema = z.object({
+  key: sidebarItemKeySchema,
+  visibility: sidebarVisibilitySchema,
+  sortOrder: z.number().int().nonnegative(),
+});
+const sidebarPreferencesSchema = z.object({
+  workspaceId: z.string().uuid(),
+  memberId: z.string().uuid(),
+  badgeStyle: z.enum(["count", "dot"]),
+  items: z.array(sidebarItemPreferenceSchema),
+});
+const sidebarPreferencesUpdateSchema = z
+  .object({
+    badgeStyle: z.enum(["count", "dot"]).optional(),
+    items: z
+      .array(
+        z
+          .object({
+            key: sidebarItemKeySchema,
+            visibility: sidebarVisibilitySchema.optional(),
+            sortOrder: z.number().int().nonnegative().optional(),
+          })
+          .refine((item) => item.visibility !== undefined || item.sortOrder !== undefined, {
+            message: "Choose a visibility or sort order for each sidebar item.",
+          }),
+      )
+      .min(1)
+      .refine((items) => new Set(items.map(({ key }) => key)).size === items.length, {
+        message: "A sidebar item can only be updated once per request.",
+      })
+      .optional(),
+  })
+  .refine((values) => values.badgeStyle !== undefined || values.items !== undefined, {
+    message: "Choose a badge style or at least one sidebar item to update.",
+  });
+
+const memberPreferenceValuesSchema = z.object({
+  defaultHomeView: z.enum([
+    "agent",
+    "inbox",
+    "my-issues",
+    "reviews",
+    "all-issues",
+    "active-issues",
+    "current-cycle",
+    "projects",
+  ]),
+  displayNameFormat: z.enum(["full", "first"]),
+  firstDayOfWeek: z.enum(["sunday", "monday"]),
+  convertEmoticons: z.boolean(),
+  sendCommentsOn: z.enum(["enter", "mod-enter"]),
+  interfaceFontSize: z.enum(["small", "default", "large"]),
+  usePointerCursors: z.boolean(),
+  underlineLinks: z.boolean(),
+  disableAnimatedImages: z.boolean(),
+  interfaceTheme: z.enum(["system", "light", "dark"]),
+  codeTheme: z.enum([
+    "linear-dark",
+    "linear-colorblind",
+    "linear-midnight",
+    "andromeda",
+    "atom-one-dark",
+    "ayu-dark",
+    "ayu-mirage",
+    "catppuccin-frappe",
+    "catppuccin-macchiato",
+    "catppuccin-mocha",
+    "cobalt2",
+    "darcula",
+    "dracula",
+    "edge-dark",
+    "everforest-dark",
+    "github-dark",
+    "github-dark-dimmed",
+    "gruvbox-dark",
+    "halcyon",
+    "houston",
+    "iceberg-dark",
+    "modern-dark",
+    "night-owl",
+    "nord",
+    "one-dark-pro",
+    "one-monokai",
+    "palenight",
+    "rose-pine",
+    "rose-pine-moon",
+    "shades-of-purple",
+    "solarized-dark",
+    "sonokai",
+    "synthwave-84",
+    "tokyo-night",
+    "vitesse-dark",
+  ]),
+  codeFontSize: z.enum(["smaller", "small", "default", "large", "larger"]),
+  codeLineHeight: z.enum(["compact", "regular", "relaxed"]),
+  codeFontFamily: z.string(),
+  openInDesktopApp: z.boolean(),
+  autoAssignToSelf: z.boolean(),
+  autoAssignOnMoveToStarted: z.boolean(),
+});
+const memberPreferencesSchema = memberPreferenceValuesSchema.extend({
+  workspaceId: z.string().uuid(),
+  memberId: z.string().uuid(),
+});
+const memberPreferencesUpdateSchema = memberPreferenceValuesSchema
+  .partial()
+  .refine((values) => Object.keys(values).length > 0, {
+    message: "Choose at least one member preference to update.",
+  });
+
+const issueDraftSchema = z.object({
+  id: z.string().uuid(),
+  workspaceId: z.string().uuid(),
+  creatorId: z.string().uuid(),
+  teamId: z.string().uuid().nullable(),
+  title: z.string(),
+  description: z.string().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+const issueDraftValuesSchema = z.object({
+  teamId: z.string().uuid().nullable().optional(),
+  title: z.string().optional(),
+  description: z.string().nullable().optional(),
+});
+const issueDraftUpdateSchema = issueDraftValuesSchema
+  .extend({ id: z.string().uuid() })
+  .refine(
+    ({ teamId, title, description }) =>
+      teamId !== undefined || title !== undefined || description !== undefined,
+    { message: "Choose at least one draft field to update." },
+  );
+
 const customerDomainRuleKindSchema = z.enum(["excluded", "generic"]);
 const customerDomainPattern =
   /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
@@ -683,6 +828,18 @@ export const contract = {
     get: oc.output(customerSettingsSchema),
     /** Updates Customer settings; the Workspace id always comes from middleware. */
     update: oc.input(customerSettingsUpdateSchema).output(customerSettingsSchema),
+  },
+  sidebarPreferences: {
+    /** Reads or initializes the current Member's sidebar preferences. */
+    get: oc.output(sidebarPreferencesSchema),
+    /** Updates the current Member's badge style and selected sidebar items. */
+    update: oc.input(sidebarPreferencesUpdateSchema).output(sidebarPreferencesSchema),
+  },
+  memberPreferences: {
+    /** Reads or initializes all persisted preferences for the current Member. */
+    get: oc.output(memberPreferencesSchema),
+    /** Updates selected preferences for the current Member. */
+    update: oc.input(memberPreferencesUpdateSchema).output(memberPreferencesSchema),
   },
   customerDomainRule: {
     /** Lists custom excluded or generic domains and email addresses. */
@@ -970,6 +1127,18 @@ export const contract = {
         failed: z.array(issueBulkFailureSchema),
       }),
     ),
+  },
+  issueDraft: {
+    /** Lists only the current Member's unpublished Issue drafts. */
+    list: oc.output(z.array(issueDraftSchema)),
+    /** Saves a draft, including an empty composer with no Team selected. */
+    create: oc.input(issueDraftValuesSchema).output(issueDraftSchema),
+    /** Updates one unpublished draft owned by the current Member. */
+    update: oc.input(issueDraftUpdateSchema).output(issueDraftSchema),
+    /** Creates a real Issue with its Team's default Status and removes the draft. */
+    publish: oc.input(z.object({ id: z.string().uuid() })).output(issueSchema),
+    /** Permanently discards one unpublished draft owned by the current Member. */
+    discard: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
   notification: {
     /** Lista as notificações ativas do Member resolvido, por padrão das mais novas. */

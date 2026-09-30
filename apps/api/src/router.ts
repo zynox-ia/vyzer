@@ -82,6 +82,9 @@ import {
   workspaceScoped,
 } from "./orpc";
 import { createCustomerSettingsRouter } from "./customer-settings";
+import { createIssueDraftRouter } from "./issue-drafts";
+import { createMemberPreferencesRouter } from "./member-preferences";
+import { createSidebarPreferencesRouter } from "./sidebar-preferences";
 
 export function createRouter(resolveContext?: WorkspaceContextResolver) {
   const middleware = resolveContext
@@ -90,6 +93,9 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
 
   return base.router({
     ...createCustomerSettingsRouter(middleware),
+    ...createSidebarPreferencesRouter(middleware),
+    ...createMemberPreferencesRouter(middleware),
+    ...createIssueDraftRouter(middleware),
     health: middleware.workspaceScoped.health.handler(async ({ context }) => {
       await checkConnection(context.db);
       return { status: "ok" as const, database: "ok" as const };

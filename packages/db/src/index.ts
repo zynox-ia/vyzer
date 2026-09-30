@@ -768,6 +768,17 @@ export {
   updateWorkspaceIssue,
 } from "./issues";
 export {
+  IssueDraftRuleError,
+  createWorkspaceIssueDraft,
+  discardWorkspaceIssueDraft,
+  listWorkspaceIssueDrafts,
+  publishWorkspaceIssueDraft,
+  updateWorkspaceIssueDraft,
+} from "./issue-drafts";
+export { getOrCreateSidebarPreferences, updateSidebarPreferences } from "./sidebar-preferences";
+export { getOrCreateMemberPreferences, updateMemberPreferences } from "./member-preferences";
+export type { MemberPreferencesPatch } from "./member-preferences";
+export {
   LabelRuleError,
   archiveWorkspaceLabel,
   convertWorkspaceLabelToGroup,
@@ -805,17 +816,21 @@ export {
   customerStatus,
   customerTier,
   issue,
+  issueDraft,
   issueEvent,
   issueLink,
   issueLabel,
   issueRelation,
   label,
   member,
+  memberSidebarPreference,
+  memberPreference,
   notification,
   project,
   projectTeam,
   team,
   teamMember,
+  sidebarItemPreference,
   workflowStatus,
   workspace,
 } from "./schema";
@@ -832,6 +847,18 @@ export type {
   ApiKeyPermission,
   ApiKeyPermissions,
   ApiKeyPolicy,
+  SidebarBadgeStyle,
+  SidebarItemKey,
+  SidebarItemVisibility,
+  MemberCodeFontSize,
+  MemberCodeLineHeight,
+  MemberCodeTheme,
+  MemberDefaultHomeView,
+  MemberDisplayNameFormat,
+  MemberFirstDayOfWeek,
+  MemberInterfaceFontSize,
+  MemberInterfaceTheme,
+  MemberSendCommentsOn,
   IssueEventType,
   IssueRelationType,
   IssuePriority,

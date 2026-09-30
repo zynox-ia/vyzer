@@ -83,6 +83,203 @@ export const member = pgTable(
   ],
 );
 
+export const sidebarBadgeStyle = pgEnum("sidebar_badge_style", ["count", "dot"]);
+export type SidebarBadgeStyle = (typeof sidebarBadgeStyle.enumValues)[number];
+
+export const sidebarItemKey = pgEnum("sidebar_item_key", [
+  "inbox",
+  "reviews",
+  "my-issues",
+  "agent",
+  "drafts",
+  "projects",
+  "views",
+  "members",
+  "teams",
+]);
+export type SidebarItemKey = (typeof sidebarItemKey.enumValues)[number];
+
+export const sidebarItemVisibility = pgEnum("sidebar_item_visibility", [
+  "always",
+  "when-badged",
+  "hidden",
+]);
+export type SidebarItemVisibility = (typeof sidebarItemVisibility.enumValues)[number];
+
+export const memberDefaultHomeView = pgEnum("member_default_home_view", [
+  "agent",
+  "inbox",
+  "my-issues",
+  "reviews",
+  "all-issues",
+  "active-issues",
+  "current-cycle",
+  "projects",
+]);
+export type MemberDefaultHomeView = (typeof memberDefaultHomeView.enumValues)[number];
+
+export const memberDisplayNameFormat = pgEnum("member_display_name_format", ["full", "first"]);
+export type MemberDisplayNameFormat = (typeof memberDisplayNameFormat.enumValues)[number];
+
+export const memberFirstDayOfWeek = pgEnum("member_first_day_of_week", ["sunday", "monday"]);
+export type MemberFirstDayOfWeek = (typeof memberFirstDayOfWeek.enumValues)[number];
+
+export const memberSendCommentsOn = pgEnum("member_send_comments_on", ["enter", "mod-enter"]);
+export type MemberSendCommentsOn = (typeof memberSendCommentsOn.enumValues)[number];
+
+export const memberInterfaceFontSize = pgEnum("member_interface_font_size", [
+  "small",
+  "default",
+  "large",
+]);
+export type MemberInterfaceFontSize = (typeof memberInterfaceFontSize.enumValues)[number];
+
+export const memberInterfaceTheme = pgEnum("member_interface_theme", ["system", "light", "dark"]);
+export type MemberInterfaceTheme = (typeof memberInterfaceTheme.enumValues)[number];
+
+export const memberCodeTheme = pgEnum("member_code_theme", [
+  "linear-dark",
+  "linear-colorblind",
+  "linear-midnight",
+  "andromeda",
+  "atom-one-dark",
+  "ayu-dark",
+  "ayu-mirage",
+  "catppuccin-frappe",
+  "catppuccin-macchiato",
+  "catppuccin-mocha",
+  "cobalt2",
+  "darcula",
+  "dracula",
+  "edge-dark",
+  "everforest-dark",
+  "github-dark",
+  "github-dark-dimmed",
+  "gruvbox-dark",
+  "halcyon",
+  "houston",
+  "iceberg-dark",
+  "modern-dark",
+  "night-owl",
+  "nord",
+  "one-dark-pro",
+  "one-monokai",
+  "palenight",
+  "rose-pine",
+  "rose-pine-moon",
+  "shades-of-purple",
+  "solarized-dark",
+  "sonokai",
+  "synthwave-84",
+  "tokyo-night",
+  "vitesse-dark",
+]);
+export type MemberCodeTheme = (typeof memberCodeTheme.enumValues)[number];
+
+export const memberCodeFontSize = pgEnum("member_code_font_size", [
+  "smaller",
+  "small",
+  "default",
+  "large",
+  "larger",
+]);
+export type MemberCodeFontSize = (typeof memberCodeFontSize.enumValues)[number];
+
+export const memberCodeLineHeight = pgEnum("member_code_line_height", [
+  "compact",
+  "regular",
+  "relaxed",
+]);
+export type MemberCodeLineHeight = (typeof memberCodeLineHeight.enumValues)[number];
+
+export const memberSidebarPreference = pgTable(
+  "member_sidebar_preference",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id").notNull(),
+    badgeStyle: sidebarBadgeStyle("badge_style").notNull().default("count"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("member_sidebar_preference_member_workspace_unique").on(
+      table.memberId,
+      table.workspaceId,
+    ),
+    foreignKey({
+      name: "member_sidebar_preference_member_workspace_fk",
+      columns: [table.memberId, table.workspaceId],
+      foreignColumns: [member.id, member.workspaceId],
+    }).onDelete("cascade"),
+  ],
+);
+
+export const sidebarItemPreference = pgTable(
+  "sidebar_item_preference",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id").notNull(),
+    itemKey: sidebarItemKey("item_key").notNull(),
+    visibility: sidebarItemVisibility("visibility").notNull(),
+    sortOrder: integer("sort_order").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check("sidebar_item_preference_sort_order_check", sql`${table.sortOrder} >= 0`),
+    uniqueIndex("sidebar_item_preference_member_item_unique").on(table.memberId, table.itemKey),
+    foreignKey({
+      name: "sidebar_item_preference_member_workspace_fk",
+      columns: [table.memberId, table.workspaceId],
+      foreignColumns: [member.id, member.workspaceId],
+    }).onDelete("cascade"),
+  ],
+);
+
+export const memberPreference = pgTable(
+  "member_preference",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id").notNull(),
+    defaultHomeView: memberDefaultHomeView("default_home_view").notNull().default("agent"),
+    displayNameFormat: memberDisplayNameFormat("display_name_format").notNull().default("full"),
+    firstDayOfWeek: memberFirstDayOfWeek("first_day_of_week").notNull().default("sunday"),
+    convertEmoticons: boolean("convert_emoticons").notNull().default(true),
+    sendCommentsOn: memberSendCommentsOn("send_comments_on").notNull().default("enter"),
+    interfaceFontSize: memberInterfaceFontSize("interface_font_size").notNull().default("default"),
+    usePointerCursors: boolean("use_pointer_cursors").notNull().default(false),
+    underlineLinks: boolean("underline_links").notNull().default(false),
+    disableAnimatedImages: boolean("disable_animated_images").notNull().default(false),
+    interfaceTheme: memberInterfaceTheme("interface_theme").notNull().default("system"),
+    codeTheme: memberCodeTheme("code_theme").notNull().default("linear-dark"),
+    codeFontSize: memberCodeFontSize("code_font_size").notNull().default("default"),
+    codeLineHeight: memberCodeLineHeight("code_line_height").notNull().default("regular"),
+    codeFontFamily: text("code_font_family").notNull().default(""),
+    openInDesktopApp: boolean("open_in_desktop_app").notNull().default(false),
+    autoAssignToSelf: boolean("auto_assign_to_self").notNull().default(false),
+    autoAssignOnMoveToStarted: boolean("auto_assign_on_move_to_started").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("member_preference_member_unique").on(table.memberId),
+    foreignKey({
+      name: "member_preference_member_workspace_fk",
+      columns: [table.memberId, table.workspaceId],
+      foreignColumns: [member.id, member.workspaceId],
+    }).onDelete("cascade"),
+  ],
+);
+
 export const apiKey = pgTable(
   "api_key",
   {
@@ -523,6 +720,36 @@ export const issueEvent = pgTable(
   ],
 );
 
+export const issueDraft = pgTable(
+  "issue_draft",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    creatorId: uuid("creator_id").notNull(),
+    // The API verifies the Team's Workspace; deleting a Team only clears this nullable reference.
+    teamId: uuid("team_id").references(() => team.id, { onDelete: "set null" }),
+    title: text("title").notNull().default(""),
+    description: text("description"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      name: "issue_draft_creator_workspace_fk",
+      columns: [table.creatorId, table.workspaceId],
+      foreignColumns: [member.id, member.workspaceId],
+    }).onDelete("cascade"),
+    index("issue_draft_creator_updated_index").on(
+      table.workspaceId,
+      table.creatorId,
+      table.updatedAt,
+      table.id,
+    ),
+  ],
+);
+
 export const issueRelation = pgTable(
   "issue_relation",
   {
@@ -631,10 +858,14 @@ export const notification = pgTable(
 
 export const workspaceRelations = relations(workspace, ({ many }) => ({
   members: many(member),
+  memberSidebarPreferences: many(memberSidebarPreference),
+  sidebarItemPreferences: many(sidebarItemPreference),
+  memberPreferences: many(memberPreference),
   teams: many(team),
   apiKeys: many(apiKey),
   issues: many(issue),
   issueEvents: many(issueEvent),
+  issueDrafts: many(issueDraft),
   labels: many(label),
   notifications: many(notification),
   projects: many(project),
@@ -646,6 +877,13 @@ export const memberRelations = relations(member, ({ many, one }) => ({
     references: [workspace.id],
   }),
   teamMemberships: many(teamMember),
+  sidebarPreferences: many(memberSidebarPreference),
+  sidebarItemPreferences: many(sidebarItemPreference),
+  preferences: one(memberPreference, {
+    fields: [member.id],
+    references: [memberPreference.memberId],
+  }),
+  createdIssueDrafts: many(issueDraft),
   apiKeys: many(apiKey),
   assignedIssues: many(issue, { relationName: "issueAssignee" }),
   createdIssues: many(issue, { relationName: "issueCreator" }),
@@ -676,11 +914,45 @@ export const teamRelations = relations(team, ({ many, one }) => ({
   workflowStatuses: many(workflowStatus),
   labels: many(label),
   issues: many(issue),
+  issueDrafts: many(issueDraft),
   defaultStatus: one(workflowStatus, {
     fields: [team.defaultStatusId],
     references: [workflowStatus.id],
   }),
   projects: many(projectTeam),
+}));
+
+export const memberSidebarPreferenceRelations = relations(memberSidebarPreference, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [memberSidebarPreference.workspaceId],
+    references: [workspace.id],
+  }),
+  member: one(member, {
+    fields: [memberSidebarPreference.memberId, memberSidebarPreference.workspaceId],
+    references: [member.id, member.workspaceId],
+  }),
+}));
+
+export const sidebarItemPreferenceRelations = relations(sidebarItemPreference, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [sidebarItemPreference.workspaceId],
+    references: [workspace.id],
+  }),
+  member: one(member, {
+    fields: [sidebarItemPreference.memberId, sidebarItemPreference.workspaceId],
+    references: [member.id, member.workspaceId],
+  }),
+}));
+
+export const memberPreferenceRelations = relations(memberPreference, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [memberPreference.workspaceId],
+    references: [workspace.id],
+  }),
+  member: one(member, {
+    fields: [memberPreference.memberId],
+    references: [member.id],
+  }),
 }));
 
 export const workflowStatusRelations = relations(workflowStatus, ({ many, one }) => ({
@@ -790,6 +1062,21 @@ export const issueEventRelations = relations(issueEvent, ({ one, many }) => ({
     relationName: "issueEventActor",
   }),
   notifications: many(notification),
+}));
+
+export const issueDraftRelations = relations(issueDraft, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [issueDraft.workspaceId],
+    references: [workspace.id],
+  }),
+  creator: one(member, {
+    fields: [issueDraft.creatorId, issueDraft.workspaceId],
+    references: [member.id, member.workspaceId],
+  }),
+  team: one(team, {
+    fields: [issueDraft.teamId, issueDraft.workspaceId],
+    references: [team.id, team.workspaceId],
+  }),
 }));
 
 export const notificationRelations = relations(notification, ({ one }) => ({
