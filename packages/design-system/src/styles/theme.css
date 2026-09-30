@@ -309,13 +309,15 @@
   --blur-lg: 16px;
 
   /* ---------- Camadas (z-*) ---------- */
+  /* Dropdown (Select/Menu/Listbox) fica acima de modal: são portais que podem abrir de dentro de
+     um Dialog (ex. Customize sidebar), e precisam vencer o overlay dele para receber clique. */
   --z-index-base: 0;
-  --z-index-dropdown: 1000;
   --z-index-sticky: 1100;
   --z-index-overlay: 1200;
   --z-index-modal: 1300;
-  --z-index-toast: 1400;
-  --z-index-tooltip: 1500;
+  --z-index-dropdown: 1400;
+  --z-index-toast: 1500;
+  --z-index-tooltip: 1600;
 
   /* ---------- Breakpoints: mobile é o padrão ---------- */
   --breakpoint-tablet: 768px;
