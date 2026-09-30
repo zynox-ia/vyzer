@@ -19,7 +19,7 @@ Sem frame confirmado no Figma (MCP não autorizado na sessão da spec). Nós con
 - **Seleção na URL:** `/inbox/:notificationId` (Vyzer) em vez de trocar para a URL da issue com `#comment-…` (Linear), para sobreviver a recarregar sem perder a lista (spec D10).
 - **Filtro e Display options só na URL:** o Linear os persiste por usuário (observado); o Vyzer segue a regra 8 do `AGENTS.md`, sem persistência por usuário (spec D11). Formato legível em search params, sem o `?filter=` em base64.
 - **Filtro/Display options: a preferência de Priority inbox é a exceção:** é configuração de Settings e fica no banco por Member.
-- **Só o que funciona aparece na UI:** canais Desktop/Mobile/Email/Slack, "Updates from Linear", agentes, Loops, Reviews, Document/Project activity e o sino de View **não são cortados**: estão sequenciados no backlog da spec (etapas 4.9 a 4.16) e entram quando o domínio, o gatilho ou a credencial existir (spec D2/D3); até lá, nenhum item morto na UI.
+- **Só o que funciona aparece na UI:** canais Desktop/Mobile/Email/Slack, agentes, Loops, Reviews, Document/Project activity e o sino de View **não são cortados**: estão sequenciados no backlog da spec (etapas 4.9 a 4.16) e entram quando o domínio, o gatilho ou a credencial existir (spec D2/D3); até lá, nenhum item morto na UI. "Updates from Linear" (comunicações do fornecedor) não tem contraparte no Vyzer e fica fora, sem etapa (confirmado).
 
 ## Não observado (revisor deve conferir)
 
