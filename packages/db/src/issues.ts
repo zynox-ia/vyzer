@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
+import { listWorkspaceIssueLabelSummaries } from "./labels";
 import type { Db } from "./index";
 import * as schema from "./schema";
 
@@ -32,6 +33,7 @@ export type IssueFilters = {
   updatedAt?: IssueDateRange;
   startedAt?: IssueDateRange;
   completedAt?: IssueDateRange;
+  labelIds?: string[];
   timeInStatus?: IssueDurationRange;
   content?: string;
 };
@@ -45,7 +47,7 @@ export type IssueOrderBy =
   | "created"
   | "dueDate"
   | "timeInStatus";
-export type IssueGroupBy = "none" | "status" | "assignee" | "priority";
+export type IssueGroupBy = "none" | "status" | "assignee" | "priority" | "label";
 export type IssueListOptions = {
   view?: IssueView;
   filters?: IssueFilters;
@@ -251,10 +253,12 @@ async function getIssueRow(executor: DbSession, workspaceId: string, id: string)
     .where(and(eq(schema.issue.id, id), eq(schema.issue.workspaceId, workspaceId)))
     .limit(1);
 
-  return currentIssue ? withIdentifier(currentIssue) : null;
+  if (!currentIssue) return null;
+  const labelsByIssueId = await listWorkspaceIssueLabelSummaries(executor, workspaceId, [id]);
+  return { ...withIdentifier(currentIssue), labels: labelsByIssueId.get(id) ?? [] };
 }
 
-type IssueFilterDimension = "status" | "assignee" | "creator" | "priority";
+type IssueFilterDimension = "status" | "assignee" | "creator" | "priority" | "label";
 
 function addTimestampRange(conditions: SQL[], column: AnyPgColumn, range: IssueDateRange) {
   if (range.isEmpty !== undefined) {
@@ -313,6 +317,19 @@ function issueConditions(
   if (ignoreDimension !== "priority" && filters?.priorities) {
     conditions.push(inArray(schema.issue.priority, filters.priorities));
   }
+  if (ignoreDimension !== "label" && filters?.labelIds) {
+    const labelIds = sql.join(
+      filters.labelIds.map((labelId) => sql`${labelId}::uuid`),
+      sql`, `,
+    );
+    conditions.push(sql`exists (
+      select 1 from issue_label as filtered_issue_label
+      inner join label as filtered_label on filtered_label.id = filtered_issue_label.label_id
+      where filtered_issue_label.issue_id = ${schema.issue.id}
+        and filtered_label.workspace_id = ${workspaceId}::uuid
+        and filtered_issue_label.label_id in (${labelIds})
+    )`);
+  }
   if (filters?.dueDate) {
     const range = filters.dueDate;
     if (range.isEmpty !== undefined) {
@@ -357,6 +374,16 @@ function groupOrderTerms(groupBy: IssueGroupBy | undefined) {
       return [sql`${issueAssignee.name} asc nulls last`];
     case "priority":
       return [asc(priorityOrder)];
+    case "label":
+      return [
+        sql`coalesce((
+        select min(lower(group_label.name))
+        from issue_label as group_issue_label
+        inner join label as group_label on group_label.id = group_issue_label.label_id
+        where group_issue_label.issue_id = ${schema.issue.id}
+          and group_label.workspace_id = ${schema.issue.workspaceId}
+      ), 'zzzz') asc`,
+      ];
     default:
       return [];
   }
@@ -433,6 +460,7 @@ function orderCompletedIssuesByRecency<
     assigneeId: string | null;
     priority: schema.IssuePriority;
     completedAt: Date | null;
+    labels?: { id: string; name: string }[];
   },
 >(rows: T[], options: IssueListOptions): T[] {
   if (!options.orderCompletedByRecency) return rows;
@@ -450,6 +478,7 @@ function orderCompletedIssuesByRecency<
         if (dimension === "status") return row.status.id;
         if (dimension === "assignee") return row.assigneeId;
         if (dimension === "priority") return row.priority;
+        if (dimension === "label") return row.labels?.[0]?.name.toLocaleLowerCase() ?? null;
         return null;
       }),
     );
@@ -501,8 +530,17 @@ export async function listWorkspaceTeamIssues(
     workspaceId,
     rows.map((row) => row.id),
   );
+  const labelsByIssueId = await listWorkspaceIssueLabelSummaries(
+    db,
+    workspaceId,
+    rows.map((row) => row.id),
+  );
+  const rowsWithLabels = rows.map((row) => ({
+    ...row,
+    labels: labelsByIssueId.get(row.id) ?? [],
+  }));
 
-  return orderCompletedIssuesByRecency(rows, options).map((row) => ({
+  return orderCompletedIssuesByRecency(rowsWithLabels, options).map((row) => ({
     ...withIdentifier(row),
     subIssueProgress: progressByIssueId.get(row.id) ?? { completed: 0, total: 0 },
   }));
@@ -523,85 +561,121 @@ export async function listWorkspaceTeamIssueFacets(
   if (!currentTeam) return null;
 
   const view = options.view ?? "active";
-  const [statusRows, assigneeRows, creatorRows, priorityRows, statuses, members] =
-    await Promise.all([
-      db
-        .select({ value: schema.issue.statusId, count: sql<number>`count(*)::int` })
-        .from(schema.issue)
-        .innerJoin(
-          schema.workflowStatus,
-          and(
-            eq(schema.workflowStatus.id, schema.issue.statusId),
-            eq(schema.workflowStatus.teamId, schema.issue.teamId),
-          ),
-        )
-        .where(
-          and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "status")),
-        )
-        .groupBy(schema.issue.statusId),
-      db
-        .select({ value: schema.issue.assigneeId, count: sql<number>`count(*)::int` })
-        .from(schema.issue)
-        .innerJoin(
-          schema.workflowStatus,
-          and(
-            eq(schema.workflowStatus.id, schema.issue.statusId),
-            eq(schema.workflowStatus.teamId, schema.issue.teamId),
-          ),
-        )
-        .where(
-          and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "assignee")),
-        )
-        .groupBy(schema.issue.assigneeId),
-      db
-        .select({ value: schema.issue.creatorId, count: sql<number>`count(*)::int` })
-        .from(schema.issue)
-        .innerJoin(
-          schema.workflowStatus,
-          and(
-            eq(schema.workflowStatus.id, schema.issue.statusId),
-            eq(schema.workflowStatus.teamId, schema.issue.teamId),
-          ),
-        )
-        .where(
-          and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "creator")),
-        )
-        .groupBy(schema.issue.creatorId),
-      db
-        .select({ value: schema.issue.priority, count: sql<number>`count(*)::int` })
-        .from(schema.issue)
-        .innerJoin(
-          schema.workflowStatus,
-          and(
-            eq(schema.workflowStatus.id, schema.issue.statusId),
-            eq(schema.workflowStatus.teamId, schema.issue.teamId),
-          ),
-        )
-        .where(
-          and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "priority")),
-        )
-        .groupBy(schema.issue.priority),
-      db
-        .select({
-          id: schema.workflowStatus.id,
-          name: schema.workflowStatus.name,
-          description: schema.workflowStatus.description,
-          category: schema.workflowStatus.category,
-        })
-        .from(schema.workflowStatus)
-        .where(eq(schema.workflowStatus.teamId, currentTeam.id))
-        .orderBy(categoryOrder, asc(schema.workflowStatus.position)),
-      db
-        .select({ id: schema.member.id, name: schema.member.name })
-        .from(schema.member)
-        .where(eq(schema.member.workspaceId, workspaceId))
-        .orderBy(asc(schema.member.name)),
-    ]);
+  const [
+    statusRows,
+    assigneeRows,
+    creatorRows,
+    priorityRows,
+    labelRows,
+    statuses,
+    members,
+    labels,
+  ] = await Promise.all([
+    db
+      .select({ value: schema.issue.statusId, count: sql<number>`count(*)::int` })
+      .from(schema.issue)
+      .innerJoin(
+        schema.workflowStatus,
+        and(
+          eq(schema.workflowStatus.id, schema.issue.statusId),
+          eq(schema.workflowStatus.teamId, schema.issue.teamId),
+        ),
+      )
+      .where(and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "status")))
+      .groupBy(schema.issue.statusId),
+    db
+      .select({ value: schema.issue.assigneeId, count: sql<number>`count(*)::int` })
+      .from(schema.issue)
+      .innerJoin(
+        schema.workflowStatus,
+        and(
+          eq(schema.workflowStatus.id, schema.issue.statusId),
+          eq(schema.workflowStatus.teamId, schema.issue.teamId),
+        ),
+      )
+      .where(
+        and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "assignee")),
+      )
+      .groupBy(schema.issue.assigneeId),
+    db
+      .select({ value: schema.issue.creatorId, count: sql<number>`count(*)::int` })
+      .from(schema.issue)
+      .innerJoin(
+        schema.workflowStatus,
+        and(
+          eq(schema.workflowStatus.id, schema.issue.statusId),
+          eq(schema.workflowStatus.teamId, schema.issue.teamId),
+        ),
+      )
+      .where(and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "creator")))
+      .groupBy(schema.issue.creatorId),
+    db
+      .select({ value: schema.issue.priority, count: sql<number>`count(*)::int` })
+      .from(schema.issue)
+      .innerJoin(
+        schema.workflowStatus,
+        and(
+          eq(schema.workflowStatus.id, schema.issue.statusId),
+          eq(schema.workflowStatus.teamId, schema.issue.teamId),
+        ),
+      )
+      .where(
+        and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "priority")),
+      )
+      .groupBy(schema.issue.priority),
+    db
+      .select({
+        value: schema.issueLabel.labelId,
+        count: sql<number>`count(distinct ${schema.issue.id})::int`,
+      })
+      .from(schema.issueLabel)
+      .innerJoin(schema.issue, eq(schema.issue.id, schema.issueLabel.issueId))
+      .innerJoin(
+        schema.workflowStatus,
+        and(
+          eq(schema.workflowStatus.id, schema.issue.statusId),
+          eq(schema.workflowStatus.teamId, schema.issue.teamId),
+        ),
+      )
+      .where(and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "label")))
+      .groupBy(schema.issueLabel.labelId),
+    db
+      .select({
+        id: schema.workflowStatus.id,
+        name: schema.workflowStatus.name,
+        description: schema.workflowStatus.description,
+        category: schema.workflowStatus.category,
+      })
+      .from(schema.workflowStatus)
+      .where(eq(schema.workflowStatus.teamId, currentTeam.id))
+      .orderBy(categoryOrder, asc(schema.workflowStatus.position)),
+    db
+      .select({ id: schema.member.id, name: schema.member.name })
+      .from(schema.member)
+      .where(eq(schema.member.workspaceId, workspaceId))
+      .orderBy(asc(schema.member.name)),
+    db
+      .select({
+        id: schema.label.id,
+        name: schema.label.name,
+        color: schema.label.color,
+      })
+      .from(schema.label)
+      .where(
+        and(
+          eq(schema.label.workspaceId, workspaceId),
+          eq(schema.label.isGroup, false),
+          or(isNull(schema.label.teamId), eq(schema.label.teamId, currentTeam.id)),
+        ),
+      )
+      .orderBy(asc(schema.label.name)),
+  ]);
 
   const statusCounts = new Map(statusRows.map((row) => [row.value, row.count]));
   const assigneeCounts = new Map(assigneeRows.map((row) => [row.value, row.count]));
   const creatorCounts = new Map(creatorRows.map((row) => [row.value, row.count]));
   const priorityCounts = new Map(priorityRows.map((row) => [row.value, row.count]));
+  const labelCounts = new Map(labelRows.map((row) => [row.value, row.count]));
 
   return {
     status: statuses.map((status) => ({
@@ -622,6 +696,10 @@ export async function listWorkspaceTeamIssueFacets(
     priority: ([0, 1, 2, 3, 4] as const).map((value) => ({
       value,
       count: priorityCounts.get(value) ?? 0,
+    })),
+    labels: labels.map((currentLabel) => ({
+      ...currentLabel,
+      count: labelCounts.get(currentLabel.id) ?? 0,
     })),
   };
 }
@@ -685,12 +763,32 @@ export async function reorderWorkspaceIssue(
     const dimensions = [options.groupBy ?? "status", options.subgroupBy ?? "none"].filter(
       (dimension, index, all) => dimension !== "none" && all.indexOf(dimension) === index,
     );
+    const labelGroupByIssue = new Map<string, string>();
+    if (dimensions.includes("label")) {
+      const issueLabelRows = await tx
+        .select({ issueId: schema.issueLabel.issueId, name: schema.label.name })
+        .from(schema.issueLabel)
+        .innerJoin(schema.label, eq(schema.label.id, schema.issueLabel.labelId))
+        .where(
+          inArray(
+            schema.issueLabel.issueId,
+            teamIssues.map((row) => row.id),
+          ),
+        )
+        .orderBy(asc(schema.label.name), asc(schema.label.id));
+      for (const row of issueLabelRows) {
+        if (!labelGroupByIssue.has(row.issueId)) {
+          labelGroupByIssue.set(row.issueId, row.name.toLocaleLowerCase());
+        }
+      }
+    }
     const keyFor = (issue: (typeof teamIssues)[number]) =>
       JSON.stringify(
         dimensions.map((dimension) => {
           if (dimension === "status") return issue.statusId;
           if (dimension === "assignee") return issue.assigneeId;
           if (dimension === "priority") return issue.priority;
+          if (dimension === "label") return labelGroupByIssue.get(issue.id) ?? null;
           return null;
         }),
       );
@@ -757,6 +855,9 @@ export async function getWorkspaceIssueByIdentifier(
     .limit(1);
 
   if (!currentIssue) return null;
+  const labelsByIssueId = await listWorkspaceIssueLabelSummaries(db, workspaceId, [
+    currentIssue.id,
+  ]);
 
   const parentIssue = currentIssue.parentId
     ? await issueRows(db)
@@ -773,6 +874,7 @@ export async function getWorkspaceIssueByIdentifier(
 
   return {
     ...withIdentifier(currentIssue),
+    labels: labelsByIssueId.get(currentIssue.id) ?? [],
     parent: parentIssue
       ? {
           id: parentIssue.id,
@@ -1025,6 +1127,23 @@ export async function updateWorkspaceIssue(
       throw new IssueConflictError("The Issue changed while being updated; retry the update.");
     }
 
+    const assignedLabels = isMovingTeam
+      ? await tx
+          .select({
+            id: schema.label.id,
+            name: schema.label.name,
+            teamId: schema.label.teamId,
+          })
+          .from(schema.issueLabel)
+          .innerJoin(schema.label, eq(schema.label.id, schema.issueLabel.labelId))
+          .where(eq(schema.issueLabel.issueId, currentIssue.id))
+          .orderBy(asc(schema.label.id))
+          .for("update")
+      : [];
+    const labelsToRemove = assignedLabels.filter(
+      (currentLabel) => currentLabel.teamId !== null && currentLabel.teamId !== targetTeam.id,
+    );
+
     if (values.assigneeId !== undefined && values.assigneeId !== null) {
       const [assignee] = await tx
         .select({ id: schema.member.id })
@@ -1112,6 +1231,23 @@ export async function updateWorkspaceIssue(
           },
         },
       });
+      if (labelsToRemove.length > 0) {
+        const labelIds = labelsToRemove.map((currentLabel) => currentLabel.id);
+        await tx
+          .delete(schema.issueLabel)
+          .where(
+            and(
+              eq(schema.issueLabel.issueId, currentIssue.id),
+              inArray(schema.issueLabel.labelId, labelIds),
+            ),
+          );
+        events.push(
+          ...labelsToRemove.map((currentLabel) => ({
+            type: "label_removed" as const,
+            payload: { labelId: currentLabel.id, labelName: currentLabel.name, teamMove: true },
+          })),
+        );
+      }
     }
     if (statusChanged) {
       patch.statusId = nextStatus.id;

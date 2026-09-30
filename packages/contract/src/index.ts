@@ -108,6 +108,35 @@ const workflowStatusSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
+const labelColorSchema = workflowStatusColorSchema;
+const labelSchema = z.object({
+  id: z.string().uuid(),
+  workspaceId: z.string().uuid(),
+  teamId: z.string().uuid().nullable(),
+  parentId: z.string().uuid().nullable(),
+  isGroup: z.boolean(),
+  name: z.string(),
+  description: z.string().nullable(),
+  color: labelColorSchema,
+  archivedAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+const labelListItemSchema = labelSchema.extend({
+  issueCount: z.number().int().nonnegative(),
+  lastAppliedAt: z.iso.datetime().nullable(),
+});
+const issueLabelSchema = labelSchema.pick({
+  id: true,
+  teamId: true,
+  parentId: true,
+  isGroup: true,
+  name: true,
+  description: true,
+  color: true,
+  archivedAt: true,
+});
+
 const teamSlugSchema = z.string().trim().min(1);
 
 const issuePrioritySchema = z.union([
@@ -163,6 +192,7 @@ const issueFiltersSchema = z.object({
   updatedAt: issueDateRangeSchema().optional(),
   startedAt: issueDateRangeSchema().optional(),
   completedAt: issueDateRangeSchema().optional(),
+  labelIds: z.array(z.string().uuid()).min(1).optional(),
   timeInStatus: issueDurationRangeSchema.optional(),
   content: z.string().trim().min(1).max(500).optional(),
 });
@@ -177,7 +207,7 @@ const issueOrderBySchema = z.enum([
   "dueDate",
   "timeInStatus",
 ]);
-const issueGroupBySchema = z.enum(["none", "status", "assignee", "priority"]);
+const issueGroupBySchema = z.enum(["none", "status", "assignee", "priority", "label"]);
 const issueIdsSchema = z
   .array(z.string().uuid())
   .min(1)
@@ -212,6 +242,14 @@ const issueFacetsSchema = z.object({
   creators: z.array(issueFacetCountSchema),
   priority: z.array(
     z.object({ value: issuePrioritySchema, count: z.number().int().nonnegative() }),
+  ),
+  labels: z.array(
+    z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      color: labelColorSchema,
+      count: z.number().int().nonnegative(),
+    }),
   ),
 });
 const issueListInputSchema = z.object({
@@ -271,6 +309,7 @@ const issueSchema = z.object({
   creatorId: z.string().uuid(),
   creator: issueMemberSchema,
   parentId: z.string().uuid().nullable(),
+  labels: z.array(issueLabelSchema),
   dueDate: z.iso.date().nullable(),
   startedAt: z.iso.datetime().nullable(),
   completedAt: z.iso.datetime().nullable(),
@@ -292,6 +331,8 @@ const issueEventTypeSchema = z.enum([
   "title",
   "description",
   "due_date",
+  "label_added",
+  "label_removed",
   "team",
 ]);
 
@@ -308,6 +349,9 @@ const issueEventSchema = z.object({
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
 export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
+export type Label = z.infer<typeof labelSchema>;
+export type LabelListItem = z.infer<typeof labelListItemSchema>;
+export type IssueLabel = z.infer<typeof issueLabelSchema>;
 export type Issue = z.infer<typeof issueSchema>;
 export type IssueListItem = z.infer<typeof issueListItemSchema>;
 export type IssueDetail = z.infer<typeof issueDetailSchema>;
@@ -432,6 +476,53 @@ export const contract = {
       .output(z.void()),
     setDefault: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
+  label: {
+    /** Lista Labels do Workspace e, quando informado, do Team selecionado. */
+    list: oc
+      .input(z.object({ team: teamSlugSchema.optional() }))
+      .output(z.array(labelListItemSchema)),
+    /** Cria um Label ou grupo no Workspace, Team ou grupo pai informado. */
+    create: oc
+      .input(
+        z.object({
+          team: teamSlugSchema.optional(),
+          parentId: z.string().uuid().optional(),
+          isGroup: z.boolean().optional(),
+          name: z.string().trim().min(1).max(80),
+          description: z.string().trim().max(500).nullable().optional(),
+          color: labelColorSchema.optional(),
+        }),
+      )
+      .output(labelSchema),
+    /** Edita os campos de apresentação de um Label. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().trim().min(1).max(80).optional(),
+          description: z.string().trim().max(500).nullable().optional(),
+          color: labelColorSchema.optional(),
+        }),
+      )
+      .output(labelSchema),
+    archive: oc.input(z.object({ id: z.string().uuid() })).output(labelSchema),
+    delete: oc
+      .input(z.object({ id: z.string().uuid() }))
+      .output(z.object({ deletedIssueCount: z.number().int().nonnegative() })),
+    merge: oc
+      .input(z.object({ sourceId: z.string().uuid(), targetId: z.string().uuid() }))
+      .output(labelSchema),
+    /** Converte um Label em grupo e opcionalmente migra as aplicações para um novo filho. */
+    convertToGroup: oc
+      .input(
+        z.object({ id: z.string().uuid(), childName: z.string().trim().min(1).max(80).optional() }),
+      )
+      .output(z.array(labelSchema)),
+    /** Move o Label (e seus filhos, quando grupo) para o Workspace ou Team indicado. */
+    move: oc
+      .input(z.object({ id: z.string().uuid(), team: teamSlugSchema.nullable() }))
+      .output(z.array(labelSchema)),
+  },
   issue: {
     /** Lista Issues de um Team, filtradas e ordenadas para a view escolhida. */
     list: oc.input(issueListInputSchema).output(z.array(issueListItemSchema)),
@@ -477,6 +568,15 @@ export const contract = {
     setParent: oc
       .input(z.object({ id: z.string().uuid(), parentId: z.string().uuid().nullable() }))
       .output(issueSchema),
+    /** Substitui a coleção de Labels; cada grupo admite no máximo um filho por Issue. */
+    setLabels: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          labelIds: z.array(z.string().uuid()).refine((ids) => new Set(ids).size === ids.length),
+        }),
+      )
+      .output(z.array(issueLabelSchema)),
     /** Hard-delete da Issue e dos eventos dependentes (D4). */
     delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
     /** Activity persistida para uma Issue dentro do Workspace atual. */

@@ -71,6 +71,13 @@
       "when": 1790730119620,
       "tag": "0009_purple_dormammu",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790731836668,
+      "tag": "0010_clammy_master_mold",
+      "breakpoints": true
     }
   ]
 }

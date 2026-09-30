@@ -2,6 +2,7 @@
 import { relations, sql } from "drizzle-orm";
 import {
   check,
+  boolean,
   date,
   index,
   integer,
@@ -110,6 +111,8 @@ export type WorkflowStatusColor =
   | "pink"
   | "red";
 
+export type LabelColor = WorkflowStatusColor;
+
 export const workflowStatus = pgTable(
   "workflow_status",
   {
@@ -161,6 +164,45 @@ export const teamMember = pgTable(
   (table) => [primaryKey({ columns: [table.teamId, table.memberId] })],
 );
 
+export const label = pgTable(
+  "label",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id").references(() => team.id, { onDelete: "cascade" }),
+    parentId: uuid("parent_id").references((): AnyPgColumn => label.id, {
+      onDelete: "cascade",
+    }),
+    isGroup: boolean("is_group").notNull().default(false),
+    name: text("name").notNull(),
+    description: text("description"),
+    color: text("color").$type<LabelColor>().notNull().default("grey"),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check(
+      "label_color_check",
+      sql`${table.color} in ('grey', 'slate', 'purple', 'cyan', 'green', 'amber', 'orange', 'pink', 'red')`,
+    ),
+    check(
+      "label_not_own_parent_check",
+      sql`${table.parentId} is null or ${table.parentId} <> ${table.id}`,
+    ),
+    uniqueIndex("label_workspace_name_unique")
+      .on(table.workspaceId, sql`lower(${table.name})`)
+      .where(sql`${table.teamId} is null`),
+    uniqueIndex("label_team_name_unique")
+      .on(table.teamId, sql`lower(${table.name})`)
+      .where(sql`${table.teamId} is not null`),
+    index("label_parent_index").on(table.parentId),
+    index("label_workspace_team_index").on(table.workspaceId, table.teamId),
+  ],
+);
+
 export type IssuePriority = 0 | 1 | 2 | 3 | 4;
 
 export type IssueEventType =
@@ -171,6 +213,8 @@ export type IssueEventType =
   | "title"
   | "description"
   | "due_date"
+  | "label_added"
+  | "label_removed"
   | "team";
 
 export type IssueEventPayload = Record<string, unknown>;
@@ -236,7 +280,7 @@ export const issueEvent = pgTable(
   (table) => [
     check(
       "issue_event_type_check",
-      sql`${table.type} in ('created', 'status', 'priority', 'assignee', 'title', 'description', 'due_date', 'team')`,
+      sql`${table.type} in ('created', 'status', 'priority', 'assignee', 'title', 'description', 'due_date', 'label_added', 'label_removed', 'team')`,
     ),
     index("issue_event_workspace_issue_created_index").on(
       table.workspaceId,
@@ -246,11 +290,29 @@ export const issueEvent = pgTable(
   ],
 );
 
+export const issueLabel = pgTable(
+  "issue_label",
+  {
+    issueId: uuid("issue_id")
+      .notNull()
+      .references(() => issue.id, { onDelete: "cascade" }),
+    labelId: uuid("label_id")
+      .notNull()
+      .references(() => label.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.issueId, table.labelId] }),
+    index("issue_label_label_index").on(table.labelId),
+  ],
+);
+
 export const workspaceRelations = relations(workspace, ({ many }) => ({
   members: many(member),
   teams: many(team),
   issues: many(issue),
   issueEvents: many(issueEvent),
+  labels: many(label),
 }));
 
 export const memberRelations = relations(member, ({ many, one }) => ({
@@ -271,6 +333,7 @@ export const teamRelations = relations(team, ({ many, one }) => ({
   }),
   members: many(teamMember),
   workflowStatuses: many(workflowStatus),
+  labels: many(label),
   issues: many(issue),
   defaultStatus: one(workflowStatus, {
     fields: [team.defaultStatusId],
@@ -316,6 +379,36 @@ export const issueRelations = relations(issue, ({ many, one }) => ({
     relationName: "issueCreator",
   }),
   events: many(issueEvent),
+  labels: many(issueLabel),
+}));
+
+export const labelRelations = relations(label, ({ many, one }) => ({
+  workspace: one(workspace, {
+    fields: [label.workspaceId],
+    references: [workspace.id],
+  }),
+  team: one(team, {
+    fields: [label.teamId],
+    references: [team.id],
+  }),
+  parent: one(label, {
+    fields: [label.parentId],
+    references: [label.id],
+    relationName: "labelParent",
+  }),
+  children: many(label, { relationName: "labelParent" }),
+  issues: many(issueLabel),
+}));
+
+export const issueLabelRelations = relations(issueLabel, ({ one }) => ({
+  issue: one(issue, {
+    fields: [issueLabel.issueId],
+    references: [issue.id],
+  }),
+  label: one(label, {
+    fields: [issueLabel.labelId],
+    references: [label.id],
+  }),
 }));
 
 export const issueEventRelations = relations(issueEvent, ({ one }) => ({

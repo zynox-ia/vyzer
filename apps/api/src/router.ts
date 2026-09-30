@@ -1,15 +1,20 @@
 import { ORPCError } from "@orpc/server";
 import {
+  archiveWorkspaceLabel,
   checkConnection,
+  convertWorkspaceLabelToGroup,
   createWorkspaceIssue,
+  createWorkspaceLabel,
   createWorkspaceTeamWorkflowStatus,
   createTeamSlug,
   createWorkspaceTeam,
+  deleteWorkspaceLabel,
   deleteWorkspaceWorkflowStatus,
   deleteWorkspaceIssue,
   deleteWorkspace,
   deleteWorkspaceTeam,
   getWorkspaceTeamBySlug,
+  listWorkspaceLabels,
   listWorkspaceTeamMembers,
   listWorkspaceTeams,
   listWorkspaceTeamWorkflowStatuses,
@@ -18,19 +23,25 @@ import {
   getWorkspaceIssueByIdentifier,
   listWorkspaceMembers,
   listWorkspaceTeamIssueFacets,
+  mergeWorkspaceLabels,
+  moveWorkspaceLabel,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
   updateWorkspaceTeam,
   updateWorkspaceWorkflowStatus,
+  updateWorkspaceLabel,
   reorderWorkspaceWorkflowStatus,
   reorderWorkspaceIssue,
+  setWorkspaceIssueLabels,
   setWorkspaceDefaultWorkflowStatus,
   setWorkspaceIssueParent,
   updateWorkspaceIssue,
   IssueConflictError,
   IssueRuleError,
+  LabelRuleError,
   type IssueEventType,
   type IssuePriority,
+  type LabelColor,
   WorkflowStatusRuleError,
   type WorkflowStatusCategory,
   type WorkflowStatusColor,
@@ -324,6 +335,89 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         if (result === null) throw new ORPCError("NOT_FOUND");
       }),
     },
+    label: {
+      list: middleware.workspaceScoped.label.list.handler(async ({ context, input }) => {
+        const labels = await listWorkspaceLabels(context.db, context.workspace.id, input.team);
+        if (!labels) throw new ORPCError("NOT_FOUND");
+
+        return labels.map(serializeLabelListItem);
+      }),
+      create: middleware.adminOnly.label.create.handler(async ({ context, input }) => {
+        const createdLabel = await withLabelErrors(() =>
+          createWorkspaceLabel(context.db, context.workspace.id, input),
+        );
+        if (!createdLabel) throw new ORPCError("NOT_FOUND");
+
+        return serializeLabel(createdLabel);
+      }),
+      update: middleware.adminOnly.label.update.handler(async ({ context, input }) => {
+        const { id, ...values } = input;
+        const updatedLabel = await withLabelErrors(() =>
+          updateWorkspaceLabel(context.db, context.workspace.id, id, values),
+        );
+        if (!updatedLabel) throw new ORPCError("NOT_FOUND");
+
+        return serializeLabel(updatedLabel);
+      }),
+      archive: middleware.adminOnly.label.archive.handler(async ({ context, input }) => {
+        const archivedLabel = await archiveWorkspaceLabel(
+          context.db,
+          context.workspace.id,
+          input.id,
+        );
+        if (!archivedLabel) throw new ORPCError("NOT_FOUND");
+
+        return serializeLabel(archivedLabel);
+      }),
+      delete: middleware.adminOnly.label.delete.handler(async ({ context, input }) => {
+        const result = await deleteWorkspaceLabel(
+          context.db,
+          context.workspace.id,
+          context.member.id,
+          input.id,
+        );
+        if (!result) throw new ORPCError("NOT_FOUND");
+        return result;
+      }),
+      merge: middleware.adminOnly.label.merge.handler(async ({ context, input }) => {
+        const mergedLabel = await withLabelErrors(() =>
+          mergeWorkspaceLabels(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.sourceId,
+            input.targetId,
+          ),
+        );
+        if (!mergedLabel) throw new ORPCError("NOT_FOUND");
+
+        return serializeLabel(mergedLabel);
+      }),
+      convertToGroup: middleware.adminOnly.label.convertToGroup.handler(
+        async ({ context, input }) => {
+          const converted = await withLabelErrors(() =>
+            convertWorkspaceLabelToGroup(
+              context.db,
+              context.workspace.id,
+              context.member.id,
+              input.id,
+              input.childName,
+            ),
+          );
+          if (!converted) throw new ORPCError("NOT_FOUND");
+
+          return converted.map(serializeLabel);
+        },
+      ),
+      move: middleware.adminOnly.label.move.handler(async ({ context, input }) => {
+        const movedLabels = await withLabelErrors(() =>
+          moveWorkspaceLabel(context.db, context.workspace.id, input.id, input.team),
+        );
+        if (!movedLabels) throw new ORPCError("NOT_FOUND");
+
+        return movedLabels.map(serializeLabel);
+      }),
+    },
     issue: {
       list: middleware.workspaceScoped.issue.list.handler(async ({ context, input }) => {
         const issues = await listWorkspaceTeamIssues(
@@ -388,6 +482,20 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         if (!updatedIssue) throw new ORPCError("NOT_FOUND");
 
         return serializeIssue(updatedIssue);
+      }),
+      setLabels: middleware.workspaceScoped.issue.setLabels.handler(async ({ context, input }) => {
+        const labels = await withLabelErrors(() =>
+          setWorkspaceIssueLabels(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.id,
+            input.labelIds,
+          ),
+        );
+        if (!labels) throw new ORPCError("NOT_FOUND");
+
+        return labels.map(serializeIssueLabel);
       }),
       delete: middleware.workspaceScoped.issue.delete.handler(async ({ context, input }) => {
         const deletedIssue = await deleteWorkspaceIssue(context.db, context.workspace.id, input.id);
@@ -506,6 +614,22 @@ async function withStatusErrors<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
+async function withLabelErrors<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof LabelRuleError) {
+      throw new ORPCError("BAD_REQUEST", { message: error.message });
+    }
+    if (isUniqueConstraintViolation(error)) {
+      throw new ORPCError("CONFLICT", {
+        message: "A Label with this name already exists in the selected scope.",
+      });
+    }
+    throw error;
+  }
+}
+
 function serializeWorkflowStatus<
   T extends {
     id: string;
@@ -525,6 +649,68 @@ function serializeWorkflowStatus<
     createdAt: status.createdAt.toISOString(),
     updatedAt: status.updatedAt.toISOString(),
   };
+}
+
+function serializeLabel<
+  T extends {
+    id: string;
+    workspaceId: string;
+    teamId: string | null;
+    parentId: string | null;
+    isGroup: boolean;
+    name: string;
+    description: string | null;
+    color: LabelColor;
+    archivedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  },
+>(label: T) {
+  return {
+    ...label,
+    archivedAt: label.archivedAt?.toISOString() ?? null,
+    createdAt: label.createdAt.toISOString(),
+    updatedAt: label.updatedAt.toISOString(),
+  };
+}
+
+function serializeLabelListItem<
+  T extends {
+    id: string;
+    workspaceId: string;
+    teamId: string | null;
+    parentId: string | null;
+    isGroup: boolean;
+    name: string;
+    description: string | null;
+    color: LabelColor;
+    archivedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    issueCount: number;
+    lastAppliedAt: Date | null;
+  },
+>(label: T) {
+  return {
+    ...serializeLabel(label),
+    issueCount: label.issueCount,
+    lastAppliedAt: label.lastAppliedAt?.toISOString() ?? null,
+  };
+}
+
+function serializeIssueLabel<
+  T extends {
+    id: string;
+    teamId: string | null;
+    parentId: string | null;
+    isGroup: boolean;
+    name: string;
+    description: string | null;
+    color: LabelColor;
+    archivedAt: Date | null;
+  },
+>(label: T) {
+  return { ...label, archivedAt: label.archivedAt?.toISOString() ?? null };
 }
 
 function serializeIssue<
@@ -548,6 +734,16 @@ function serializeIssue<
     creatorId: string;
     creator: { id: string; name: string };
     parentId: string | null;
+    labels: Array<{
+      id: string;
+      teamId: string | null;
+      parentId: string | null;
+      isGroup: boolean;
+      name: string;
+      description: string | null;
+      color: LabelColor;
+      archivedAt: Date | null;
+    }>;
     team: { id: string; name: string; slug: string; key: string };
     dueDate: string | null;
     startedAt: Date | null;
@@ -559,6 +755,7 @@ function serializeIssue<
 >(issue: T) {
   return {
     ...issue,
+    labels: issue.labels.map(serializeIssueLabel),
     startedAt: issue.startedAt?.toISOString() ?? null,
     completedAt: issue.completedAt?.toISOString() ?? null,
     canceledAt: issue.canceledAt?.toISOString() ?? null,

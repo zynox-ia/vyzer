@@ -25,6 +25,9 @@ export const updateIssueMutationOptions = () => api.issue.update.mutationOptions
 /** Define ou remove a Issue pai. */
 export const setIssueParentMutationOptions = () => api.issue.setParent.mutationOptions();
 
+/** Aplica ou remove Labels de uma Issue. */
+export const setIssueLabelsMutationOptions = () => api.issue.setLabels.mutationOptions();
+
 /** Exclui permanentemente uma Issue e seus eventos dependentes. */
 export const deleteIssueMutationOptions = () => api.issue.delete.mutationOptions();
 

@@ -278,7 +278,30 @@ export {
   setWorkspaceIssueParent,
   updateWorkspaceIssue,
 } from "./issues";
-export { issue, issueEvent, member, team, teamMember, workflowStatus, workspace } from "./schema";
+export {
+  LabelRuleError,
+  archiveWorkspaceLabel,
+  convertWorkspaceLabelToGroup,
+  createWorkspaceLabel,
+  deleteWorkspaceLabel,
+  listWorkspaceIssueLabelSummaries,
+  listWorkspaceLabels,
+  mergeWorkspaceLabels,
+  moveWorkspaceLabel,
+  setWorkspaceIssueLabels,
+  updateWorkspaceLabel,
+} from "./labels";
+export {
+  issue,
+  issueEvent,
+  issueLabel,
+  label,
+  member,
+  team,
+  teamMember,
+  workflowStatus,
+  workspace,
+} from "./schema";
 export type {
   IssueCreateValues,
   IssueFilters,
@@ -291,6 +314,8 @@ export type {
 export type {
   IssueEventType,
   IssuePriority,
+  LabelColor,
   WorkflowStatusCategory,
   WorkflowStatusColor,
 } from "./schema";
+export type { IssueLabelSummary } from "./labels";

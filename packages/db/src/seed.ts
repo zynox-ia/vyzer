@@ -1,6 +1,6 @@
 import type { Db } from "./index";
 import { ne, or } from "drizzle-orm";
-import { member, team, teamMember, workspace } from "./schema";
+import { label, member, team, teamMember, workspace } from "./schema";
 import {
   seedTeamWorkflowStatuses,
   VYZER_WORKFLOW_STATUSES,
@@ -13,6 +13,12 @@ export const MEMBER_ID = "00000000-0000-4000-8000-000000000002";
 export const ZYNOX_TEAM_ID = "00000000-0000-4000-8000-000000000003";
 export const VYZER_TEAM_ID = "00000000-0000-4000-8000-000000000004";
 export const WORKSPACE_REGION = "United States";
+
+export const WORKSPACE_LABELS = [
+  { name: "Bug", color: "grey" },
+  { name: "Feature", color: "grey" },
+  { name: "Improvement", color: "grey" },
+] as const;
 
 /** Seed the single local Workspace and its owner. Re-running this is safe. */
 export async function seedWorkspace(db: Db): Promise<void> {
@@ -91,5 +97,16 @@ export async function seedWorkspace(db: Db): Promise<void> {
 
     await seedTeamWorkflowStatuses(tx, ZYNOX_TEAM_ID, ZYNOX_WORKFLOW_STATUSES);
     await seedTeamWorkflowStatuses(tx, VYZER_TEAM_ID, VYZER_WORKFLOW_STATUSES);
+
+    await tx
+      .insert(label)
+      .values(
+        WORKSPACE_LABELS.map((seedLabel) => ({
+          workspaceId: WORKSPACE_ID,
+          name: seedLabel.name,
+          color: seedLabel.color,
+        })),
+      )
+      .onConflictDoNothing();
   });
 }
