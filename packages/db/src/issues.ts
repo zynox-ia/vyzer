@@ -1,7 +1,9 @@
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
+import { insertWorkspaceIssueEvent } from "./issue-events";
 import { listWorkspaceIssueLabelSummaries } from "./labels";
+import { listWorkspaceIssueRelationDetails } from "./relations";
 import type { Db } from "./index";
 import * as schema from "./schema";
 
@@ -245,7 +247,7 @@ async function insertIssueEvent(
     createdAt?: Date;
   },
 ) {
-  await executor.insert(schema.issueEvent).values(event);
+  await insertWorkspaceIssueEvent(executor, event);
 }
 
 async function getIssueRow(executor: DbSession, workspaceId: string, id: string) {
@@ -858,6 +860,7 @@ export async function getWorkspaceIssueByIdentifier(
   const labelsByIssueId = await listWorkspaceIssueLabelSummaries(db, workspaceId, [
     currentIssue.id,
   ]);
+  const relationDetails = await listWorkspaceIssueRelationDetails(db, workspaceId, currentIssue.id);
 
   const parentIssue = currentIssue.parentId
     ? await issueRows(db)
@@ -875,6 +878,8 @@ export async function getWorkspaceIssueByIdentifier(
   return {
     ...withIdentifier(currentIssue),
     labels: labelsByIssueId.get(currentIssue.id) ?? [],
+    relations: relationDetails.relations,
+    links: relationDetails.links,
     parent: parentIssue
       ? {
           id: parentIssue.id,

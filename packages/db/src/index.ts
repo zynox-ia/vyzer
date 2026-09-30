@@ -292,6 +292,15 @@ export {
   updateWorkspaceLabel,
 } from "./labels";
 export {
+  IssueRelationRuleError,
+  addWorkspaceIssueLink,
+  addWorkspaceIssueRelation,
+  listWorkspaceIssueRelationDetails,
+  removeWorkspaceIssueLink,
+  removeWorkspaceIssueRelation,
+} from "./relations";
+export type { IssueRelationGroups, IssueRelationSummary } from "./relations";
+export {
   archiveAllWorkspaceNotifications,
   archiveWorkspaceNotifications,
   countUnreadWorkspaceNotifications,
@@ -303,7 +312,9 @@ export {
 export {
   issue,
   issueEvent,
+  issueLink,
   issueLabel,
+  issueRelation,
   label,
   member,
   notification,
@@ -323,6 +334,7 @@ export type {
 } from "./issues";
 export type {
   IssueEventType,
+  IssueRelationType,
   IssuePriority,
   LabelColor,
   NotificationType,

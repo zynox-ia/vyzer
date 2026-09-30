@@ -85,6 +85,20 @@
       "when": 1790733390925,
       "tag": "0011_nervous_payback",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790734245172,
+      "tag": "0012_flawless_red_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790734481198,
+      "tag": "0013_abandoned_mojo",
+      "breakpoints": true
     }
   ]
 }

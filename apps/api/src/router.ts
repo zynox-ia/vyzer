@@ -3,6 +3,8 @@ import {
   archiveAllWorkspaceNotifications,
   archiveWorkspaceLabel,
   archiveWorkspaceNotifications,
+  addWorkspaceIssueLink,
+  addWorkspaceIssueRelation,
   checkConnection,
   convertWorkspaceLabelToGroup,
   countUnreadWorkspaceNotifications,
@@ -23,6 +25,8 @@ import {
   listWorkspaceTeamWorkflowStatuses,
   listWorkspaceTeamIssues,
   listWorkspaceIssueEvents,
+  removeWorkspaceIssueLink,
+  removeWorkspaceIssueRelation,
   listWorkspaceNotifications,
   getWorkspaceIssueByIdentifier,
   listWorkspaceMembers,
@@ -44,6 +48,7 @@ import {
   updateWorkspaceIssue,
   IssueConflictError,
   IssueRuleError,
+  IssueRelationRuleError,
   LabelRuleError,
   type IssueEventType,
   type IssuePriority,
@@ -424,6 +429,59 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         return movedLabels.map(serializeLabel);
       }),
     },
+    relation: {
+      add: middleware.workspaceScoped.relation.add.handler(async ({ context, input }) => {
+        const result = await withRelationErrors(() =>
+          addWorkspaceIssueRelation(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.issueId,
+            input.relatedIssueId,
+            input.type,
+          ),
+        );
+        if (result === null) throw new ORPCError("NOT_FOUND");
+      }),
+      remove: middleware.workspaceScoped.relation.remove.handler(async ({ context, input }) => {
+        const result = await withRelationErrors(() =>
+          removeWorkspaceIssueRelation(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.issueId,
+            input.relatedIssueId,
+            input.type,
+          ),
+        );
+        if (result === null) throw new ORPCError("NOT_FOUND");
+      }),
+    },
+    link: {
+      add: middleware.workspaceScoped.link.add.handler(async ({ context, input }) => {
+        const createdLink = await withRelationErrors(() =>
+          addWorkspaceIssueLink(
+            context.db,
+            context.workspace.id,
+            context.member.id,
+            input.issueId,
+            {
+              url: input.url,
+              title: input.title,
+            },
+          ),
+        );
+        if (!createdLink) throw new ORPCError("NOT_FOUND");
+      }),
+      remove: middleware.workspaceScoped.link.remove.handler(async ({ context, input }) => {
+        const deletedLink = await removeWorkspaceIssueLink(
+          context.db,
+          context.workspace.id,
+          input.id,
+        );
+        if (!deletedLink) throw new ORPCError("NOT_FOUND");
+      }),
+    },
     issue: {
       list: middleware.workspaceScoped.issue.list.handler(async ({ context, input }) => {
         const issues = await listWorkspaceTeamIssues(
@@ -455,7 +513,14 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         );
         if (!issue) throw new ORPCError("NOT_FOUND");
 
-        return serializeIssue(issue);
+        return {
+          ...serializeIssue(issue),
+          relations: issue.relations,
+          links: issue.links.map((link) => ({
+            ...link,
+            createdAt: link.createdAt.toISOString(),
+          })),
+        };
       }),
       create: middleware.workspaceScoped.issue.create.handler(async ({ context, input }) => {
         const { team: teamSlug, ...values } = input;
@@ -875,6 +940,17 @@ async function withIssueErrors<T>(operation: () => Promise<T>): Promise<T> {
     }
     if (isUniqueConstraintViolation(error)) {
       throw new ORPCError("CONFLICT", { message: "This Issue number is already in use." });
+    }
+    throw error;
+  }
+}
+
+async function withRelationErrors<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof IssueRelationRuleError) {
+      throw new ORPCError("BAD_REQUEST", { message: error.message });
     }
     throw error;
   }

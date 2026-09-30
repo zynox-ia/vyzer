@@ -205,6 +205,8 @@ export const label = pgTable(
 
 export type IssuePriority = 0 | 1 | 2 | 3 | 4;
 
+export type IssueRelationType = "blocks" | "related" | "duplicate";
+
 export type IssueEventType =
   | "created"
   | "status"
@@ -215,7 +217,9 @@ export type IssueEventType =
   | "due_date"
   | "label_added"
   | "label_removed"
-  | "team";
+  | "team"
+  | "relation_added"
+  | "relation_removed";
 
 export type IssueEventPayload = Record<string, unknown>;
 
@@ -282,13 +286,56 @@ export const issueEvent = pgTable(
   (table) => [
     check(
       "issue_event_type_check",
-      sql`${table.type} in ('created', 'status', 'priority', 'assignee', 'title', 'description', 'due_date', 'label_added', 'label_removed', 'team')`,
+      sql`${table.type} in ('created', 'status', 'priority', 'assignee', 'title', 'description', 'due_date', 'label_added', 'label_removed', 'team', 'relation_added', 'relation_removed')`,
     ),
     index("issue_event_workspace_issue_created_index").on(
       table.workspaceId,
       table.issueId,
       table.createdAt,
     ),
+  ],
+);
+
+export const issueRelation = pgTable(
+  "issue_relation",
+  {
+    issueId: uuid("issue_id")
+      .notNull()
+      .references(() => issue.id, { onDelete: "cascade" }),
+    relatedIssueId: uuid("related_issue_id")
+      .notNull()
+      .references(() => issue.id, { onDelete: "cascade" }),
+    type: text("type").$type<IssueRelationType>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check("issue_relation_type_check", sql`${table.type} in ('blocks', 'related', 'duplicate')`),
+    check("issue_relation_not_self_check", sql`${table.issueId} <> ${table.relatedIssueId}`),
+    primaryKey({ columns: [table.issueId, table.relatedIssueId, table.type] }),
+    index("issue_relation_related_index").on(table.relatedIssueId, table.type),
+  ],
+);
+
+export const issueLink = pgTable(
+  "issue_link",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    issueId: uuid("issue_id")
+      .notNull()
+      .references(() => issue.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    title: text("title"),
+    creatorId: uuid("creator_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check(
+      "issue_link_http_url_check",
+      sql`lower(${table.url}) like 'http://%' or lower(${table.url}) like 'https://%'`,
+    ),
+    index("issue_link_issue_created_index").on(table.issueId, table.createdAt),
   ],
 );
 
@@ -373,6 +420,7 @@ export const memberRelations = relations(member, ({ many, one }) => ({
   assignedIssues: many(issue, { relationName: "issueAssignee" }),
   createdIssues: many(issue, { relationName: "issueCreator" }),
   authoredIssueEvents: many(issueEvent, { relationName: "issueEventActor" }),
+  createdIssueLinks: many(issueLink),
   receivedNotifications: many(notification, { relationName: "notificationRecipient" }),
   notificationsAsActor: many(notification, { relationName: "notificationActor" }),
 }));
@@ -431,6 +479,9 @@ export const issueRelations = relations(issue, ({ many, one }) => ({
   }),
   events: many(issueEvent),
   labels: many(issueLabel),
+  outgoingRelations: many(issueRelation, { relationName: "issueRelationSource" }),
+  incomingRelations: many(issueRelation, { relationName: "issueRelationTarget" }),
+  links: many(issueLink),
   notifications: many(notification),
 }));
 
@@ -461,6 +512,24 @@ export const issueLabelRelations = relations(issueLabel, ({ one }) => ({
     fields: [issueLabel.labelId],
     references: [label.id],
   }),
+}));
+
+export const issueRelationRelations = relations(issueRelation, ({ one }) => ({
+  issue: one(issue, {
+    fields: [issueRelation.issueId],
+    references: [issue.id],
+    relationName: "issueRelationSource",
+  }),
+  relatedIssue: one(issue, {
+    fields: [issueRelation.relatedIssueId],
+    references: [issue.id],
+    relationName: "issueRelationTarget",
+  }),
+}));
+
+export const issueLinkRelations = relations(issueLink, ({ one }) => ({
+  issue: one(issue, { fields: [issueLink.issueId], references: [issue.id] }),
+  creator: one(member, { fields: [issueLink.creatorId], references: [member.id] }),
 }));
 
 export const issueEventRelations = relations(issueEvent, ({ one, many }) => ({

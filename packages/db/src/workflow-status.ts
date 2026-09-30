@@ -1,8 +1,9 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import type { Db } from "./index";
+import { insertWorkspaceIssueEvent } from "./issue-events";
 import * as schema from "./schema";
 
-type DbSession = Pick<Db, "delete" | "insert" | "select" | "update">;
+type DbSession = Pick<Db, "delete" | "execute" | "insert" | "select" | "update">;
 
 export type WorkflowStatusSeed = Pick<
   typeof schema.workflowStatus.$inferInsert,
@@ -342,7 +343,7 @@ export async function deleteWorkspaceWorkflowStatus(
             updatedAt: now,
           })
           .where(eq(schema.issue.id, affectedIssue.id));
-        await tx.insert(schema.issueEvent).values({
+        await insertWorkspaceIssueEvent(tx, {
           workspaceId,
           issueId: affectedIssue.id,
           actorId,
