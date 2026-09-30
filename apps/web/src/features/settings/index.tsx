@@ -21,3 +21,4 @@ export function SettingsRoute() {
 
 export { PreferencesPage } from "./preferences";
 export { MembersPage } from "./members";
+export { TeamStatusesPage } from "./team-statuses";

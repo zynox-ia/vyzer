@@ -73,8 +73,248 @@ const teamListItemSchema = teamSchema.extend({
   issueCount: z.number().int().nonnegative(),
 });
 
+const workflowStatusCategorySchema = z.enum([
+  "triage",
+  "backlog",
+  "unstarted",
+  "started",
+  "completed",
+  "canceled",
+  "duplicate",
+]);
+
+const workflowStatusColorSchema = z.enum([
+  "grey",
+  "slate",
+  "purple",
+  "cyan",
+  "green",
+  "amber",
+  "orange",
+  "pink",
+  "red",
+]);
+
+const workflowStatusSchema = z.object({
+  id: z.string().uuid(),
+  teamId: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable(),
+  category: workflowStatusCategorySchema,
+  color: workflowStatusColorSchema,
+  position: z.number().int().nonnegative(),
+  isDefault: z.boolean(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+const teamSlugSchema = z.string().trim().min(1);
+
+const issuePrioritySchema = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+]);
+const issueViewSchema = z.enum(["active", "backlog", "all"]);
+const issueDateRangeSchema = (dateOnly = false) => {
+  const dateSchema = dateOnly ? z.iso.date() : z.iso.datetime();
+  return z
+    .object({
+      from: dateSchema.optional(),
+      to: dateSchema.optional(),
+      isEmpty: z.boolean().optional(),
+    })
+    .refine(
+      (range) => range.from !== undefined || range.to !== undefined || range.isEmpty !== undefined,
+      "Choose a date range or whether the field is empty.",
+    )
+    .refine(
+      (range) =>
+        range.isEmpty === undefined || (range.from === undefined && range.to === undefined),
+      "A date range cannot be combined with an empty check.",
+    );
+};
+const issueDurationRangeSchema = z
+  .object({
+    minSeconds: z.number().int().nonnegative().optional(),
+    maxSeconds: z.number().int().nonnegative().optional(),
+  })
+  .refine(
+    (range) => range.minSeconds !== undefined || range.maxSeconds !== undefined,
+    "Choose a minimum or maximum duration.",
+  )
+  .refine(
+    (range) =>
+      range.minSeconds === undefined ||
+      range.maxSeconds === undefined ||
+      range.minSeconds <= range.maxSeconds,
+    "The minimum duration must not exceed the maximum duration.",
+  );
+const issueFiltersSchema = z.object({
+  statusIds: z.array(z.string().uuid()).min(1).optional(),
+  assigneeIds: z.array(z.string().uuid()).min(1).optional(),
+  unassigned: z.boolean().optional(),
+  creatorIds: z.array(z.string().uuid()).min(1).optional(),
+  priorities: z.array(issuePrioritySchema).min(1).optional(),
+  dueDate: issueDateRangeSchema(true).optional(),
+  createdAt: issueDateRangeSchema().optional(),
+  updatedAt: issueDateRangeSchema().optional(),
+  startedAt: issueDateRangeSchema().optional(),
+  completedAt: issueDateRangeSchema().optional(),
+  timeInStatus: issueDurationRangeSchema.optional(),
+  content: z.string().trim().min(1).max(500).optional(),
+});
+const issueOrderBySchema = z.enum([
+  "manual",
+  "title",
+  "status",
+  "priority",
+  "assignee",
+  "updated",
+  "created",
+  "dueDate",
+  "timeInStatus",
+]);
+const issueGroupBySchema = z.enum(["none", "status", "assignee", "priority"]);
+const issueIdsSchema = z
+  .array(z.string().uuid())
+  .min(1)
+  .refine((ids) => new Set(ids).size === ids.length, "Issue ids must be unique.");
+const issueBulkFailureSchema = z.object({
+  id: z.string().uuid(),
+  code: z.enum(["NOT_FOUND", "BAD_REQUEST", "CONFLICT", "INTERNAL_SERVER_ERROR"]),
+  message: z.string(),
+});
+const issueFacetCountSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  count: z.number().int().nonnegative(),
+});
+const issueFacetsSchema = z.object({
+  status: z.array(
+    z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      description: z.string().nullable(),
+      category: workflowStatusCategorySchema,
+      count: z.number().int().nonnegative(),
+    }),
+  ),
+  assignees: z.array(
+    z.object({
+      id: z.string().uuid().nullable(),
+      name: z.string().nullable(),
+      count: z.number().int().nonnegative(),
+    }),
+  ),
+  creators: z.array(issueFacetCountSchema),
+  priority: z.array(
+    z.object({ value: issuePrioritySchema, count: z.number().int().nonnegative() }),
+  ),
+});
+const issueListInputSchema = z.object({
+  team: teamSlugSchema,
+  view: issueViewSchema.optional(),
+  filters: issueFiltersSchema.optional(),
+  orderBy: issueOrderBySchema.optional(),
+  orderDirection: z.enum(["asc", "desc"]).optional(),
+  groupBy: issueGroupBySchema.optional(),
+  subgroupBy: issueGroupBySchema.optional(),
+  orderCompletedByRecency: z.boolean().optional(),
+});
+const issueFacetsInputSchema = z.object({
+  team: teamSlugSchema,
+  view: issueViewSchema.optional(),
+  filters: issueFiltersSchema.optional(),
+});
+
+const issueTeamSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  key: teamKeySchema,
+});
+
+const issueStatusSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  category: workflowStatusCategorySchema,
+  color: workflowStatusColorSchema,
+});
+
+const issueMemberSchema = z.object({ id: z.string().uuid(), name: z.string() });
+const issueSubIssueProgressSchema = z.object({
+  completed: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+});
+const issueParentSummarySchema = z.object({
+  id: z.string().uuid(),
+  identifier: z.string(),
+  title: z.string(),
+});
+
+const issueSchema = z.object({
+  id: z.string().uuid(),
+  teamId: z.string().uuid(),
+  number: z.number().int().positive(),
+  identifier: z.string(),
+  team: issueTeamSchema,
+  title: z.string(),
+  description: z.string().nullable(),
+  statusId: z.string().uuid(),
+  status: issueStatusSchema,
+  priority: issuePrioritySchema,
+  assigneeId: z.string().uuid().nullable(),
+  assignee: issueMemberSchema.nullable(),
+  creatorId: z.string().uuid(),
+  creator: issueMemberSchema,
+  parentId: z.string().uuid().nullable(),
+  dueDate: z.iso.date().nullable(),
+  startedAt: z.iso.datetime().nullable(),
+  completedAt: z.iso.datetime().nullable(),
+  canceledAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+const issueListItemSchema = issueSchema.extend({ subIssueProgress: issueSubIssueProgressSchema });
+const issueDetailSchema = issueSchema.extend({
+  parent: issueParentSummarySchema.nullable(),
+  subIssueProgress: issueSubIssueProgressSchema,
+});
+
+const issueEventTypeSchema = z.enum([
+  "created",
+  "status",
+  "priority",
+  "assignee",
+  "title",
+  "description",
+  "due_date",
+  "team",
+]);
+
+const issueEventSchema = z.object({
+  id: z.string().uuid(),
+  issueId: z.string().uuid(),
+  actorId: z.string().uuid(),
+  actor: issueMemberSchema,
+  type: issueEventTypeSchema,
+  payload: z.record(z.string(), z.unknown()),
+  createdAt: z.iso.datetime(),
+});
+
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
+export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
+export type Issue = z.infer<typeof issueSchema>;
+export type IssueListItem = z.infer<typeof issueListItemSchema>;
+export type IssueDetail = z.infer<typeof issueDetailSchema>;
+export type IssueEvent = z.infer<typeof issueEventSchema>;
+export type IssueFilters = z.infer<typeof issueFiltersSchema>;
+export type IssueListInput = z.infer<typeof issueListInputSchema>;
+export type IssueFacetsInput = z.infer<typeof issueFacetsInputSchema>;
 
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
@@ -156,6 +396,132 @@ export const contract = {
     members: oc.input(z.object({ id: z.string().uuid() })).output(z.array(memberSchema)),
     /** Exclui imediatamente um Team do Workspace resolvido. */
     delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+  },
+  status: {
+    /** Lista o Workflow ordenado pelas categorias e posições do Team. */
+    list: oc.input(z.object({ team: teamSlugSchema })).output(z.array(workflowStatusSchema)),
+    /** Cria um Status no Team selecionado; Duplicate e Triage são controlados pelo sistema. */
+    create: oc
+      .input(
+        z.object({
+          team: teamSlugSchema,
+          category: workflowStatusCategorySchema,
+          name: z.string().trim().min(1),
+          description: z.string().trim().nullable().optional(),
+          color: workflowStatusColorSchema.optional(),
+        }),
+      )
+      .output(workflowStatusSchema),
+    /** Edita o nome, a descrição ou a cor de um Status do Workspace atual. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().trim().min(1).optional(),
+          description: z.string().trim().nullable().optional(),
+          color: workflowStatusColorSchema.optional(),
+        }),
+      )
+      .output(workflowStatusSchema),
+    /** Exclui um Status e, quando preciso, move as Issues para moveIssuesTo. */
+    delete: oc
+      .input(z.object({ id: z.string().uuid(), moveIssuesTo: z.string().uuid().optional() }))
+      .output(z.void()),
+    reorder: oc
+      .input(z.object({ id: z.string().uuid(), position: z.number().int().nonnegative() }))
+      .output(z.void()),
+    setDefault: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+  },
+  issue: {
+    /** Lista Issues de um Team, filtradas e ordenadas para a view escolhida. */
+    list: oc.input(issueListInputSchema).output(z.array(issueListItemSchema)),
+    /** Contagens por filtro e grupos, incluindo opções sem Issues. */
+    facets: oc.input(issueFacetsInputSchema).output(issueFacetsSchema),
+    /** Busca pelo identificador derivado da Team key atual (ex.: VYZ-35). */
+    get: oc.input(z.object({ identifier: z.string().trim().min(1) })).output(issueDetailSchema),
+    /** Cria uma Issue; com parentId, infere o Team e herda Priority do pai. */
+    create: oc
+      .input(
+        z
+          .object({
+            team: teamSlugSchema.optional(),
+            parentId: z.string().uuid().optional(),
+            title: z.string().trim().min(1),
+            description: z.string().nullable().optional(),
+            statusId: z.string().uuid().optional(),
+            priority: issuePrioritySchema.optional(),
+            assigneeId: z.string().uuid().nullable().optional(),
+            dueDate: z.iso.date().nullable().optional(),
+          })
+          .refine((values) => values.team !== undefined || values.parentId !== undefined, {
+            message: "Choose a Team or a parent Issue.",
+          }),
+      )
+      .output(issueSchema),
+    /** Atualiza propriedades da Issue ou move-a para outro Team do Workspace. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          title: z.string().trim().min(1).optional(),
+          description: z.string().nullable().optional(),
+          statusId: z.string().uuid().optional(),
+          priority: issuePrioritySchema.optional(),
+          assigneeId: z.string().uuid().nullable().optional(),
+          dueDate: z.iso.date().nullable().optional(),
+          teamId: z.string().uuid().optional(),
+        }),
+      )
+      .output(issueSchema),
+    /** Define ou remove o parent Issue; relações entre Workspaces e ciclos são rejeitados. */
+    setParent: oc
+      .input(z.object({ id: z.string().uuid(), parentId: z.string().uuid().nullable() }))
+      .output(issueSchema),
+    /** Hard-delete da Issue e dos eventos dependentes (D4). */
+    delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+    /** Activity persistida para uma Issue dentro do Workspace atual. */
+    events: oc.input(z.object({ id: z.string().uuid() })).output(z.array(issueEventSchema)),
+    /** Reordena manualmente uma Issue dentro do grupo selecionado. */
+    reorder: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          position: z.number().int().nonnegative(),
+          groupBy: issueGroupBySchema.optional(),
+          subgroupBy: issueGroupBySchema.optional(),
+        }),
+      )
+      .output(z.void()),
+    /** Aplica mudanças em massa; a resposta identifica falhas por Issue. */
+    bulkUpdate: oc
+      .input(
+        z.object({
+          ids: issueIdsSchema,
+          changes: z
+            .object({
+              statusId: z.string().uuid().optional(),
+              priority: issuePrioritySchema.optional(),
+              assigneeId: z.string().uuid().nullable().optional(),
+            })
+            .refine(
+              (changes) => Object.values(changes).some((value) => value !== undefined),
+              "Choose at least one Issue property to update.",
+            ),
+        }),
+      )
+      .output(
+        z.object({
+          updatedIds: z.array(z.string().uuid()),
+          failed: z.array(issueBulkFailureSchema),
+        }),
+      ),
+    /** Exclui várias Issues; a resposta identifica falhas por Issue. */
+    bulkDelete: oc.input(z.object({ ids: issueIdsSchema })).output(
+      z.object({
+        deletedIds: z.array(z.string().uuid()),
+        failed: z.array(issueBulkFailureSchema),
+      }),
+    ),
   },
 };
 

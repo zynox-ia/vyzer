@@ -1,6 +1,11 @@
 import type { Db } from "./index";
 import { ne, or } from "drizzle-orm";
 import { member, team, teamMember, workspace } from "./schema";
+import {
+  seedTeamWorkflowStatuses,
+  VYZER_WORKFLOW_STATUSES,
+  ZYNOX_WORKFLOW_STATUSES,
+} from "./workflow-status";
 
 /** Stable identifiers used while authentication is deferred (ADR-0015). */
 export const WORKSPACE_ID = "00000000-0000-4000-8000-000000000001";
@@ -83,5 +88,8 @@ export async function seedWorkspace(db: Db): Promise<void> {
         { teamId: VYZER_TEAM_ID, memberId: MEMBER_ID },
       ])
       .onConflictDoNothing();
+
+    await seedTeamWorkflowStatuses(tx, ZYNOX_TEAM_ID, ZYNOX_WORKFLOW_STATUSES);
+    await seedTeamWorkflowStatuses(tx, VYZER_TEAM_ID, VYZER_WORKFLOW_STATUSES);
   });
 }
