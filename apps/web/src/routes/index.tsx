@@ -4,11 +4,13 @@ import { AppShell } from "@/layouts/app-shell";
 import { AgentPage } from "@/features/agent";
 import { AgentPersonalizationPage } from "@/features/agent/personalization";
 import { HealthPage } from "@/features/health";
+import { InboxPage } from "@/features/inbox";
 import { PlaceholderPage } from "@/features/placeholder";
 import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "@/features/projects";
 import { MembersPage, PreferencesPage, SettingsRoute, TeamStatusesPage } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
+import { unreadNotificationsCountQueryOptions } from "@/services/notifications";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 
 /** Rotas só de desenvolvimento: ficam fora do build de produção. */
@@ -23,7 +25,6 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
 
 /** Rotas do shell sem conteúdo nesta fase: dados reais ficam para quando cada área for construída. */
 const placeholderRoutes: RouteObject[] = [
-  { path: "inbox", element: <PlaceholderPage title="Inbox" /> },
   { path: "reviews", element: <PlaceholderPage title="Reviews" /> },
   { path: "my-issues", element: <PlaceholderPage title="My issues" /> },
   { path: "views", element: <PlaceholderPage title="Views" /> },
@@ -71,6 +72,12 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
 /** Product-only data wrapper; the `/design-system` documentation keeps its static sidebar. */
 function WorkspaceAppShell() {
   const currentWorkspace = useQuery(currentWorkspaceQueryOptions());
+  // Sem SSE (spec D1): o contador se atualiza a cada 60 s e ao voltar o foco à janela.
+  const unreadCount = useQuery({
+    ...unreadNotificationsCountQueryOptions(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
   const workspaceStatus = currentWorkspace.isPending
     ? "Loading workspace name."
     : currentWorkspace.isError
@@ -84,6 +91,7 @@ function WorkspaceAppShell() {
         (currentWorkspace.isError ? "Workspace unavailable" : "Workspace")
       }
       workspaceIcon={currentWorkspace.data?.workspace.icon}
+      inboxUnreadCount={unreadCount.data}
       workspaceStatus={workspaceStatus}
       onWorkspaceRetry={
         currentWorkspace.isError ? () => void currentWorkspace.refetch() : undefined
@@ -122,6 +130,7 @@ export const router = createBrowserRouter([
       { path: "projects/:projectId", Component: ProjectDetailPage },
       { path: "teams/:team/projects", Component: TeamProjectsListPage },
       { path: "agent", Component: AgentPage },
+      { path: "inbox/:notificationId?", Component: InboxPage },
       ...placeholderRoutes,
     ],
   },

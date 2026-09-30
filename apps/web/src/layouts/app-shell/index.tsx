@@ -109,11 +109,14 @@ export function AppShell({
   workspaceIcon,
   workspaceStatus,
   onWorkspaceRetry,
+  inboxUnreadCount,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
+  /** Não lidas da Inbox (contador da sidebar); a rota do produto passa o valor da API. */
+  inboxUnreadCount?: number;
 } = {}) {
   return (
     <AppShellProvider>
@@ -127,6 +130,7 @@ export function AppShell({
             workspaceIcon={workspaceIcon}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
+            inboxUnreadCount={inboxUnreadCount}
           />
           <ShellFrame />
         </div>

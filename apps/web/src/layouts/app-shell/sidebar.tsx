@@ -47,11 +47,14 @@ export function SidebarContent({
   workspaceIcon,
   workspaceStatus,
   onWorkspaceRetry,
+  inboxUnreadCount = 0,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
+  /** Não lidas da Inbox; o contador só aparece com pelo menos uma. */
+  inboxUnreadCount?: number;
 }) {
   const { setCommandMenuOpen, setCreateIssueOpen } = useAppShell();
   return (
@@ -91,7 +94,12 @@ export function SidebarContent({
           depois do fim da linha do seletor de workspace, não colado nela). */}
       <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pt-4 pb-2">
         <NavList label="Navegação principal">
-          <NavItem to="/inbox" icon={<Icon icon={InboxIcon} size="14" />}>
+          <NavItem
+            to="/inbox"
+            icon={<Icon icon={InboxIcon} size="14" />}
+            count={inboxUnreadCount > 0 ? inboxUnreadCount : undefined}
+            countTone="accent"
+          >
             Inbox
           </NavItem>
           <NavItem to="/reviews" icon={<Icon icon={GitPullRequest} size="14" />} count={5}>
@@ -233,12 +241,14 @@ export function Sidebar({
   workspaceIcon,
   workspaceStatus,
   onWorkspaceRetry,
+  inboxUnreadCount,
 }: {
   label?: string;
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
+  inboxUnreadCount?: number;
 }) {
   const { sidebarCollapsed, toggleSidebar, sidebarWidth, sidebarDrawerOpen, setSidebarDrawerOpen } =
     useAppShell();
@@ -260,6 +270,7 @@ export function Sidebar({
             workspaceIcon={workspaceIcon}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
+            inboxUnreadCount={inboxUnreadCount}
           />
           <ResizeHandle />
         </nav>
@@ -299,6 +310,7 @@ export function Sidebar({
                 workspaceIcon={workspaceIcon}
                 workspaceStatus={workspaceStatus}
                 onWorkspaceRetry={onWorkspaceRetry}
+                inboxUnreadCount={inboxUnreadCount}
               />
             </DialogPrimitive.Content>
           </DialogPrimitive.Overlay>

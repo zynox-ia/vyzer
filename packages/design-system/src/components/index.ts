@@ -240,6 +240,14 @@ export {
   type IssueRowProps,
   type IssueValue,
 } from "./issue-list";
+export {
+  NotificationRow,
+  NotificationRowSkeleton,
+  notificationRowStyles,
+  type NotificationActor,
+  type NotificationRowContentProps,
+  type NotificationRowProps,
+} from "./notification-row";
 export { ListGroup, type ListGroupProps } from "./list-group";
 export {
   Table,

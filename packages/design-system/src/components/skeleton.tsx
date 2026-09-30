@@ -20,11 +20,15 @@ const shapeClass: Record<SkeletonShape, string> = {
   avatar: "rounded-full",
 };
 
-const avatarSize: Record<AvatarSize, string> = { sm: "size-icon-sm", md: "size-icon-md" };
+const avatarSize: Record<AvatarSize, string> = {
+  sm: "size-icon-sm",
+  md: "size-icon-md",
+  lg: "size-icon-xl",
+};
 
 export type SkeletonProps = HTMLAttributes<HTMLSpanElement> & {
   shape?: SkeletonShape;
-  /** Só no avatar: sm 16 · md 20 px (padrão), como o Avatar. */
+  /** Só no avatar: sm 16 · md 20 px (padrão) · lg 32 px, como o Avatar. */
   size?: AvatarSize;
 };
 

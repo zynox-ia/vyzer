@@ -254,6 +254,11 @@ export const sections: DocSection[] = [
         Page: page(() => import("./pages/data-display/list-row")),
       },
       {
+        slug: "notification-row",
+        title: "Notification Row",
+        Page: page(() => import("./pages/data-display/notification-row")),
+      },
+      {
         slug: "group-header",
         title: "Group Header",
         Page: page(() => import("./pages/data-display/group-header")),

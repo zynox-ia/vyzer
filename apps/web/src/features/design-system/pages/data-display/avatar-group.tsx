@@ -8,7 +8,7 @@ import { Field, Segmented } from "../../kit/controls";
 import { PEOPLE } from "../../kit/issue-data";
 
 function usePlayground() {
-  const [size, setSize] = useState<AvatarSize>("md");
+  const [size, setSize] = useState<Exclude<AvatarSize, "lg">>("md");
   const [count, setCount] = useState<"3" | "6">("6");
   return {
     preview: <AvatarGroup label="Members" people={PEOPLE.slice(0, Number(count))} size={size} />,

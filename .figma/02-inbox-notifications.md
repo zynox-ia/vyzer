@@ -20,6 +20,13 @@ Sem frame confirmado no Figma (MCP não autorizado na sessão da spec). Nós con
 - **Filtro e Display options só na URL:** o Linear os persiste por usuário (observado); o Vyzer segue a regra 8 do `AGENTS.md`, sem persistência por usuário (spec D11). Formato legível em search params, sem o `?filter=` em base64.
 - **Filtro/Display options: a preferência de Priority inbox é a exceção:** é configuração de Settings e fica no banco por Member.
 - **Só o que funciona aparece na UI:** canais Desktop/Mobile/Email/Slack, agentes, Loops, Reviews, Document/Project activity e o sino de View **não são cortados**: estão sequenciados no backlog da spec (etapas 4.9 a 4.16) e entram quando o domínio, o gatilho ou a credencial existir (spec D2/D3); até lá, nenhum item morto na UI. "Updates from Linear" (comunicações do fornecedor) não tem contraparte no Vyzer e fica fora, sem etapa (confirmado).
+- **Altura da Notification Row:** 56 px (dada pelo conteúdo: py-2.5 + 20 + 16), contra 55 px no Linear; sem altura fixa para não criar valor fora dos tokens.
+- **Peso do ID e do resumo:** 400 (lida) e 500 (não lida, label-md), contra 450 e 500 no Linear; o DS não tem o peso 450.
+- **Avatar lg (32 px)** novo no DS para a linha; ícone de fallback de 20 px.
+- **Sem botões dentro da linha:** ações por atalho (`U`, `⌫`, `⇧ ⌫`), menu Notification actions e o botão Delete notification no cabeçalho do detalhe (a linha é `role="option"`; botão dentro reprova no axe).
+- **Detalhe da Inbox** é uma composição de leitura (título, descrição, status, prioridade, assignee) até a página real da issue do Time B existir; sem Snooze (etapa 4.2 não entra), sem Unsubscribe.
+- **Sem Add filter, Display options, Snooze e Priority inbox** (etapas 4.2, 4.3 e 4.8 fora desta entrega): só "Show unreads only" (`?unread=1`) e Notification actions.
+- **Lista carrega até 100 notificações de uma vez** (máximo do contrato), sem paginação.
 
 ## Não observado (revisor deve conferir)
 
