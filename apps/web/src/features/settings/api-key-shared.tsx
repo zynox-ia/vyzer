@@ -28,6 +28,9 @@ export const SECURITY_PATH = "/settings/security";
 export const NEW_API_KEY_PATH = `${SECURITY_PATH}/api-keys/new`;
 export const apiKeyPath = (id: string) => `${SECURITY_PATH}/api-keys/${id}`;
 export const apiKeyEditPath = (id: string) => `${apiKeyPath(id)}/edit`;
+/** Settings → Administration → API e a tabela de chaves emitidas. */
+export const API_SETTINGS_PATH = "/settings/api";
+export const ISSUED_KEYS_PATH = `${API_SETTINGS_PATH}/keys`;
 
 /** As cinco permissões do formulário do Linear, com o texto de cada uma. */
 export const PERMISSION_OPTIONS: {
@@ -97,10 +100,13 @@ export function ApiKeyMenu({
   apiKey,
   className,
   onRevoked,
+  edit = true,
 }: {
   apiKey: ApiKey;
   className?: string;
   onRevoked?: () => void;
+  /** "Edit API key" só nas telas pessoais; a tabela de Settings → API tem só "Revoke API key". */
+  edit?: boolean;
 }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -147,9 +153,11 @@ export function ApiKeyMenu({
             }
           }}
         >
-          <MenuItem icon={Pencil} onSelect={() => void navigate(apiKeyEditPath(apiKey.id))}>
-            Edit API key
-          </MenuItem>
+          {edit && (
+            <MenuItem icon={Pencil} onSelect={() => void navigate(apiKeyEditPath(apiKey.id))}>
+              Edit API key
+            </MenuItem>
+          )}
           <MenuItem
             icon={Trash2}
             onSelect={() => {

@@ -9,6 +9,8 @@ import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "@/fea
 import { MembersPage, PreferencesPage, SettingsRoute } from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
+import { ApiKeysTablePage } from "@/features/settings/api-keys-table";
+import { ApiSettingsPage } from "@/features/settings/api-settings";
 import { ApiKeyCreatePage } from "@/features/settings/api-key-create";
 import { ApiKeyDetailPage } from "@/features/settings/api-key-detail";
 import { ApiKeyEditPage } from "@/features/settings/api-key-edit";
@@ -63,7 +65,6 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
   { path: "integrations", title: "Integrations" },
   { path: "teams", title: "Teams" },
   { path: "security-admin", title: "Security" },
-  { path: "api", title: "API" },
   { path: "applications", title: "Applications" },
   { path: "usage", title: "Usage & limits" },
   { path: "teams/vyzer", title: "Vyzer" },
@@ -109,6 +110,8 @@ export const router = createBrowserRouter([
       { path: "agent-personalization", Component: AgentPersonalizationPage },
       { path: "workspace", Component: WorkspaceSettingsPage },
       { path: "members", Component: MembersPage },
+      { path: "api", Component: ApiSettingsPage },
+      { path: "api/keys", Component: ApiKeysTablePage },
       { path: "security", Component: SecurityAccessPage },
       { path: "security/api-keys/new", Component: ApiKeyCreatePage },
       { path: "security/api-keys/:keyId", Component: ApiKeyDetailPage },

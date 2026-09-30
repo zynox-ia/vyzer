@@ -286,3 +286,14 @@ Settings → Security & access → Personal API keys (API.2), sem frame no Figma
 - **Depois de "Create":** diálogo com o token e "Copy", que só fecha por "Done" ou pelo X (o que o Linear mostra não foi observado, spec D12).
 - **Edit API key** (`/api-keys/:id/edit`, achado da revisão de fidelidade): mesmo formulário do Create, com nome e permissões atuais, "Back" no topo e Cancel/Save. O que o Linear faz depois de "Save" não foi observado (mudaria uma chave real); aqui volta para a página da chave com o toast "API key updated". Team access fora até a API.4.
 - **Menu da chave:** "Edit API key" e "Revoke API key", como no Linear, na linha da lista e na página da chave. Ícone da linha em `text-secondary`.
+
+Settings → Administration → API e Issued keys (API.3), sem frame no Figma; referência é o Linear ao vivo (`/zynox-dev/settings/api` e `/settings/api/keys`, medido 29/09):
+
+- **Só a seção "API keys":** OAuth applications e Webhooks não aparecem (spec D9, D10: exigem auth e Issues). "Join our Slack" e "Docs" também não (sem docs nem canal); o texto de abertura fala do Vyzer, sem GraphQL.
+- **Export CSV** fora, adiado (spec D11). O resto da barra de ferramentas do Linear entrou: filtro por chave ou membro e filtro de status.
+- **Seleção em lote (não estava na spec):** o Linear marca linhas e mostra "N selected · Actions · ✕", com "Revoke API key" no menu Actions; entrou com a `SelectionBar` do DS. O checkbox fica na primeira coluna da tabela (no Linear ele está na margem esquerda). Linha inativa não é selecionável.
+- **Coluna Key:** nome com o prefixo do token embaixo (spec); o Linear mostra só o nome.
+- **Permissions:** chave "Full access" é texto simples; chave com permissões selecionadas abre um `Popover` com cada permissão e a descrição. O popover do Linear não foi observado (a chave real é Full access), então o conteúdo é palpite.
+- **"Last used" nunca usada:** mostra "Never" (o Linear não mostrou esse caso).
+- **"Back" para "API"** fica na coluna de conteúdo, como nas telas de chave (sem slot de barra superior no `SettingsLayout`).
+- **Linha "Issued keys":** contagem só de chaves ativas.

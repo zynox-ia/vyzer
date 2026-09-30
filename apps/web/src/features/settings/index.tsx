@@ -4,6 +4,9 @@ import { SettingsLayout } from "@/layouts/app-shell/settings-layout";
 import { readLastShellPath } from "@/layouts/app-shell/lib/last-path";
 import { SETTINGS_GROUPS } from "./nav-data";
 
+/** Páginas com tabela larga (72 rem) em vez da coluna de 640 px. */
+const WIDE_PATHS = ["/settings/members", "/settings/api/keys"];
+
 export function SettingsRoute() {
   const { pathname } = useLocation();
   // "Back to app" volta para onde a pessoa estava antes de entrar em Settings, como no Linear
@@ -12,7 +15,7 @@ export function SettingsRoute() {
     <SettingsLayout
       backTo={readLastShellPath("/projects")}
       groups={SETTINGS_GROUPS}
-      contentWidth={pathname === "/settings/members" ? "wide" : "narrow"}
+      contentWidth={WIDE_PATHS.includes(pathname) ? "wide" : "narrow"}
     >
       <Outlet />
     </SettingsLayout>
