@@ -50,6 +50,20 @@
       "when": 1790666680287,
       "tag": "0006_wide_bloodstorm",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790728533730,
+      "tag": "0007_cold_raider",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790729166461,
+      "tag": "0008_parallel_nighthawk",
+      "breakpoints": true
     }
   ]
 }

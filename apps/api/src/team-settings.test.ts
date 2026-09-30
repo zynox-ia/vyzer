@@ -35,7 +35,17 @@ const foreignWorkspaceIds: string[] = [];
 const fixtureMemberIds: string[] = [];
 
 function uniqueTeamKey(): string {
-  return `T${randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
+  return `T${randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase()}`;
+}
+
+function issueEmailAddressFor(slug: string): string {
+  const token = randomUUID().replaceAll("-", "").slice(0, 12);
+  return `${slug}-${token}@intake.vyzer.app.br`;
+}
+
+function expectIssueEmailAddress(address: string, slug: string): void {
+  expect(address.startsWith(`${slug}-`)).toBe(true);
+  expect(address.slice(`${slug}-`.length)).toMatch(/^[a-f0-9]{12}@intake\.vyzer\.app\.br$/);
 }
 
 function createWorkspaceApi(workspaceId: string, memberId: string) {
@@ -92,6 +102,7 @@ async function createTeam(
     key,
     icon: { kind: "icon", name: "Layers", color: "purple" },
     description: options.description ?? null,
+    issueEmailAddress: issueEmailAddressFor(slug),
   });
 
   return { id, name, slug, key };
@@ -151,7 +162,7 @@ describe("Workspace-scoped Team settings procedures", () => {
   it("team.update returns NOT_FOUND and leaves a foreign Team unchanged", async () => {
     const foreign = await createWorkspaceAndMember();
     const fixtureTeam = await createTeam(foreign.workspaceId);
-    const attemptedName = `Unauthorized Rename ${randomUUID()}`;
+    const attemptedName = `NoAccess ${randomUUID()}`;
 
     await expect(
       api.team.update({ id: fixtureTeam.id, name: attemptedName }),
@@ -175,7 +186,7 @@ describe("Workspace-scoped Team settings procedures", () => {
     `;
 
     await expect(
-      memberApi.team.update({ id: ZYNOX_TEAM_ID, name: `Blocked Rename ${randomUUID()}` }),
+      memberApi.team.update({ id: ZYNOX_TEAM_ID, name: `Blocked ${randomUUID()}` }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
 
     const [after] = await db.$client<{ name: string }[]>`
@@ -204,7 +215,7 @@ describe("Workspace-scoped Team settings procedures", () => {
     const foreign = await createWorkspaceAndMember();
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const fixtureTeam = await createTeam(foreign.workspaceId);
-    const updatedName = `Renamed Team ${randomUUID()}`;
+    const updatedName = `Team ${randomUUID()}`;
     const updatedKey = uniqueTeamKey();
     const updatedIcon = { kind: "emoji" as const, emoji: "🧭" };
 
@@ -238,6 +249,171 @@ describe("Workspace-scoped Team settings procedures", () => {
       key: updatedKey,
       icon: updatedIcon,
     });
+  });
+
+  it("team.update accepts an IANA timezone and team.get returns the saved timezone", async () => {
+    const foreign = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
+    const fixtureTeam = await createTeam(foreign.workspaceId);
+
+    const initial = await foreignApi.team.get({ team: fixtureTeam.slug });
+    expect(initial.timezone).toBe("America/Sao_Paulo");
+
+    const updated = await foreignApi.team.update({
+      id: fixtureTeam.id,
+      timezone: "Europe/Lisbon",
+    });
+    expect(updated.timezone).toBe("Europe/Lisbon");
+
+    const fetched = await foreignApi.team.get({ team: fixtureTeam.slug });
+    expect(fetched.timezone).toBe("Europe/Lisbon");
+  });
+
+  it("team.update rejects an invalid timezone without changing the saved timezone", async () => {
+    const foreign = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
+    const fixtureTeam = await createTeam(foreign.workspaceId);
+
+    await expect(
+      foreignApi.team.update({ id: fixtureTeam.id, timezone: "Mars/Olympus_Mons" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    const fetched = await foreignApi.team.get({ team: fixtureTeam.slug });
+    expect(fetched.timezone).toBe("America/Sao_Paulo");
+  });
+
+  it("team.update toggles Team issue settings and accepts the estimation enum", async () => {
+    const foreign = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
+    const fixtureTeam = await createTeam(foreign.workspaceId);
+
+    const initial = await foreignApi.team.get({ team: fixtureTeam.slug });
+    expect(initial).toMatchObject({
+      detailedIssueHistory: false,
+      issueEmailEnabled: false,
+      estimation: "none",
+    });
+
+    const enabled = await foreignApi.team.update({
+      id: fixtureTeam.id,
+      detailedIssueHistory: true,
+      issueEmailEnabled: true,
+      estimation: "fibonacci",
+    });
+    expect(enabled).toMatchObject({
+      detailedIssueHistory: true,
+      issueEmailEnabled: true,
+      estimation: "fibonacci",
+    });
+
+    const disabled = await foreignApi.team.update({
+      id: fixtureTeam.id,
+      detailedIssueHistory: false,
+      issueEmailEnabled: false,
+      estimation: "linear",
+    });
+    expect(disabled).toMatchObject({
+      detailedIssueHistory: false,
+      issueEmailEnabled: false,
+      estimation: "linear",
+    });
+  });
+
+  it("team.update rejects an estimation outside the supported enum", async () => {
+    const foreign = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
+    const fixtureTeam = await createTeam(foreign.workspaceId);
+
+    await expect(
+      Reflect.apply(foreignApi.team.update, undefined, [
+        { id: fixtureTeam.id, estimation: "invalid-estimation" },
+      ]),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    const unchanged = await foreignApi.team.get({ team: fixtureTeam.slug });
+    expect(unchanged.estimation).toBe("none");
+  });
+
+  it("team.resetIssueEmail regenerates a slug address and enforces admin Workspace scope", async () => {
+    const foreign = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
+    const fixtureTeam = await createTeam(foreign.workspaceId);
+    const initial = await foreignApi.team.get({ team: fixtureTeam.slug });
+
+    const reset = await foreignApi.team.resetIssueEmail({ id: fixtureTeam.id });
+    expect(reset).toMatchObject({ id: fixtureTeam.id, slug: fixtureTeam.slug });
+    expect(reset.issueEmailAddress).not.toBe(initial.issueEmailAddress);
+    expectIssueEmailAddress(reset.issueEmailAddress, fixtureTeam.slug);
+
+    await expect(api.team.resetIssueEmail({ id: fixtureTeam.id })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    expect((await foreignApi.team.get({ team: fixtureTeam.slug })).issueEmailAddress).toBe(
+      reset.issueEmailAddress,
+    );
+
+    const nonAdmin = await createSeedWorkspaceMember("member");
+    const nonAdminApi = createWorkspaceApi(WORKSPACE_ID, nonAdmin.id);
+    const seedTeamBefore = await api.team.get({ team: "zynox" });
+    await expect(nonAdminApi.team.resetIssueEmail({ id: ZYNOX_TEAM_ID })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    expect((await api.team.get({ team: "zynox" })).issueEmailAddress).toBe(
+      seedTeamBefore.issueEmailAddress,
+    );
+  });
+
+  it("team.create and team.update accept Team names up to 48 chars and keys up to 7 chars", async () => {
+    const foreign = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
+    const maxName = "N".repeat(48);
+    const maxKey = "T123456";
+    const created = await foreignApi.team.create({
+      name: maxName,
+      key: maxKey,
+      icon: { kind: "icon", name: "Layers", color: "purple" },
+    });
+
+    expect(created.name).toBe(maxName);
+    expect(created.key).toBe(maxKey);
+
+    const updatedName = "U".repeat(48);
+    const updatedKey = "U123456";
+    const updated = await foreignApi.team.update({
+      id: created.id,
+      name: updatedName,
+      key: updatedKey,
+    });
+
+    expect(updated.name).toBe(updatedName);
+    expect(updated.key).toBe(updatedKey);
+  });
+
+  it("team.create and team.update reject Team names over 48 chars or keys over 7 chars", async () => {
+    const foreign = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
+    const fixtureTeam = await createTeam(foreign.workspaceId);
+    const tooLongName = "N".repeat(49);
+    const validName = "Valid Team";
+    const validKey = "T123456";
+    const tooLongKey = "T1234567";
+    const icon = { kind: "icon" as const, name: "Layers", color: "purple" as const };
+
+    await expect(
+      foreignApi.team.create({ name: tooLongName, key: validKey, icon }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(
+      foreignApi.team.create({ name: validName, key: tooLongKey, icon }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(
+      foreignApi.team.update({ id: fixtureTeam.id, name: tooLongName }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(
+      foreignApi.team.update({ id: fixtureTeam.id, key: tooLongKey }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    const unchanged = await foreignApi.team.get({ team: fixtureTeam.slug });
+    expect(unchanged).toMatchObject({ name: fixtureTeam.name, key: fixtureTeam.key });
   });
 
   it("team.update can set and clear a Team description", async () => {

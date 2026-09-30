@@ -55,6 +55,17 @@ const memberSchema = z.object({
 
 const memberListItemSchema = memberSchema.extend({ teamCount: z.number().int().nonnegative() });
 
+const teamNameSchema = z.string().trim().min(1).max(48);
+const teamKeySchema = z
+  .string()
+  .max(7)
+  .regex(/^[A-Z][A-Z0-9]*$/);
+const teamTimezoneValues = new Set(Intl.supportedValuesOf("timeZone"));
+const teamTimezoneSchema = z.string().refine((timezone) => teamTimezoneValues.has(timezone), {
+  message: "Use a supported IANA time zone.",
+});
+const teamEstimationSchema = z.enum(["none", "exponential", "fibonacci", "linear", "tshirt"]);
+
 const teamSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -62,11 +73,14 @@ const teamSchema = z.object({
   key: z.string(),
   icon: projectIconValueSchema,
   description: z.string().nullable(),
+  timezone: teamTimezoneSchema,
+  estimation: teamEstimationSchema,
+  detailedIssueHistory: z.boolean(),
+  issueEmailEnabled: z.boolean(),
+  issueEmailAddress: z.string(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
-
-const teamKeySchema = z.string().regex(/^[A-Z][A-Z0-9]*$/);
 
 const teamListItemSchema = teamSchema.extend({
   memberCount: z.number().int().nonnegative(),
@@ -132,7 +146,7 @@ export const contract = {
     create: oc
       .input(
         z.object({
-          name: z.string().trim().min(1),
+          name: teamNameSchema,
           key: teamKeySchema,
           icon: projectIconValueSchema,
         }),
@@ -145,13 +159,19 @@ export const contract = {
       .input(
         z.object({
           id: z.string().uuid(),
-          name: z.string().trim().min(1).optional(),
+          name: teamNameSchema.optional(),
           key: teamKeySchema.optional(),
           icon: projectIconValueSchema.optional(),
           description: z.string().trim().nullable().optional(),
+          timezone: teamTimezoneSchema.optional(),
+          estimation: teamEstimationSchema.optional(),
+          detailedIssueHistory: z.boolean().optional(),
+          issueEmailEnabled: z.boolean().optional(),
         }),
       )
       .output(teamSchema),
+    /** Regenera o endereço de email de intake do Team. */
+    resetIssueEmail: oc.input(z.object({ id: z.string().uuid() })).output(teamSchema),
     /** Lista Members vinculados a um Team do Workspace resolvido. */
     members: oc.input(z.object({ id: z.string().uuid() })).output(z.array(memberSchema)),
     /** Exclui imediatamente um Team do Workspace resolvido. */

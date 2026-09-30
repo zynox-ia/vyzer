@@ -17,5 +17,8 @@ export const createTeamMutationOptions = () => api.team.create.mutationOptions()
 /** Updates editable Team settings without changing the stable slug. */
 export const updateTeamMutationOptions = () => api.team.update.mutationOptions();
 
+/** Regenerates the Team's issue intake email address. */
+export const resetTeamIssueEmailMutationOptions = () => api.team.resetIssueEmail.mutationOptions();
+
 /** Permanently deletes a Team in the resolved Workspace. */
 export const deleteTeamMutationOptions = () => api.team.delete.mutationOptions();
