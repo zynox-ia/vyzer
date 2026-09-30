@@ -21,7 +21,7 @@ export function SettingsRow({
 }) {
   const id = useId();
   return (
-    <div className="flex items-center gap-4 border-b border-subtle py-4 last:border-b-0">
+    <div className="flex items-center gap-4 border-b border-default py-4 last:border-b-0">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <FormLabel htmlFor={id}>{label}</FormLabel>
         <div aria-live="polite">
@@ -55,7 +55,9 @@ export function SettingsGroup({
         </h2>
       )}
       {description && <p className="pb-2 text-body-sm text-secondary">{description}</p>}
-      <div className="flex flex-col rounded-container border border-subtle px-4">{children}</div>
+      <div className="flex flex-col rounded-container border border-default bg-panel px-4">
+        {children}
+      </div>
     </section>
   );
 }

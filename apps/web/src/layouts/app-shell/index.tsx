@@ -19,6 +19,7 @@ import { AppShellProvider } from "./context";
 import { CreateIssueDialog } from "./create-issue-dialog";
 import { writeLastShellPath } from "./lib/last-path";
 import { ShellCommandMenu } from "./shell-command-menu";
+import type { SidebarPreferencesData } from "./sidebar-items";
 import { Sidebar } from "./sidebar";
 import { useAppShell } from "./use-app-shell";
 
@@ -113,6 +114,9 @@ export function AppShell({
   workspaceStatus,
   onWorkspaceRetry,
   inboxUnreadCount,
+  draftsCount,
+  sidebarPreferences,
+  onSaveIssueDraft,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
@@ -122,6 +126,12 @@ export function AppShell({
   onWorkspaceRetry?: () => void;
   /** Não lidas da Inbox (contador da sidebar); a rota do produto passa o valor da API. */
   inboxUnreadCount?: number;
+  /** Rascunhos de issue do Member (contador do item Drafts). */
+  draftsCount?: number;
+  /** Customize sidebar: visibilidade, ordem e badge; a rota do produto passa o valor da API. */
+  sidebarPreferences?: SidebarPreferencesData;
+  /** Fechar o "Create new issue" sem criar, com texto, salva um rascunho (API de drafts). */
+  onSaveIssueDraft?: (draft: { title: string; description: string }) => void;
 } = {}) {
   return (
     <AppShellProvider>
@@ -138,12 +148,14 @@ export function AppShell({
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
             inboxUnreadCount={inboxUnreadCount}
+            draftsCount={draftsCount}
+            sidebarPreferences={sidebarPreferences}
           />
           <ShellFrame />
         </div>
         <AgentFooter />
         <ShellCommandMenu />
-        <CreateIssueDialog teams={teams} />
+        <CreateIssueDialog teams={teams} onSaveDraft={onSaveIssueDraft} />
       </AgentChatProvider>
     </AppShellProvider>
   );

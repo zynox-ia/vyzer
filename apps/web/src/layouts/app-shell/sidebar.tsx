@@ -20,8 +20,12 @@ import {
   Box,
   Ellipsis,
   Bot,
+  PenLine,
   UserRound,
   UserRoundPlus,
+  Users,
+  UsersRound,
+  type LucideIcon,
 } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { useRef, type PointerEvent as ReactPointerEvent } from "react";
@@ -40,6 +44,12 @@ import { TEAMS, type Team } from "@/features/projects/project-data";
 import { NavAction, NavItem, NavList, SidebarSection, TeamNavGroup } from "./sidebar-nav";
 import { WorkspaceMenu } from "./workspace-menu";
 import { useAppShell } from "./use-app-shell";
+import {
+  isSidebarItemShown,
+  resolveSidebar,
+  type SidebarItemKey,
+  type SidebarPreferencesData,
+} from "./sidebar-items";
 
 /** Exportado para a documentação mostrar a gaveta aberta de forma estática (sem Dialog modal). */
 export function SidebarContent({
@@ -50,6 +60,8 @@ export function SidebarContent({
   workspaceStatus,
   onWorkspaceRetry,
   inboxUnreadCount = 0,
+  draftsCount = 0,
+  sidebarPreferences,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
@@ -60,8 +72,48 @@ export function SidebarContent({
   onWorkspaceRetry?: () => void;
   /** Não lidas da Inbox; o contador só aparece com pelo menos uma. */
   inboxUnreadCount?: number;
+  /** Rascunhos de issue do Member; o item Drafts só mostra contador com pelo menos um. */
+  draftsCount?: number;
+  /** Customize sidebar: visibilidade, ordem e estilo do badge; sem a prop, o padrão. */
+  sidebarPreferences?: SidebarPreferencesData;
 }) {
   const { setCommandMenuOpen, setCreateIssueOpen } = useAppShell();
+  const sidebar = resolveSidebar(sidebarPreferences);
+  const badges: Partial<Record<SidebarItemKey, number>> = {
+    inbox: inboxUnreadCount,
+    reviews: 5,
+    drafts: draftsCount,
+  };
+  const items: Record<SidebarItemKey, { to: string; icon: LucideIcon; label: string }> = {
+    inbox: { to: "/inbox", icon: InboxIcon, label: "Inbox" },
+    reviews: { to: "/reviews", icon: GitPullRequest, label: "Reviews" },
+    "my-issues": { to: "/my-issues", icon: UserRound, label: "My issues" },
+    agent: { to: "/agent", icon: Bot, label: "Agent" },
+    drafts: { to: "/drafts", icon: PenLine, label: "Drafts" },
+    projects: { to: "/projects", icon: Box, label: "Projects" },
+    views: { to: "/views", icon: Layers, label: "Views" },
+    members: { to: "/settings/members", icon: UsersRound, label: "Members" },
+    teams: { to: "/settings/teams", icon: Users, label: "Teams" },
+  };
+  const renderItems = (group: "personal" | "workspace") =>
+    sidebar.order[group]
+      .filter((key) => isSidebarItemShown(sidebar.visibility[key], badges[key] ?? 0))
+      .map((key) => {
+        const item = items[key];
+        const badge = badges[key];
+        return (
+          <NavItem
+            key={key}
+            to={item.to}
+            icon={<Icon icon={item.icon} size="14" />}
+            count={badge !== undefined && badge > 0 ? badge : undefined}
+            countTone={key === "inbox" ? "accent" : undefined}
+            badgeStyle={sidebar.badgeStyle}
+          >
+            {item.label}
+          </NavItem>
+        );
+      });
   return (
     <div className="flex h-full flex-col">
       {/* items-start + pt-4: medido ao vivo no Linear (x=12, y=16 até os botões do cabeçalho,
@@ -103,34 +155,11 @@ export function SidebarContent({
       {/* px-3/pt-4: medido ao vivo no Linear (12 px de cada lado, primeiro item em y=60 — 16 px
           depois do fim da linha do seletor de workspace, não colado nela). */}
       <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pt-4 pb-2">
-        <NavList label="Navegação principal">
-          <NavItem
-            to="/inbox"
-            icon={<Icon icon={InboxIcon} size="14" />}
-            count={inboxUnreadCount > 0 ? inboxUnreadCount : undefined}
-            countTone="accent"
-          >
-            Inbox
-          </NavItem>
-          <NavItem to="/reviews" icon={<Icon icon={GitPullRequest} size="14" />} count={5}>
-            Reviews
-          </NavItem>
-          <NavItem to="/my-issues" icon={<Icon icon={UserRound} size="14" />}>
-            My issues
-          </NavItem>
-          <NavItem to="/agent" icon={<Icon icon={Bot} size="14" />}>
-            Agent
-          </NavItem>
-        </NavList>
+        <NavList label="Navegação principal">{renderItems("personal")}</NavList>
 
         <SidebarSection title="Workspace">
           <NavList label="Workspace">
-            <NavItem to="/projects" icon={<Icon icon={Box} size="14" />}>
-              Projects
-            </NavItem>
-            <NavItem to="/views" icon={<Icon icon={Layers} size="14" />}>
-              Views
-            </NavItem>
+            {renderItems("workspace")}
             <NavAction icon={<Icon icon={Ellipsis} size="14" />}>More</NavAction>
           </NavList>
         </SidebarSection>
@@ -255,6 +284,8 @@ export function Sidebar({
   workspaceStatus,
   onWorkspaceRetry,
   inboxUnreadCount,
+  draftsCount,
+  sidebarPreferences,
 }: {
   label?: string;
   workspaceName?: string;
@@ -265,6 +296,8 @@ export function Sidebar({
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
   inboxUnreadCount?: number;
+  draftsCount?: number;
+  sidebarPreferences?: SidebarPreferencesData;
 }) {
   const { sidebarCollapsed, toggleSidebar, sidebarWidth, sidebarDrawerOpen, setSidebarDrawerOpen } =
     useAppShell();
@@ -289,6 +322,8 @@ export function Sidebar({
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
             inboxUnreadCount={inboxUnreadCount}
+            draftsCount={draftsCount}
+            sidebarPreferences={sidebarPreferences}
           />
           <ResizeHandle />
         </nav>
@@ -331,6 +366,8 @@ export function Sidebar({
                 workspaceStatus={workspaceStatus}
                 onWorkspaceRetry={onWorkspaceRetry}
                 inboxUnreadCount={inboxUnreadCount}
+                draftsCount={draftsCount}
+                sidebarPreferences={sidebarPreferences}
               />
             </DialogPrimitive.Content>
           </DialogPrimitive.Overlay>

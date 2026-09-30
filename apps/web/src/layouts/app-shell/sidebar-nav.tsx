@@ -68,6 +68,8 @@ export type NavItemProps = {
   children: ReactNode;
   count?: number;
   countTone?: CounterProps["tone"];
+  /** "dot": no lugar do número, só um ponto quando há algo (Customize sidebar → badge style). */
+  badgeStyle?: "count" | "dot";
   /** Recuo extra para subitens (Your teams › Home, Issues, Projects, Views). */
   indent?: boolean;
   end?: boolean;
@@ -86,7 +88,16 @@ export type NavItemProps = {
  * `h-nav-item` aqui de propósito: o token é compartilhado com Settings e a nav do
  * `/design-system`, que não devem mudar de altura por causa disto.
  */
-export function NavItem({ to, icon, children, count, countTone, indent, end }: NavItemProps) {
+export function NavItem({
+  to,
+  icon,
+  children,
+  count,
+  countTone,
+  badgeStyle = "count",
+  indent,
+  end,
+}: NavItemProps) {
   return (
     <li>
       <NavLink
@@ -105,7 +116,17 @@ export function NavItem({ to, icon, children, count, countTone, indent, end }: N
           {icon}
         </span>
         <span className="min-w-0 flex-1 truncate">{children}</span>
-        {count !== undefined && <Counter count={count} tone={countTone} />}
+        {count !== undefined &&
+          (badgeStyle === "dot" ? (
+            count > 0 && (
+              <span
+                aria-label={`${count} unread`}
+                className="size-1.5 shrink-0 rounded-full bg-accent"
+              />
+            )
+          ) : (
+            <Counter count={count} tone={countTone} />
+          ))}
       </NavLink>
     </li>
   );

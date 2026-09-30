@@ -7,6 +7,7 @@ import { Icon } from "@vyzer/design-system/icons";
 import { teamsQueryOptions } from "@/services/teams";
 import { SettingsLayout } from "@/layouts/app-shell/settings-layout";
 import { readLastShellPath } from "@/layouts/app-shell/lib/last-path";
+import { useApplyMemberPreferences } from "./use-apply-member-preferences";
 import { SETTINGS_GROUPS } from "./nav-data";
 
 /** Páginas com tabela larga (72 rem) em vez da coluna de 640 px, além das que casam por padrão abaixo. */
@@ -41,6 +42,7 @@ function useSettingsGroups() {
 
 export function SettingsRoute() {
   const { pathname } = useLocation();
+  useApplyMemberPreferences();
   const groups = useSettingsGroups();
   // "Back to app" volta para onde a pessoa estava antes de entrar em Settings, como no Linear
   // (review de código, item 3); "/projects" é só o fallback quando não há nada guardado ainda.
@@ -51,7 +53,8 @@ export function SettingsRoute() {
       contentWidth={
         WIDE_PATHS.includes(pathname) || /^\/settings\/teams\/[^/]+\/members$/.test(pathname)
           ? "wide"
-          : /^\/settings\/teams\/[^/]+$/.test(pathname) && pathname !== "/settings/teams/new"
+          : (/^\/settings\/teams\/[^/]+$/.test(pathname) && pathname !== "/settings/teams/new") ||
+              pathname === "/settings/preferences"
             ? "medium"
             : "narrow"
       }

@@ -163,7 +163,14 @@ function IssueProperties({ teamOptions }: { teamOptions: TeamOption[] }) {
 }
 
 /** `teams`: os Teams reais; sem a prop, o Team de exemplo (a documentação em /design-system). */
-export function CreateIssueDialog({ teams }: { teams?: Team[] } = {}) {
+export function CreateIssueDialog({
+  teams,
+  onSaveDraft,
+}: {
+  teams?: Team[];
+  /** Fechar sem criar, com algo escrito, salva o que há como rascunho (item Drafts da sidebar). */
+  onSaveDraft?: (draft: { title: string; description: string }) => void;
+} = {}) {
   const teamOptions = teams ? teamOptionsFrom(teams) : TEAMS;
   const { createIssueOpen, setCreateIssueOpen, overlayReturnFocus } = useAppShell();
   const toast = useToast();
@@ -178,6 +185,14 @@ export function CreateIssueDialog({ teams }: { teams?: Team[] } = {}) {
     setDescription("");
   };
 
+  // Fechar sem criar (X, Esc, fora) guarda o que foi escrito como rascunho, como o Linear.
+  const dismiss = () => {
+    if (onSaveDraft && (title.trim() !== "" || description.trim() !== "")) {
+      onSaveDraft({ title: title.trim(), description: description.trim() });
+    }
+    close();
+  };
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (title.trim() === "") return;
@@ -189,7 +204,7 @@ export function CreateIssueDialog({ teams }: { teams?: Team[] } = {}) {
   return (
     <DialogPrimitive.Root
       open={createIssueOpen}
-      onOpenChange={(open) => (open ? setCreateIssueOpen(true) : close())}
+      onOpenChange={(open) => (open ? setCreateIssueOpen(true) : dismiss())}
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className={dialogStyles.overlay}>

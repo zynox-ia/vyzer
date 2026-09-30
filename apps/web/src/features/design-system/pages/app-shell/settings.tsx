@@ -4,11 +4,28 @@
  * Exemplo de conteúdo nesta fase: só Preferences (spec, "Escopo de Settings").
  */
 import { SettingsLayout } from "@/layouts/app-shell/settings-layout";
-import { PreferencesPage } from "@/features/settings/preferences";
+import { DEFAULT_PREFERENCE_VALUES, PreferencesView } from "@/features/settings/preferences";
+import { setThemePreference } from "@vyzer/design-system/theme";
+import { useState } from "react";
 import { SETTINGS_GROUPS } from "@/features/settings/nav-data";
 import { Decisions, DocPage, DocSection } from "../../kit/doc";
 import { suppressLinkNavigation } from "../../kit/shell-frame";
 import { ThemePair } from "../../kit/theme-frame";
+
+/** A documentação mostra a tela com estado local, sem chamar a API de preferências. */
+function DocPreferences() {
+  const [values, setValues] = useState(DEFAULT_PREFERENCE_VALUES);
+  return (
+    <PreferencesView
+      headingLevel="h2"
+      values={values}
+      onChange={(patch) => {
+        setValues((current) => ({ ...current, ...patch }));
+        if (patch.interfaceTheme) setThemePreference(patch.interfaceTheme);
+      }}
+    />
+  );
+}
 
 function Demo({ label }: { label: string }) {
   return (
@@ -19,7 +36,7 @@ function Demo({ label }: { label: string }) {
       className="h-150 overflow-hidden rounded-container border border-subtle"
     >
       <SettingsLayout backTo="/projects" groups={SETTINGS_GROUPS} label={label} landmark={false}>
-        <PreferencesPage headingLevel="h2" />
+        <DocPreferences />
       </SettingsLayout>
     </div>
   );

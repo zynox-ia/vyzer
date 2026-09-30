@@ -4,3 +4,31 @@
 /* Classes usadas pelas telas e pela documentação (/design-system). */
 @source "./";
 @source not "./**/*.test.tsx";
+
+/*
+ * Preferências de interface do Member (Preferences → Use pointer cursors / Underline links):
+ * `useApplyMemberPreferences` liga os atributos no <html>. Sem valor visual aqui, só o
+ * comportamento do cursor e do sublinhado de links.
+ */
+:root[data-pointer-cursors]
+  :is(
+    a[href],
+    button:not(:disabled),
+    summary,
+    select:not(:disabled),
+    label[for],
+    [role="button"],
+    [role="tab"],
+    [role="menuitem"],
+    [role="option"],
+    [role="combobox"],
+    [role="switch"],
+    [role="checkbox"],
+    [role="radio"]
+  ):not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+:root[data-underline-links] a[href] {
+  text-decoration-line: underline;
+}

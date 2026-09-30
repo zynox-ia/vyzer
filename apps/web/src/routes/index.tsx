@@ -1,7 +1,10 @@
 import { createBrowserRouter, Navigate, type RouteObject } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@vyzer/design-system/components";
+import { HomeRedirect } from "./home-redirect";
 import { AppShell } from "@/layouts/app-shell";
 import { AgentPage } from "@/features/agent";
+import { DraftsPage } from "@/features/drafts";
 import { AgentPersonalizationPage } from "@/features/agent/personalization";
 import { HealthPage } from "@/features/health";
 import { InboxPage } from "@/features/inbox";
@@ -21,6 +24,7 @@ import {
   TeamsPage,
   TeamStatusesPage,
 } from "@/features/settings";
+import { useApplyMemberPreferences } from "@/features/settings/use-apply-member-preferences";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
 import { CustomerRequestsPage } from "@/features/settings/customer-requests";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
@@ -30,7 +34,9 @@ import { ApiKeyCreatePage } from "@/features/settings/api-key-create";
 import { ApiKeyDetailPage } from "@/features/settings/api-key-detail";
 import { ApiKeyEditPage } from "@/features/settings/api-key-edit";
 import { SecurityAccessPage } from "@/features/settings/security-access";
+import { createIssueDraftMutationOptions, issueDraftsQueryOptions } from "@/services/issue-drafts";
 import { unreadNotificationsCountQueryOptions } from "@/services/notifications";
+import { sidebarPreferencesQueryOptions } from "@/services/sidebar-preferences";
 import { teamsQueryOptions } from "@/services/teams";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 
@@ -85,6 +91,7 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
 
 /** Product-only data wrapper; the `/design-system` documentation keeps its static sidebar. */
 function WorkspaceAppShell() {
+  useApplyMemberPreferences();
   const currentWorkspace = useQuery(currentWorkspaceQueryOptions());
   const teams = useQuery(teamsQueryOptions());
   // Sem SSE (spec D1): o contador se atualiza a cada 60 s e ao voltar o foco à janela.
@@ -92,6 +99,23 @@ function WorkspaceAppShell() {
     ...unreadNotificationsCountQueryOptions(),
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
+  });
+  const sidebarPreferences = useQuery(sidebarPreferencesQueryOptions());
+  const drafts = useQuery(issueDraftsQueryOptions());
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const saveDraft = useMutation({
+    ...createIssueDraftMutationOptions(),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: issueDraftsQueryOptions().queryKey });
+      toast({ title: "Draft saved" });
+    },
+    onError: () =>
+      toast({
+        title: "Could not save draft",
+        description: "What you wrote was not saved. Check your connection and try again.",
+        variant: "error",
+      }),
   });
   const workspaceStatus = currentWorkspace.isPending
     ? "Loading workspace name."
@@ -109,6 +133,11 @@ function WorkspaceAppShell() {
       workspaceLogoUrl={currentWorkspace.data?.workspace.logoUrl}
       teams={teams.data ?? []}
       inboxUnreadCount={unreadCount.data}
+      draftsCount={drafts.data?.length}
+      onSaveIssueDraft={({ title, description }) =>
+        saveDraft.mutate({ title, description: description === "" ? null : description })
+      }
+      sidebarPreferences={sidebarPreferences.data}
       workspaceStatus={workspaceStatus}
       onWorkspaceRetry={
         currentWorkspace.isError ? () => void currentWorkspace.refetch() : undefined
@@ -164,11 +193,13 @@ export const router = createBrowserRouter([
     path: "/",
     Component: WorkspaceAppShell,
     children: [
-      { index: true, element: <Navigate to="/projects" replace /> },
+      // A tela inicial é a "Default home view" das Preferences (spec preferences-persistence).
+      { index: true, Component: HomeRedirect },
       { path: "projects", Component: ProjectsListPage },
       { path: "projects/:projectId", Component: ProjectDetailPage },
       { path: "teams/:team/projects", Component: TeamProjectsListPage },
       { path: "agent", Component: AgentPage },
+      { path: "drafts", Component: DraftsPage },
       { path: "inbox/:notificationId?", Component: InboxPage },
       ...placeholderRoutes,
     ],
