@@ -285,3 +285,8 @@ Settings → Administration → Teams (2.1) e Team settings (2.2), Linear ao viv
 - **Ordem dos Teams na sidebar:** vem da API (o Linear mostra "Vyzer, Zynox", aqui "Zynox, Vyzer"); a spec não define critério, então fica a ordem do servidor.
 - **Team settings, hub do Overview:** reduzido a General, Members e Danger zone (D9); os cartões de Slack, labels, templates, workflow, cycles e AI entram com os seus domínios.
 - **Team → General:** Name (com o ícone), Identifier e Description; Estimates, Create issues by email, Timezone e Other ficam pendentes da confirmação item a item (D10). Salva sozinho, com toast "Saved" e Undo, como o Workspace.
+
+Team → General, grupos de 29/09 (Estimates, Create issues by email, Timezone, Other):
+
+- **Link "Docs" em Estimates:** o Linear mostra um link para a documentação dele ao lado do subtítulo; omitido porque apontaria para a documentação de outro produto.
+- **Endereço de e-mail do Team:** em `text-secondary` (texto discreto, como no Linear), em fonte de código; só configuração, o Vyzer ainda não recebe e-mail (spec, "Team → General: decisões de 29/09").

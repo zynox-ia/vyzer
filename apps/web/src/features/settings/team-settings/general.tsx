@@ -409,7 +409,7 @@ function IssueEmailAddressRow({
     >
       {() => (
         <div className="flex flex-col items-end gap-2">
-          <code className="max-w-72 text-right text-code break-all text-primary">{address}</code>
+          <code className="max-w-72 text-right text-code break-all text-secondary">{address}</code>
           <div className="flex items-center gap-2">
             <Button type="button" icon={copied ? Check : Copy} onClick={copy}>
               {copied ? "Copied" : "Copy"}
