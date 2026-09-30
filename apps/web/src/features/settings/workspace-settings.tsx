@@ -20,17 +20,24 @@
  * controles ficam desabilitados para não convidar a uma ação que falha.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
+import { Smile, Trash2, Upload } from "lucide-react";
 import type { ApiClient } from "@vyzer/contract";
 import {
   Alert,
   Button,
   Confirm,
-  IconPicker,
+  IconPickerPanel,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuTrigger,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-  SegmentedControl,
   Select,
   Skeleton,
   TextInput,
@@ -38,6 +45,7 @@ import {
   type ListOption,
   type ProjectIconValue,
 } from "@vyzer/design-system/components";
+import { cn } from "@vyzer/design-system/cn";
 import { WorkspaceMark } from "@/layouts/app-shell/workspace-mark";
 import {
   currentWorkspaceQueryOptions,
@@ -79,15 +87,14 @@ function sameIcon(a: ProjectIconValue, b: ProjectIconValue) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-type LogoMode = "icon" | "logo";
-
 const LOGO_TYPES = "image/png,image/jpeg,image/webp,image/svg+xml";
 
 /**
- * Linha "Logo": alternador Icon / Logo (aprovado 29/09, "melhor dos dois mundos"). Icon é o
- * IconPicker; Logo envia uma imagem, mostra a prévia e a grava no Workspace. Com um logo
- * gravado ele aparece no lugar do ícone na sidebar; voltar para Icon remove o logo (o Undo do
- * toast "Saved" o restaura). Escolher Logo sozinho não muda nada até a imagem subir.
+ * Linha "Logo", como a do Linear: rótulo e ajuda à esquerda, um único avatar quadrado à direita.
+ * O avatar mostra o logo enviado ou, sem logo, o ícone. Clicar nele abre um menu (Upload logo,
+ * Choose icon, Remove logo) e arrastar uma imagem para ele envia o logo. Com um logo gravado ele
+ * aparece no lugar do ícone na sidebar; escolher um ícone remove o logo (o Undo do toast "Saved"
+ * o restaura).
  */
 function WorkspaceLogoField({
   canEdit,
@@ -102,27 +109,30 @@ function WorkspaceLogoField({
   onIconChange: (icon: ProjectIconValue) => void;
   onLogoChange: (logoUrl: string | null) => void;
 }) {
-  const [mode, setMode] = useState<LogoMode>(logoUrl ? "logo" : "icon");
   const [uploadError, setUploadError] = useState<string>();
+  const [iconOpen, setIconOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const upload = useMutation(uploadWorkspaceLogoMutationOptions());
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const changeMode = (next: LogoMode) => {
-    setMode(next);
-    setUploadError(undefined);
-    if (next === "icon" && logoUrl) onLogoChange(null);
-  };
-
-  const onFile = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    // Limpa para poder escolher o mesmo arquivo de novo depois de um erro.
-    event.target.value = "";
+  const uploadFile = (file: File | undefined) => {
     if (!file) return;
     setUploadError(undefined);
     upload.mutate(file, {
       onSuccess: (uploaded) => onLogoChange(uploaded.logoUrl),
       onError: (error) => setUploadError(error.message),
     });
+  };
+  const onFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // Limpa para poder escolher o mesmo arquivo de novo depois de um erro.
+    event.target.value = "";
+    uploadFile(file);
+  };
+  const onDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragging(false);
+    if (canEdit) uploadFile(event.dataTransfer.files[0]);
   };
 
   const description = canEdit
@@ -135,48 +145,65 @@ function WorkspaceLogoField({
         !canEdit ? (
           <WorkspaceMark icon={icon} logoUrl={logoUrl} className="size-icon-md" />
         ) : (
-          <div className="flex flex-col items-start gap-2">
-            <SegmentedControl<LogoMode>
-              label="Workspace logo type"
-              value={mode}
-              onValueChange={changeMode}
-              options={[
-                { value: "icon", label: "Icon" },
-                { value: "logo", label: "Logo" },
-              ]}
+          <Popover open={iconOpen} onOpenChange={setIconOpen}>
+            <input
+              ref={fileInput}
+              type="file"
+              accept={LOGO_TYPES}
+              aria-label="Workspace logo file"
+              hidden
+              onChange={onFile}
             />
-            {mode === "icon" ? (
-              <IconPicker
+            <PopoverAnchor asChild>
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={onDrop}
+                className={cn("rounded-control", dragging && "bg-hover")}
+              >
+                <Menu>
+                  <MenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Workspace logo"
+                      aria-busy={upload.isPending || undefined}
+                      disabled={upload.isPending}
+                      className="flex size-control-lg items-center justify-center overflow-hidden rounded-control bg-pressed focus-ring disabled:opacity-disabled"
+                    >
+                      <WorkspaceMark
+                        icon={icon}
+                        logoUrl={logoUrl}
+                        className={logoUrl ? "size-full" : "size-icon-md"}
+                      />
+                    </button>
+                  </MenuTrigger>
+                  <MenuContent variant="dropdown" align="end">
+                    <MenuItem icon={Upload} onSelect={() => fileInput.current?.click()}>
+                      Upload logo
+                    </MenuItem>
+                    <MenuItem icon={Smile} onSelect={() => setIconOpen(true)}>
+                      Choose icon
+                    </MenuItem>
+                    {logoUrl && (
+                      <MenuItem icon={Trash2} onSelect={() => onLogoChange(null)}>
+                        Remove logo
+                      </MenuItem>
+                    )}
+                  </MenuContent>
+                </Menu>
+              </div>
+            </PopoverAnchor>
+            <PopoverContent label="Project icon" align="end" className="w-auto p-0">
+              <IconPickerPanel
                 value={icon}
                 onValueChange={onIconChange}
-                triggerLabel="Choose workspace icon"
+                onDone={() => setIconOpen(false)}
               />
-            ) : (
-              <div className="flex items-center gap-2">
-                <WorkspaceMark icon={icon} logoUrl={logoUrl} className="size-control-md" />
-                <input
-                  ref={fileInput}
-                  type="file"
-                  accept={LOGO_TYPES}
-                  aria-label="Workspace logo file"
-                  hidden
-                  onChange={onFile}
-                />
-                <Button
-                  type="button"
-                  loading={upload.isPending}
-                  onClick={() => fileInput.current?.click()}
-                >
-                  {logoUrl ? "Change" : "Upload"}
-                </Button>
-                {logoUrl && (
-                  <Button type="button" variant="ghost" onClick={() => onLogoChange(null)}>
-                    Remove
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
+            </PopoverContent>
+          </Popover>
         )
       }
     </SettingsRow>
@@ -348,8 +375,12 @@ export function WorkspaceSettingsPage() {
             icon={icon}
             logoUrl={logoUrl}
             onIconChange={(next) => {
-              setDraft((prev) => ({ ...prev, icon: next }));
-              if (!sameIcon(next, workspace.icon)) save({ icon: next });
+              // Escolher um ícone substitui o logo enviado, se houver.
+              const dropLogo = logoUrl !== null;
+              setDraft((prev) => ({ ...prev, icon: next, ...(dropLogo && { logoUrl: null }) }));
+              if (!sameIcon(next, workspace.icon) || dropLogo) {
+                save({ icon: next, ...(dropLogo && { logoUrl: null }) });
+              }
             }}
             onLogoChange={(next) => {
               setDraft((prev) => ({ ...prev, logoUrl: next }));
@@ -423,14 +454,14 @@ export function WorkspaceSettingsPage() {
         <SettingsRow label="Welcome message">
           {() => (
             <Button type="button" variant="ghost" disabled>
-              Available on Enterprise
+              Configure
             </Button>
           )}
         </SettingsRow>
         <SettingsRow label="Default home view">
           {() => (
             <Button type="button" variant="ghost" disabled>
-              Available on Enterprise
+              Configure
             </Button>
           )}
         </SettingsRow>

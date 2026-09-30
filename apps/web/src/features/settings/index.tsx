@@ -50,7 +50,9 @@ export function SettingsRoute() {
         pathname === "/settings/teams" ||
         /^\/settings\/teams\/[^/]+\/members$/.test(pathname)
           ? "wide"
-          : "narrow"
+          : /^\/settings\/teams\/[^/]+$/.test(pathname) && pathname !== "/settings/teams/new"
+            ? "medium"
+            : "narrow"
       }
     >
       <Outlet />
@@ -66,3 +68,4 @@ export { TeamSettingsLayout } from "./team-settings/layout";
 export { TeamOverviewPage } from "./team-settings/overview";
 export { TeamGeneralPage } from "./team-settings/general";
 export { TeamMembersPage } from "./team-settings/members";
+export { TeamPlaceholderPage, teamPlaceholderPages } from "./team-settings/placeholder";

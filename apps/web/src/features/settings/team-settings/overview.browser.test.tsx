@@ -61,6 +61,8 @@ function Harness() {
                 <Route index element={<TeamOverviewPage />} />
                 <Route path="general" element={<h1>General page</h1>} />
                 <Route path="members" element={<h1>Members page</h1>} />
+                <Route path="project-labels" element={<h1>Project labels page</h1>} />
+                <Route path="parent-team" element={<h1>Parent team page</h1>} />
               </Route>
             </Routes>
             <LocationOutput />
@@ -96,14 +98,13 @@ afterEach(() => {
 });
 
 describe("TeamOverviewPage", () => {
-  it("mostra breadcrumb, título, acesso e o hub com General e Members", async () => {
+  it("mostra o link Teams, título, acesso e o hub com General e Members", async () => {
     const screen = await render(<Harness />);
 
     const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
     await expect
       .element(crumb.getByRole("link", { name: "Teams" }))
       .toHaveAttribute("href", "/settings/teams");
-    await expect.element(crumb.getByText("Vyzer")).toBeVisible();
     await expect.element(screen.getByRole("heading", { name: "Vyzer" })).toBeVisible();
     await expect.element(screen.getByText("Accessible to all workspace members")).toBeVisible();
     await expect
@@ -112,6 +113,70 @@ describe("TeamOverviewPage", () => {
     await expect
       .element(screen.getByRole("link", { name: /^Members/ }))
       .toHaveAttribute("href", "/settings/teams/vyzer/members");
+  });
+
+  it("mostra todas as seções do hub do Linear, com Project labels e Parent team liberados", async () => {
+    const screen = await render(<Harness />);
+    await expect.element(screen.getByRole("heading", { name: "Vyzer" })).toBeVisible();
+
+    for (const title of [
+      "Issues, projects, and documents",
+      "Workflow",
+      "AI & Agents",
+      "Team hierarchy",
+      "Danger zone",
+    ]) {
+      await expect.element(screen.getByRole("heading", { name: title })).toBeInTheDocument();
+    }
+    for (const label of [
+      "Slack notifications",
+      "Issue labels",
+      "Templates",
+      "Recurring issues",
+      "Issue statuses",
+      "Workflows & automations",
+      "Triage",
+      "Cycles",
+      "Team agents",
+      "Agent skills",
+      "Agent connectors",
+      "Project updates",
+      "Resolved thread summaries",
+    ]) {
+      await expect
+        .element(screen.getByRole("link", { name: new RegExp(`^${label}`) }))
+        .toBeInTheDocument();
+    }
+    // Nada é bloqueado por plano: nenhuma linha leva "Available on …" e todas são links.
+    await expect.element(screen.getByText(/Available on/)).not.toBeInTheDocument();
+    await expect
+      .element(screen.getByRole("link", { name: /^Project statuses/ }))
+      .toBeInTheDocument();
+    await expect.element(screen.getByRole("link", { name: /^Parent team/ })).toBeInTheDocument();
+    await expect.element(screen.getByRole("button", { name: "Leave team…" })).toBeDisabled();
+    await expect.element(screen.getByRole("button", { name: "Retire…" })).toBeDisabled();
+
+    await screen.getByRole("link", { name: /^Project labels/ }).click();
+    await expect
+      .element(screen.getByRole("heading", { name: "Project labels page" }))
+      .toBeVisible();
+  });
+
+  it("Team overview é um botão (não um título) que leva à home do time", async () => {
+    const screen = await render(<Harness />);
+    await expect.element(screen.getByRole("heading", { name: "Vyzer" })).toBeVisible();
+    await expect
+      .element(screen.getByRole("heading", { name: "Team overview" }))
+      .not.toBeInTheDocument();
+
+    await screen.getByRole("button", { name: "Team overview" }).click();
+    await expect.element(screen.getByLabelText("Current URL")).toHaveTextContent("/teams/vyzer");
+  });
+
+  it("Parent team abre a sua página", async () => {
+    const screen = await render(<Harness />);
+    await screen.getByRole("link", { name: /^Parent team/ }).click();
+    await expect.element(screen.getByRole("heading", { name: "Parent team page" })).toBeVisible();
   });
 
   it("o link Teams do breadcrumb volta à lista", async () => {

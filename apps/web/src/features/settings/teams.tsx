@@ -3,14 +3,16 @@
  * vivo, `/zynox-dev/settings/teams`, sem frame no Figma): tabela larga com Name (ícone, nome e
  * key), Members, Issues e Created, ordenável por search param (`?sort=`/`&dir=`, regra 8).
  *
- * Decisões da spec: sem Visibility (só existe "Workspace", D7), Issues sempre 0 até o domínio de
- * Issues existir (vem do contrato), sem Export CSV (D6). A linha inteira leva a
+ * Como o Linear ao vivo (29/09, pedido do responsável): barra com filtro por nome (`?q=`), o
+ * filtro de estado "Active" e, à direita, Export CSV e Create team; coluna Visibility (hoje só
+ * "Workspace") e a linha de grupo "Active N". Issues sempre 0 até o domínio de Issues existir
+ * (vem do contrato). A linha inteira leva a
  * `/settings/teams/:team` (o slug, D8): o link real fica na célula do nome e o resto da linha
  * também clica. Menu da linha: "Team settings" e "Delete team…" (`Confirm` danger; "Leave team…"
  * fica de fora, D5/D11). Exclusão imediata, sem janela de restauração (ADR-0016); com Project
  * associado a API devolve CONFLICT e nada é alterado.
  */
-import { Ellipsis, Settings, Trash2, UsersRound } from "lucide-react";
+import { Ellipsis, LogOut, Settings, Trash2, UsersRound } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -18,14 +20,22 @@ import type { TeamListItem } from "@vyzer/contract";
 import {
   Alert,
   Button,
+  ComboboxPanel,
   Confirm,
   EmptyState,
   IconButton,
   Menu,
   MenuContent,
   MenuItem,
+  MenuPanel,
+  MenuSeparator,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
   MenuTrigger,
   ProjectIcon,
+  SearchInput,
+  Select,
   Skeleton,
   Table,
   TableBody,
@@ -35,8 +45,10 @@ import {
   TableRow,
   useToast,
 } from "@vyzer/design-system/components";
+import { Icon } from "@vyzer/design-system/icons";
 import { deleteTeamMutationOptions, teamsQueryOptions } from "@/services/teams";
 import { formatShortDate } from "./format";
+import { TEAM_DESTINATIONS } from "./team-settings/destinations";
 
 type SortKey = "name" | "members" | "issues" | "created";
 type SortDirection = "asc" | "desc";
@@ -60,16 +72,66 @@ function compareTeams(a: TeamListItem, b: TeamListItem, key: SortKey) {
   }
 }
 
-function TeamsHeader({ onCreate }: { onCreate: () => void }) {
+const VISIBILITY = "Workspace";
+
+function csvCell(value: string | number) {
+  const text = String(value);
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+/** CSV de Teams (Name, Key, Visibility, Members, Issues, Created), baixado pelo navegador. */
+function downloadTeamsCsv(teams: TeamListItem[]) {
+  const rows = [
+    ["Name", "Key", "Visibility", "Members", "Issues", "Created"],
+    ...teams.map((t) => [t.name, t.key, VISIBILITY, t.memberCount, t.issueCount, t.createdAt]),
+  ];
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "teams.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function TeamsHeader({
+  query,
+  onQuery,
+  onExport,
+  onCreate,
+}: {
+  query: string;
+  onQuery: (value: string) => void;
+  onExport: () => void;
+  onCreate: () => void;
+}) {
   return (
     <>
       <h1 className="type-heading-1 pb-4 text-primary">Teams</h1>
-      {/* Como no Linear (medido ao vivo): o título fica sozinho e o "Create team" numa barra de
-          ferramentas logo abaixo, à direita, antes da tabela. */}
-      <div className="flex items-center justify-end pb-3">
-        <Button type="button" variant="primary" onClick={onCreate}>
-          Create team
-        </Button>
+      {/* Como no Linear (medido ao vivo): filtro e estado à esquerda; Export CSV e Create team à
+          direita, antes da tabela. */}
+      <div className="flex items-center gap-2 pb-4">
+        <SearchInput
+          aria-label="Filter teams by name"
+          placeholder="Filter by name..."
+          value={query}
+          onChange={(event) => onQuery(event.target.value)}
+          className="w-72"
+        />
+        <Select
+          trigger="button"
+          aria-label="Team status"
+          value="active"
+          options={[{ value: "active", label: "Active" }]}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <Button type="button" variant="secondary" onClick={onExport}>
+            Export CSV
+          </Button>
+          <Button type="button" variant="primary" onClick={onCreate}>
+            Create team
+          </Button>
+        </div>
       </div>
     </>
   );
@@ -81,6 +143,7 @@ function TeamsTableSkeleton() {
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
+          <TableHead>Visibility</TableHead>
           <TableHead>Members</TableHead>
           <TableHead>Issues</TableHead>
           <TableHead>Created</TableHead>
@@ -95,6 +158,9 @@ function TeamsTableSkeleton() {
             <td className="px-cell-x py-3">
               {row === 0 && <span className="sr-only">Loading Teams.</span>}
               <Skeleton className="w-40" />
+            </td>
+            <td className="px-cell-x py-3">
+              <Skeleton className="w-16" />
             </td>
             <td className="px-cell-x py-3">
               <Skeleton className="w-8" />
@@ -145,10 +211,22 @@ export function TeamsPage() {
     },
   });
 
+  const query = params.get("q") ?? "";
   const sortedTeams = useMemo(() => {
-    const result = [...(teams.data ?? [])].sort((a, b) => compareTeams(a, b, sort));
+    const needle = query.trim().toLowerCase();
+    const matching = (teams.data ?? []).filter(
+      (team) => needle === "" || team.name.toLowerCase().includes(needle),
+    );
+    const result = matching.sort((a, b) => compareTeams(a, b, sort));
     return direction === "desc" ? result.reverse() : result;
-  }, [teams.data, sort, direction]);
+  }, [teams.data, query, sort, direction]);
+
+  const setQuery = (value: string) => {
+    const next = new URLSearchParams(params);
+    if (value === "") next.delete("q");
+    else next.set("q", value);
+    setParams(next, { replace: true });
+  };
 
   const sortBy = (key: SortKey) => {
     const next = new URLSearchParams(params);
@@ -162,7 +240,12 @@ export function TeamsPage() {
   if (teams.isPending) {
     return (
       <div className="flex flex-col">
-        <TeamsHeader onCreate={createTeam} />
+        <TeamsHeader
+          query={query}
+          onQuery={setQuery}
+          onExport={() => downloadTeamsCsv(sortedTeams)}
+          onCreate={createTeam}
+        />
         <TeamsTableSkeleton />
       </div>
     );
@@ -171,7 +254,12 @@ export function TeamsPage() {
   if (teams.isError) {
     return (
       <div className="flex flex-col">
-        <TeamsHeader onCreate={createTeam} />
+        <TeamsHeader
+          query={query}
+          onQuery={setQuery}
+          onExport={() => downloadTeamsCsv(sortedTeams)}
+          onCreate={createTeam}
+        />
         <Alert
           tone="danger"
           role="alert"
@@ -190,8 +278,17 @@ export function TeamsPage() {
 
   return (
     <div className="flex flex-col">
-      <TeamsHeader onCreate={createTeam} />
-      {sortedTeams.length === 0 ? (
+      <TeamsHeader
+        query={query}
+        onQuery={setQuery}
+        onExport={() => downloadTeamsCsv(sortedTeams)}
+        onCreate={createTeam}
+      />
+      {sortedTeams.length === 0 && query.trim() !== "" ? (
+        <EmptyState icon={UsersRound} title="No teams found">
+          No team matches “{query.trim()}”.
+        </EmptyState>
+      ) : sortedTeams.length === 0 ? (
         <EmptyState
           icon={UsersRound}
           title="No teams yet"
@@ -210,6 +307,7 @@ export function TeamsPage() {
               <TableHead sort={sortState("name")} onSort={() => sortBy("name")}>
                 Name
               </TableHead>
+              <TableHead>Visibility</TableHead>
               <TableHead sort={sortState("members")} onSort={() => sortBy("members")}>
                 Members
               </TableHead>
@@ -225,6 +323,11 @@ export function TeamsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            <tr>
+              <td colSpan={6} className="bg-hover px-cell-x py-1.5 text-label-md text-secondary">
+                Active <span className="pl-1 text-tertiary">{sortedTeams.length}</span>
+              </td>
+            </tr>
             {sortedTeams.map((team) => (
               <TableRow
                 key={team.id}
@@ -244,6 +347,7 @@ export function TeamsPage() {
                     <span className="shrink-0 text-label-md text-secondary">{team.key}</span>
                   </div>
                 </TableCell>
+                <TableCell>{VISIBILITY}</TableCell>
                 <TableCell>
                   <Link
                     to={`/settings/teams/${team.slug}/members`}
@@ -278,12 +382,33 @@ export function TeamsPage() {
                         }
                       }}
                     >
-                      <MenuItem
-                        icon={Settings}
-                        onSelect={() => navigate(`/settings/teams/${team.slug}`)}
-                      >
-                        Team settings
+                      <MenuSub>
+                        <MenuSubTrigger icon={Settings}>Settings</MenuSubTrigger>
+                        <MenuSubContent panelLabel="Team settings" className="w-64">
+                          <MenuPanel>
+                            <ComboboxPanel
+                              label="Team settings"
+                              numbered={false}
+                              searchPlaceholder="Filter…"
+                              options={TEAM_DESTINATIONS.map((d) => ({
+                                value: d.path || "overview",
+                                label: d.label,
+                                icon: <Icon icon={d.icon} size="14" />,
+                              }))}
+                              onValueChange={(value) =>
+                                navigate(
+                                  `/settings/teams/${team.slug}${value === "overview" ? "" : `/${value}`}`,
+                                )
+                              }
+                            />
+                          </MenuPanel>
+                        </MenuSubContent>
+                      </MenuSub>
+                      <MenuSeparator />
+                      <MenuItem icon={LogOut} disabled>
+                        Leave team…
                       </MenuItem>
+                      <MenuSeparator />
                       <MenuItem
                         icon={Trash2}
                         onSelect={() => {
@@ -291,7 +416,7 @@ export function TeamsPage() {
                           setDeleting(team);
                         }}
                       >
-                        Delete team…
+                        Delete…
                       </MenuItem>
                     </MenuContent>
                   </Menu>

@@ -88,6 +88,16 @@ function Harness() {
   );
 }
 
+const logoButton = (screen: Awaited<ReturnType<typeof render>>) =>
+  screen.getByRole("button", { name: "Workspace logo", exact: true });
+
+/** Abre o menu do avatar e escolhe "Choose icon", que abre o painel do IconPicker. */
+async function openIconPicker(screen: Awaited<ReturnType<typeof render>>) {
+  await logoButton(screen).click();
+  await page.getByRole("menuitem", { name: "Choose icon" }).click();
+  await expect.element(page.getByRole("button", { name: "Set custom color" })).toBeVisible();
+}
+
 async function axeViolations(root: Element) {
   const result = await axe.run(root, { resultTypes: ["violations"] });
   return result.violations.map(
@@ -118,9 +128,7 @@ describe("WorkspaceSettingsPage", () => {
 
     resolve(makeCurrent());
     await expect.element(screen.getByLabelText("Name")).toHaveValue("Zynox Dev");
-    await expect
-      .element(screen.getByRole("button", { name: "Choose workspace icon" }))
-      .toBeVisible();
+    await expect.element(logoButton(screen)).toBeVisible();
     await expect.element(screen.getByText("Loading workspace settings.")).not.toBeInTheDocument();
   });
 
@@ -211,8 +219,7 @@ describe("WorkspaceSettingsPage", () => {
     saveWorkspace.mockResolvedValue({});
     const screen = await render(<Harness />);
 
-    await screen.getByRole("button", { name: "Choose workspace icon" }).click();
-    await expect.element(page.getByRole("button", { name: "Set custom color" })).toBeVisible();
+    await openIconPicker(screen);
     // Um ícone diferente do atual (aria-pressed=false) no primeiro grupo da paleta.
     const other = document.querySelector<HTMLButtonElement>(
       'fieldset button[aria-pressed="false"]',
@@ -266,9 +273,7 @@ describe("WorkspaceSettingsPage", () => {
     await expect.element(screen.getByRole("button", { name: "Delete workspace" })).toBeDisabled();
     await expect.element(screen.getByRole("button", { name: "Save" })).not.toBeInTheDocument();
     expect(saveWorkspace).not.toHaveBeenCalled();
-    await expect
-      .element(screen.getByRole("button", { name: "Choose workspace icon" }))
-      .not.toBeInTheDocument();
+    await expect.element(logoButton(screen)).not.toBeInTheDocument();
   });
 
   it("URL mostra o prefixo, salva só { slug } ao sair e rejeita slug inválido", async () => {
@@ -321,13 +326,14 @@ describe("WorkspaceSettingsPage", () => {
     await expect.element(screen.getByRole("combobox", { name: "Region" })).not.toBeInTheDocument();
   });
 
-  it("Member onboarding mostra as duas linhas como Available on Enterprise, desabilitadas", async () => {
+  it("Member onboarding mostra as duas linhas, sem etiqueta de plano", async () => {
     fetchCurrent.mockResolvedValue(makeCurrent());
     const screen = await render(<Harness />);
     await expect.element(screen.getByText("Welcome message")).toBeVisible();
     await expect.element(screen.getByText("Default home view")).toBeVisible();
+    await expect.element(screen.getByText(/Available on/)).not.toBeInTheDocument();
 
-    const buttons = screen.getByRole("button", { name: "Available on Enterprise" });
+    const buttons = screen.getByRole("button", { name: "Configure" });
     await expect.element(buttons.first()).toBeDisabled();
     expect(buttons.elements()).toHaveLength(2);
     for (const el of buttons.elements()) expect((el as HTMLButtonElement).disabled).toBe(true);
@@ -374,44 +380,48 @@ describe("WorkspaceSettingsPage", () => {
 
   describe("Logo", () => {
     const LOGO = "/api/workspace/logo/33333333-3333-4333-8333-333333333333.png";
-    const toggle = (screen: Awaited<ReturnType<typeof render>>, name: string) =>
-      screen.getByRole("radio", { name });
+    const menuItem = (name: string) => page.getByRole("menuitem", { name });
 
-    it("sem logo abre em Icon com o IconPicker; com logo abre em Logo com prévia", async () => {
+    it("um único avatar à direita do rótulo; o menu tem Upload logo e Choose icon", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent());
       const screen = await render(<Harness />);
-      await expect.element(toggle(screen, "Icon")).toBeChecked();
-      await expect
-        .element(screen.getByRole("button", { name: "Choose workspace icon" }))
-        .toBeVisible();
-      await screen.unmount();
+      const avatar = logoButton(screen);
+      await expect.element(avatar).toBeVisible();
+      await expect.element(screen.getByRole("radio")).not.toBeInTheDocument();
 
-      fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "admin", LOGO));
-      const withLogo = await render(<Harness />);
-      await expect.element(toggle(withLogo, "Logo")).toBeChecked();
-      await expect.element(withLogo.getByRole("button", { name: "Change" })).toBeVisible();
-      await expect.element(withLogo.getByRole("button", { name: "Remove" })).toBeVisible();
-      expect(document.querySelector(`img[src="${LOGO}"]`)).not.toBeNull();
-      await expect
-        .element(withLogo.getByRole("button", { name: "Choose workspace icon" }))
-        .not.toBeInTheDocument();
+      const label = screen.getByText("Logo", { exact: true }).first().element();
+      expect(avatar.element().getBoundingClientRect().left).toBeGreaterThan(
+        label.getBoundingClientRect().right,
+      );
+
+      await avatar.click();
+      await expect.element(menuItem("Upload logo")).toBeVisible();
+      await expect.element(menuItem("Choose icon")).toBeVisible();
+      await expect.element(menuItem("Remove logo")).not.toBeInTheDocument();
     });
 
-    it("alternar para Logo sem logo não chama update", async () => {
+    it("com logo, o avatar mostra a imagem e o menu ganha Remove logo", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "admin", LOGO));
+      const screen = await render(<Harness />);
+      await expect.element(logoButton(screen)).toBeVisible();
+      expect(document.querySelector(`img[src="${LOGO}"]`)).not.toBeNull();
+
+      await logoButton(screen).click();
+      await expect.element(menuItem("Remove logo")).toBeVisible();
+    });
+
+    it("abrir o menu e o seletor de ícone não chama update", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent());
       const screen = await render(<Harness />);
-      await toggle(screen, "Logo").click();
-
-      await expect.element(screen.getByRole("button", { name: "Upload" })).toBeVisible();
+      await openIconPicker(screen);
       expect(saveWorkspace).not.toHaveBeenCalled();
     });
 
-    it("escolher um arquivo envia o upload e grava { logoUrl } com o toast Saved", async () => {
+    it("Upload logo escolhe um arquivo, envia o upload e grava { logoUrl } com o toast Saved", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent());
       saveWorkspace.mockResolvedValue({});
       uploadLogo.mockResolvedValue({ logoUrl: LOGO });
       const screen = await render(<Harness />);
-      await toggle(screen, "Logo").click();
 
       const file = new File(["x"], "logo.png", { type: "image/png" });
       await userEvent.upload(screen.getByLabelText("Workspace logo file"), file);
@@ -423,11 +433,30 @@ describe("WorkspaceSettingsPage", () => {
       await expect.element(screen.getByText("Saved")).toBeVisible();
     });
 
+    it("arrastar uma imagem para o avatar envia o upload", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent());
+      saveWorkspace.mockResolvedValue({});
+      uploadLogo.mockResolvedValue({ logoUrl: LOGO });
+      const screen = await render(<Harness />);
+
+      await expect.element(logoButton(screen)).toBeVisible();
+      const dropZone = logoButton(screen).element().parentElement!;
+      const data = new DataTransfer();
+      data.items.add(new File(["x"], "dropped.png", { type: "image/png" }));
+      dropZone.dispatchEvent(
+        new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: data }),
+      );
+
+      await vi.waitFor(() => expect(uploadLogo).toHaveBeenCalledTimes(1));
+      expect(uploadLogo.mock.calls[0]![0].name).toBe("dropped.png");
+      await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
+      expect(saveWorkspace.mock.calls[0]![0]).toEqual({ logoUrl: LOGO });
+    });
+
     it("erro de upload mostra a mensagem na linha e não chama update", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent());
       uploadLogo.mockRejectedValue(new Error("Choose a PNG, JPG, WebP, or SVG image."));
       const screen = await render(<Harness />);
-      await toggle(screen, "Logo").click();
 
       await userEvent.upload(
         screen.getByLabelText("Workspace logo file"),
@@ -440,12 +469,13 @@ describe("WorkspaceSettingsPage", () => {
       expect(saveWorkspace).not.toHaveBeenCalled();
     });
 
-    it("Remove grava { logoUrl: null } e o Undo regrava a URL anterior", async () => {
+    it("Remove logo grava { logoUrl: null } e o Undo regrava a URL anterior", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "admin", LOGO));
       saveWorkspace.mockResolvedValue({});
       const screen = await render(<Harness />);
 
-      await screen.getByRole("button", { name: "Remove" }).click();
+      await logoButton(screen).click();
+      await menuItem("Remove logo").click();
       await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
       expect(saveWorkspace.mock.calls[0]![0]).toEqual({ logoUrl: null });
 
@@ -454,26 +484,31 @@ describe("WorkspaceSettingsPage", () => {
       expect(saveWorkspace.mock.calls[1]![0]).toEqual({ logoUrl: LOGO });
     });
 
-    it("com logo, voltar para Icon grava { logoUrl: null }", async () => {
+    it("com logo, escolher um ícone grava { icon, logoUrl: null }", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "admin", LOGO));
       saveWorkspace.mockResolvedValue({});
       const screen = await render(<Harness />);
 
-      await toggle(screen, "Icon").click();
+      await openIconPicker(screen);
+      const other = document.querySelector<HTMLButtonElement>(
+        'fieldset button[aria-pressed="false"]',
+      );
+      if (!other) throw new Error("Nenhum ícone alternativo no picker");
+      other.click();
 
       await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
-      expect(saveWorkspace.mock.calls[0]![0]).toEqual({ logoUrl: null });
+      const input = saveWorkspace.mock.calls[0]![0];
+      expect(Object.keys(input).sort()).toEqual(["icon", "logoUrl"]);
+      expect(input.logoUrl).toBeNull();
     });
 
-    it("não-admin não vê alternador nem botões de logo", async () => {
+    it("não-admin não vê o avatar editável nem o input de arquivo", async () => {
       fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "member", LOGO));
       const screen = await render(<Harness />);
       await expect.element(screen.getByLabelText("Name")).toBeDisabled();
 
-      await expect.element(screen.getByRole("radio", { name: "Icon" })).not.toBeInTheDocument();
-      for (const name of ["Change", "Remove", "Upload"]) {
-        await expect.element(screen.getByRole("button", { name })).not.toBeInTheDocument();
-      }
+      await expect.element(logoButton(screen)).not.toBeInTheDocument();
+      await expect.element(screen.getByLabelText("Workspace logo file")).not.toBeInTheDocument();
     });
   });
 

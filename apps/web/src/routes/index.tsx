@@ -13,6 +13,8 @@ import {
   TeamCreatePage,
   TeamGeneralPage,
   TeamMembersPage,
+  TeamPlaceholderPage,
+  teamPlaceholderPages,
   TeamOverviewPage,
   TeamSettingsLayout,
   TeamsPage,
@@ -125,6 +127,10 @@ export const router = createBrowserRouter([
           { index: true, Component: TeamOverviewPage },
           { path: "general", Component: TeamGeneralPage },
           { path: "members", Component: TeamMembersPage },
+          ...teamPlaceholderPages.map(({ path, title }) => ({
+            path,
+            element: <TeamPlaceholderPage title={title} />,
+          })),
         ],
       },
       ...settingsPlaceholderPages.map(({ path, title }) => ({
