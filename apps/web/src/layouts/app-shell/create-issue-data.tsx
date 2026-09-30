@@ -9,6 +9,7 @@ import type { LabelItem } from "@vyzer/design-system/components";
 import { ProjectIcon } from "@vyzer/design-system/components";
 import { PriorityIcon, StatusIcon, type Priority } from "@vyzer/design-system/icons";
 import type { ReactNode } from "react";
+import type { Team } from "@/features/projects/project-data";
 
 export type TeamOption = { value: string; label: string; hint: string; icon: ReactNode };
 
@@ -20,6 +21,16 @@ export const TEAMS: TeamOption[] = [
     icon: <ProjectIcon value={{ kind: "icon", name: "Zap", color: "red" }} />,
   },
 ];
+
+/** As opções do Team no diálogo, a partir dos Teams reais (`key` como dica, "ZYN"). */
+export function teamOptionsFrom(teams: Team[]): TeamOption[] {
+  return teams.map((team) => ({
+    value: team.slug,
+    label: team.name,
+    hint: team.key ?? team.name.slice(0, 3).toUpperCase(),
+    icon: <ProjectIcon value={team.icon} />,
+  }));
+}
 
 export type StatusOption = { value: string; label: string; icon: ReactNode };
 

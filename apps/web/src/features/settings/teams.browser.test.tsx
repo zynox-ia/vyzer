@@ -214,10 +214,33 @@ describe("TeamsPage", () => {
     fetchTeams.mockResolvedValue(makeTeams());
     const screen = await render(<Harness />);
 
-    await screen.getByRole("cell", { name: "12" }).click();
+    // A célula Created não tem link: o clique cai na linha.
+    await screen.getByRole("cell", { name: "Aug 15" }).click();
     await expect
       .element(screen.getByLabelText("Current URL"))
-      .toHaveTextContent("/settings/teams/vyzer");
+      .toHaveTextContent(/^\/settings\/teams\/vyzer$/);
+  });
+
+  it("o número de Members é um link para os Members do Team, sem disparar a linha", async () => {
+    fetchTeams.mockResolvedValue(makeTeams());
+    const screen = await render(<Harness />);
+
+    const table = screen.getByRole("table", { name: "Teams" });
+    await expect
+      .element(table.getByRole("link", { name: "12", exact: true }))
+      .toHaveAttribute("href", "/settings/teams/vyzer/members");
+    await expect
+      .element(table.getByRole("link", { name: "5", exact: true }))
+      .toHaveAttribute("href", "/settings/teams/zynox/members");
+    await expect
+      .element(table.getByRole("link", { name: "2", exact: true }))
+      .toHaveAttribute("href", "/settings/teams/alpha/members");
+
+    await table.getByRole("link", { name: "12", exact: true }).click();
+    // Só a navegação do link: nunca passa por /settings/teams/vyzer (a da linha).
+    await expect
+      .element(screen.getByLabelText("Current URL"))
+      .toHaveTextContent(/^\/settings\/teams\/vyzer\/members$/);
   });
 
   it("o link do nome navega para a configuração do Team", async () => {

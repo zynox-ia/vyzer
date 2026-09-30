@@ -29,9 +29,11 @@ import {
   Trash2,
   UserRoundPen,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import {
+  Alert,
   Button,
   EmptyState,
   IconButton,
@@ -40,6 +42,7 @@ import {
   MenuItem,
   MenuTrigger,
   ProjectIcon,
+  Skeleton,
   Tabs,
   TabsContent,
   TabsList,
@@ -52,7 +55,7 @@ import { useAppShell } from "@/layouts/app-shell/use-app-shell";
 import { AgentConversationView } from "@/features/agent/agent-conversation-view";
 import { useAgentChatStore } from "@/features/agent/agent-chat-store";
 import { COMPACT_SUGGESTIONS } from "@/features/agent/data";
-import { projectById } from "./project-data";
+import { projectQueryOptions } from "@/services/projects";
 
 const VIEW_TABS = [
   { value: "overview", label: "Overview" },
@@ -61,9 +64,21 @@ const VIEW_TABS = [
 ];
 const VIEW_TAB_VALUES = VIEW_TABS.map((t) => t.value);
 
+/** NOT_FOUND, ou BAD_REQUEST quando o id da URL nem é um UUID: em ambos o projeto não existe. */
+function isMissing(error: unknown) {
+  if (typeof error !== "object" || error === null || !("code" in error)) return false;
+  return error.code === "NOT_FOUND" || error.code === "BAD_REQUEST";
+}
+
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const project = projectById(projectId ?? "");
+  // O projeto vem da API. Id que não existe (ou que nem é um UUID) é "não encontrado": resposta
+  // definitiva, sem repetir a chamada; erro de rede não vira "não encontrado" e oferece Retry.
+  const projectQuery = useQuery({
+    ...projectQueryOptions(projectId ?? ""),
+    retry: (failureCount, error) => !isMissing(error) && failureCount < 3,
+  });
+  const project = projectQuery.data;
 
   const [params, setParams] = useSearchParams();
   // Aba desconhecida na URL cai no padrão, sem quebrar (revisão de código r3, menor 2).
@@ -128,6 +143,35 @@ export function ProjectDetailPage() {
     }
     toast({ title: "Copied" });
   };
+
+  if (!project && projectQuery.isPending) {
+    return (
+      <div aria-busy="true" className="flex min-h-0 flex-1 flex-col gap-4 p-6">
+        <span className="sr-only">Loading Project.</span>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton shape="block" className="h-32" />
+      </div>
+    );
+  }
+
+  if (!project && !isMissing(projectQuery.error)) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+        <Alert
+          tone="danger"
+          role="alert"
+          title="Could not load Project"
+          action={
+            <Button variant="secondary" onClick={() => void projectQuery.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Check your connection and try again.
+        </Alert>
+      </div>
+    );
+  }
 
   if (!project) {
     return (

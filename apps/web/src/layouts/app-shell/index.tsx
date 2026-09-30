@@ -143,7 +143,7 @@ export function AppShell({
         </div>
         <AgentFooter />
         <ShellCommandMenu />
-        <CreateIssueDialog />
+        <CreateIssueDialog teams={teams} />
       </AgentChatProvider>
     </AppShellProvider>
   );

@@ -244,7 +244,15 @@ export function TeamsPage() {
                     <span className="shrink-0 text-label-md text-secondary">{team.key}</span>
                   </div>
                 </TableCell>
-                <TableCell>{team.memberCount}</TableCell>
+                <TableCell>
+                  <Link
+                    to={`/settings/teams/${team.slug}/members`}
+                    onClick={(event) => event.stopPropagation()}
+                    className="rounded-control text-primary no-underline focus-ring hovered:underline"
+                  >
+                    {team.memberCount}
+                  </Link>
+                </TableCell>
                 <TableCell>{team.issueCount}</TableCell>
                 <TableCell>{formatShortDate(team.createdAt)}</TableCell>
                 <TableCell

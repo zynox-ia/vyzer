@@ -445,6 +445,43 @@ const notificationItemSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
+const projectStatusSchema = z.enum(["backlog", "planned", "started", "completed", "canceled"]);
+const projectHealthSchema = z.enum(["on-track", "at-risk", "off-track", "none"]);
+const projectPrioritySchema = z.enum(["none", "urgent", "high", "medium", "low"]);
+const projectTeamSummarySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  key: z.string(),
+  icon: projectIconValueSchema,
+});
+const uniqueTeamIdsSchema = z
+  .array(z.string().uuid())
+  .min(1)
+  .refine((teamIds) => new Set(teamIds).size === teamIds.length, {
+    message: "A Project must have at least one unique Team.",
+  });
+const projectSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  icon: projectIconValueSchema,
+  status: projectStatusSchema,
+  health: projectHealthSchema,
+  healthNote: z.string().nullable(),
+  priority: projectPrioritySchema.nullable(),
+  lead: z.object({ id: z.string().uuid(), name: z.string() }).nullable(),
+  targetDate: z.iso.date().nullable(),
+  teams: z.array(projectTeamSummarySchema).min(1),
+  issues: z.number().int().nonnegative(),
+  progress: z.number().int().min(0).max(100),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+const projectNameSchema = z.string().trim().min(1);
+
+export type Project = z.infer<typeof projectSchema>;
+export type ProjectTeamSummary = z.infer<typeof projectTeamSummarySchema>;
+
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
 export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
@@ -954,6 +991,49 @@ export const contract = {
     archiveAll: oc
       .input(z.object({ onlyRead: z.boolean().optional().default(false) }))
       .output(z.void()),
+  },
+  project: {
+    /** Lista Projects do Workspace, opcionalmente filtrados pelo slug de um Team. */
+    list: oc
+      .input(z.object({ teamSlug: z.string().trim().min(1).optional() }))
+      .output(z.array(projectSchema)),
+    /** Lê um Project por ID, somente dentro do Workspace resolvido. */
+    detail: oc.input(z.object({ id: z.string().uuid() })).output(projectSchema),
+    /** Cria um Project e seus vínculos com pelo menos um Team do Workspace atual. */
+    create: oc
+      .input(
+        z.object({
+          name: projectNameSchema,
+          icon: projectIconValueSchema,
+          status: projectStatusSchema,
+          health: projectHealthSchema,
+          healthNote: z.string().nullable().optional(),
+          priority: projectPrioritySchema.nullable().optional(),
+          leadMemberId: z.string().uuid().nullable().optional(),
+          targetDate: z.iso.date().nullable().optional(),
+          teamIds: uniqueTeamIdsSchema,
+        }),
+      )
+      .output(projectSchema),
+    /** Atualiza um Project; se os vínculos forem enviados, deve restar ao menos um Team. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: projectNameSchema.optional(),
+          icon: projectIconValueSchema.optional(),
+          status: projectStatusSchema.optional(),
+          health: projectHealthSchema.optional(),
+          healthNote: z.string().nullable().optional(),
+          priority: projectPrioritySchema.nullable().optional(),
+          leadMemberId: z.string().uuid().nullable().optional(),
+          targetDate: z.iso.date().nullable().optional(),
+          teamIds: uniqueTeamIdsSchema.optional(),
+        }),
+      )
+      .output(projectSchema),
+    /** Exclui permanentemente um Project do Workspace resolvido. */
+    delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
 };
 

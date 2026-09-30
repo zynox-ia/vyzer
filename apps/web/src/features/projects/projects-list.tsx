@@ -43,8 +43,11 @@ import {
   TriangleAlert,
   UserRoundPen,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import {
+  Alert,
   Avatar,
   Button,
   DisplayOptions,
@@ -56,6 +59,7 @@ import {
   ListGroup,
   ProjectIcon,
   Select,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -78,7 +82,10 @@ import {
 import { cn } from "@vyzer/design-system/cn";
 import { Breadcrumbs } from "@/layouts/app-shell/top-bar";
 import { useAppShell } from "@/layouts/app-shell/use-app-shell";
-import { projectsForTeam, teamByslug, type Project } from "./project-data";
+import { projectsQueryOptions } from "@/services/projects";
+import { formatTargetDate, toProjectRow } from "./project-adapter";
+import { type Project } from "./project-data";
+import { useWorkspaceTeam } from "./use-workspace-team";
 
 /** Rótulo e ícone de cada saúde (o mesmo texto e os mesmos ícones do `HealthBadge`, que não
  * exporta o mapa — os quatro valores lucide são os dela, badge.tsx). */
@@ -237,6 +244,18 @@ const COLUMN_WIDTH = {
   status: "w-17",
 };
 
+/** Carregando a lista: linhas de esboço no lugar da tabela, sem deslocar o cabeçalho. */
+function ProjectsSkeleton() {
+  return (
+    <div aria-busy="true" className="flex flex-col gap-3 p-2">
+      <span className="sr-only">Loading Projects.</span>
+      {[0, 1, 2, 3].map((row) => (
+        <Skeleton key={row} className="h-4 w-full" />
+      ))}
+    </div>
+  );
+}
+
 export function ProjectsListPage({
   teamSlug,
   teamName,
@@ -247,7 +266,9 @@ export function ProjectsListPage({
 }) {
   const [params, setParams] = useSearchParams();
   const { toggleRightPanel } = useAppShell();
-  const scoped = projectsForTeam(teamSlug);
+  // Os projetos vêm da API (a lista de um time já vem filtrada pelo servidor).
+  const projectsQuery = useQuery(projectsQueryOptions(teamSlug));
+  const scoped = useMemo(() => (projectsQuery.data ?? []).map(toProjectRow), [projectsQuery.data]);
 
   const filters = readFilters(params);
   const filtered = applyFilters(scoped, filters);
@@ -299,7 +320,7 @@ export function ProjectsListPage({
   // Mesmo mecanismo da estrela do projeto aberto (project-detail.tsx): estado na URL.
   const favorite = params.get("favorite") === "1";
   const setFavorite = (value: boolean) => updateParams({ favorite: value ? "1" : null });
-  const team = teamSlug ? teamByslug(teamSlug) : undefined;
+  const team = useWorkspaceTeam(teamSlug);
 
   const leadOptions: ListOption[] = Array.from(
     new Set(scoped.map((p) => p.lead).filter((l): l is string => Boolean(l))),
@@ -386,7 +407,9 @@ export function ProjectsListPage({
         <PriorityIcon priority={project.priority ?? "none"} />
       </TableCell>
       <TableCell className={COLUMN_WIDTH.lead}>{project.lead ?? "···"}</TableCell>
-      <TableCell className={COLUMN_WIDTH.targetDate}>{project.targetDate ?? ""}</TableCell>
+      <TableCell className={COLUMN_WIDTH.targetDate}>
+        {project.targetDate ? formatTargetDate(project.targetDate) : ""}
+      </TableCell>
       <TableCell className={cn(COLUMN_WIDTH.issues, "text-right tabular-nums")}>
         {project.issues}
       </TableCell>
@@ -485,23 +508,42 @@ export function ProjectsListPage({
           extra); token mais próximo, sem tocar no px-cell-x do Table (usado em outras fases). */}
       <main className="min-w-0 flex-1 overflow-y-auto p-2 pl-8">
         <h1 className="sr-only">{title}</h1>
-        <Table label="Projects">
-          <TableHeader>{columnHeaderRow}</TableHeader>
-          {!groups && <TableBody>{sorted.map(renderRow)}</TableBody>}
-        </Table>
-        {groups && (
-          <div className="mt-1 flex flex-col gap-2">
-            {groups.map((group) => (
-              <ListGroup key={group.key} title={group.label} count={group.items.length}>
-                <Table label={`${group.label} projects`} className="mt-px">
-                  <TableBody>{group.items.map(renderRow)}</TableBody>
-                </Table>
-              </ListGroup>
-            ))}
-          </div>
-        )}
-        {sorted.length === 0 && (
-          <p className="p-6 text-center text-body-md text-secondary">No projects yet.</p>
+        {projectsQuery.isPending ? (
+          <ProjectsSkeleton />
+        ) : projectsQuery.isError ? (
+          <Alert
+            tone="danger"
+            role="alert"
+            title="Could not load Projects"
+            action={
+              <Button variant="secondary" onClick={() => void projectsQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Check your connection and try again.
+          </Alert>
+        ) : (
+          <>
+            <Table label="Projects">
+              <TableHeader>{columnHeaderRow}</TableHeader>
+              {!groups && <TableBody>{sorted.map(renderRow)}</TableBody>}
+            </Table>
+            {groups && (
+              <div className="mt-1 flex flex-col gap-2">
+                {groups.map((group) => (
+                  <ListGroup key={group.key} title={group.label} count={group.items.length}>
+                    <Table label={`${group.label} projects`} className="mt-px">
+                      <TableBody>{group.items.map(renderRow)}</TableBody>
+                    </Table>
+                  </ListGroup>
+                ))}
+              </div>
+            )}
+            {sorted.length === 0 && (
+              <p className="p-6 text-center text-body-md text-secondary">No projects yet.</p>
+            )}
+          </>
         )}
       </main>
     </div>
@@ -511,6 +553,6 @@ export function ProjectsListPage({
 /** `/teams/:team/projects`: a mesma lista, com o escopo do time da URL. */
 export function TeamProjectsListPage() {
   const { team } = useParams<{ team: string }>();
-  const found = team ? teamByslug(team) : undefined;
+  const found = useWorkspaceTeam(team);
   return <ProjectsListPage teamSlug={team} teamName={found?.name ?? team} />;
 }

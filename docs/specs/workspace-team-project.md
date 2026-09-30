@@ -72,8 +72,8 @@ Critérios de aceite da etapa 3: os originais do documento (schema completo, see
 - **Workspace**: `id`, `name`, `createdAt`, `updatedAt`.
 - **Member**: `id`, `workspaceId`, `name`, `email`, `role`; o valor inicial é `admin`. A coluna representa os papéis definidos no domínio, sem implementar Guest ou convites nesta fatia.
 - **Team**: `id`, `workspaceId`, `name`, `slug`, `key`, ícone/cor compatíveis com `ProjectIconValue`, timestamps. `key` e `slug` são únicos dentro do Workspace; `key` fica disponível para o domínio de Issues futuro.
-- **Project**: `id`, `workspaceId`, `name`, ícone/cor compatíveis com `ProjectIconValue`, status, saúde, prioridade, lead opcional (Member), data-alvo opcional e timestamps.
-- **Project-Team**: relação muitos-para-muitos. Um Project pode pertencer a vários Teams; uma relação só pode existir quando ambos pertencem ao mesmo Workspace.
+- **Project**: `id`, `workspaceId`, `name`, ícone/cor compatíveis com `ProjectIconValue`, status, saúde, nota curta de saúde (`healthNote`), prioridade, lead opcional (Member), data-alvo opcional e timestamps. Os valores de saúde são `on-track`, `at-risk`, `off-track` e `none`.
+- **Project-Team**: relação muitos-para-muitos. Um Project pertence a pelo menos um Team e pode pertencer a vários; uma relação só pode existir quando ambos pertencem ao mesmo Workspace.
 
 O contrato de `Project` não aceita `workspaceId` do chamador. A lista pode receber `teamSlug` para escopo por Team; o servidor resolve o Team dentro do Workspace do contexto e retorna apenas Projects ligados a ele. A rota de Project individual continua usando o id opaco da API.
 
@@ -120,5 +120,7 @@ Issue, Workflow, Status de Issue, Cycle, Label, Triage, Guest, convite, autentic
 ## Decisões aprovadas
 
 - Semear `Aname CRM`, `Plugga OS`, `Mv School`, `ZynCloud`, `Zynox OS` e `Teste` com seus atributos de Project e vínculo de Team. `issues` e `progress` começam em zero; `milestone` não é persistido.
+- `teamIds` é obrigatório e não-vazio na criação de Project. Na atualização, vínculos omitidos permanecem; quando enviados, a lista não pode ficar vazia.
+- `healthNote` é dado próprio do Project; `targetDate` de exemplo “Dec 18th” é persistido como `2026-12-18`.
 - Usar `andrejunio.dev@gmail.com` no Member admin fixo.
 - Bloquear exclusão de Team enquanto houver Projects associados; limitar atualização e exclusão ao Workspace do contexto.

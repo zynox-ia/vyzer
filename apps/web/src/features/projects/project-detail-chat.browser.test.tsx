@@ -9,33 +9,71 @@
  * rodapé "Agent"/"Chat history" aparece em qualquer tela, não só em Projects — mas só
  * `/projects/:projectId` de fato mostra o chat no painel direito hoje.
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
+import { useState } from "react";
+import { queryOptions, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
+import type { Project as ApiProject } from "@vyzer/contract";
 import { ToastProvider } from "@vyzer/design-system/components";
 import "@/index.css";
 import { AppShell } from "@/layouts/app-shell";
 import { AgentPage } from "@/features/agent";
 import { ProjectDetailPage } from "./project-detail";
-import { PROJECTS } from "./project-data";
 
-const project = PROJECTS[0]!;
+const project: ApiProject = {
+  id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000001",
+  name: "Aname CRM",
+  icon: { kind: "icon", name: "Box", color: "grey" },
+  status: "started",
+  health: "none",
+  healthNote: null,
+  priority: "medium",
+  lead: null,
+  targetDate: null,
+  teams: [
+    {
+      id: "11111111-1111-4111-8111-111111111111",
+      name: "Zynox",
+      slug: "zynox",
+      key: "ZYN",
+      icon: { kind: "icon", name: "Navigation", color: "cyan" },
+    },
+  ],
+  issues: 106,
+  progress: 4,
+  createdAt: "2026-08-15T12:00:00.000Z",
+  updatedAt: "2026-08-15T12:00:00.000Z",
+};
+
+vi.mock("@/services/projects", () => ({
+  projectQueryOptions: (id: string) =>
+    queryOptions({ queryKey: ["project", id], queryFn: async () => project }),
+  projectsQueryOptions: () =>
+    queryOptions({ queryKey: ["projects"], queryFn: async () => [project] }),
+}));
+
 const projectPath = `/projects/${project.id}`;
 
 /** A mesma composição de rotas do app real: AppShell de verdade + ProjectDetailPage e AgentPage reais. */
 function ProjectsHarness({ initialPath = projectPath }: { initialPath?: string }) {
+  const [client] = useState(
+    () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+  );
   return (
-    <ToastProvider>
-      <MemoryRouter initialEntries={[initialPath]}>
-        <Routes>
-          <Route path="/" element={<AppShell />}>
-            <Route path="projects/:projectId" element={<ProjectDetailPage />} />
-            <Route path="agent" element={<AgentPage />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </ToastProvider>
+    <QueryClientProvider client={client}>
+      <ToastProvider>
+        <MemoryRouter initialEntries={[initialPath]}>
+          <Routes>
+            <Route path="/" element={<AppShell />}>
+              <Route path="projects/:projectId" element={<ProjectDetailPage />} />
+              <Route path="agent" element={<AgentPage />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
+    </QueryClientProvider>
   );
 }
 

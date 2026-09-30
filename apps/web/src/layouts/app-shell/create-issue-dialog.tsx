@@ -32,19 +32,30 @@ import {
 } from "@vyzer/design-system/components";
 import { Icon } from "@vyzer/design-system/icons";
 import { cn } from "@vyzer/design-system/cn";
-import { ASSIGNEES, INITIAL_LABELS, PRIORITIES, STATUSES, TEAMS } from "./create-issue-data";
+import {
+  ASSIGNEES,
+  INITIAL_LABELS,
+  PRIORITIES,
+  STATUSES,
+  TEAMS,
+  teamOptionsFrom,
+  type TeamOption,
+} from "./create-issue-data";
+import type { Team } from "@/features/projects/project-data";
 import { useAppShell } from "./use-app-shell";
 
 /** Team, Status, Priority, Assignee e Labels, na última linha do cartão (Figma 27:19344). */
-function IssueProperties() {
-  const [team, setTeam] = useState(TEAMS[0]!.value);
+function IssueProperties({ teamOptions }: { teamOptions: TeamOption[] }) {
+  const [chosenTeam, setTeam] = useState<string>();
+  // Sem escolha, o primeiro Team; sem nenhum Team, o seletor some.
+  const team = chosenTeam ?? teamOptions[0]?.value ?? "";
   const [status, setStatus] = useState(STATUSES[0]!.value);
   const [priority, setPriority] = useState(PRIORITIES[0]!.value);
   const [assignee, setAssignee] = useState(ASSIGNEES[0]!.value);
   const [labels, setLabels] = useState<LabelItem[]>(INITIAL_LABELS);
   const [chosen, setChosen] = useState<string[]>([]);
 
-  const currentTeam = TEAMS.find((t) => t.value === team);
+  const currentTeam = teamOptions.find((t) => t.value === team);
   const currentStatus = STATUSES.find((s) => s.value === status);
   const currentPriority = PRIORITIES.find((p) => p.value === priority);
   const currentAssignee = ASSIGNEES.find((a) => a.value === assignee);
@@ -59,18 +70,20 @@ function IssueProperties() {
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Combobox
-        label="Team"
-        value={team}
-        onValueChange={setTeam}
-        options={TEAMS}
-        searchPlaceholder="Change team…"
-        width="sm"
-      >
-        <PropertyButton leading={currentTeam?.icon} aria-label={`Team: ${currentTeam?.label}`}>
-          {currentTeam?.hint}
-        </PropertyButton>
-      </Combobox>
+      {teamOptions.length > 0 && (
+        <Combobox
+          label="Team"
+          value={team}
+          onValueChange={setTeam}
+          options={teamOptions}
+          searchPlaceholder="Change team…"
+          width="sm"
+        >
+          <PropertyButton leading={currentTeam?.icon} aria-label={`Team: ${currentTeam?.label}`}>
+            {currentTeam?.hint}
+          </PropertyButton>
+        </Combobox>
+      )}
       <Combobox
         label="Status"
         value={status}
@@ -149,7 +162,9 @@ function IssueProperties() {
   );
 }
 
-export function CreateIssueDialog() {
+/** `teams`: os Teams reais; sem a prop, o Team de exemplo (a documentação em /design-system). */
+export function CreateIssueDialog({ teams }: { teams?: Team[] } = {}) {
+  const teamOptions = teams ? teamOptionsFrom(teams) : TEAMS;
   const { createIssueOpen, setCreateIssueOpen, overlayReturnFocus } = useAppShell();
   const toast = useToast();
   const [title, setTitle] = useState("");
@@ -226,7 +241,7 @@ export function CreateIssueDialog() {
                 onChange={(e) => setDescription(e.target.value)}
               />
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <IssueProperties />
+                <IssueProperties teamOptions={teamOptions} />
                 <div className="ml-auto flex items-center gap-1.5">
                   <IconButton icon={Paperclip} label="Attach images, files, or videos" />
                   <Button variant="ghost" type="button" onClick={close}>
