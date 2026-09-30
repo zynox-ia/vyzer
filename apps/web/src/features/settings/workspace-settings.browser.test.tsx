@@ -27,13 +27,21 @@ type Current = {
     slug: string;
     fiscalYearStartMonth: number;
     region: string;
+    logoUrl: string | null;
   };
   member: { id: string; name: string; email: string; role: string };
 };
 
 const fetchCurrent = vi.fn<() => Promise<Current>>();
-type UpdateInput = { name?: string; icon?: Icon; slug?: string; fiscalYearStartMonth?: number };
+type UpdateInput = {
+  name?: string;
+  icon?: Icon;
+  slug?: string;
+  fiscalYearStartMonth?: number;
+  logoUrl?: string | null;
+};
 const saveWorkspace = vi.fn<(input: UpdateInput) => Promise<unknown>>();
+const uploadLogo = vi.fn<(file: File) => Promise<{ logoUrl: string }>>();
 const deleteWorkspace = vi.fn<() => Promise<unknown>>();
 
 vi.mock("@/services/workspace", () => ({
@@ -41,10 +49,12 @@ vi.mock("@/services/workspace", () => ({
     queryOptions({ queryKey: ["workspace", "current"], queryFn: () => fetchCurrent() }),
   updateWorkspaceMutationOptions: () =>
     mutationOptions({ mutationFn: (input: UpdateInput) => saveWorkspace(input) }),
+  uploadWorkspaceLogoMutationOptions: () =>
+    mutationOptions({ mutationFn: (file: File) => uploadLogo(file) }),
   deleteWorkspaceMutationOptions: () => mutationOptions({ mutationFn: () => deleteWorkspace() }),
 }));
 
-function makeCurrent(name = "Zynox Dev", role = "admin"): Current {
+function makeCurrent(name = "Zynox Dev", role = "admin", logoUrl: string | null = null): Current {
   return {
     workspace: {
       id: "11111111-1111-4111-8111-111111111111",
@@ -53,6 +63,7 @@ function makeCurrent(name = "Zynox Dev", role = "admin"): Current {
       slug: "zynox-dev",
       fiscalYearStartMonth: 1,
       region: "United States",
+      logoUrl,
     },
     member: {
       id: "22222222-2222-4222-8222-222222222222",
@@ -88,6 +99,7 @@ beforeEach(async () => {
   fetchCurrent.mockReset();
   saveWorkspace.mockReset();
   deleteWorkspace.mockReset();
+  uploadLogo.mockReset();
   await page.viewport(1280, 720);
 });
 
@@ -357,6 +369,111 @@ describe("WorkspaceSettingsPage", () => {
       await page.getByRole("alertdialog").getByRole("button", { name: "Delete workspace" }).click();
 
       await expect.element(screen.getByText("Could not delete workspace")).toBeVisible();
+    });
+  });
+
+  describe("Logo", () => {
+    const LOGO = "/api/workspace/logo/33333333-3333-4333-8333-333333333333.png";
+    const toggle = (screen: Awaited<ReturnType<typeof render>>, name: string) =>
+      screen.getByRole("radio", { name });
+
+    it("sem logo abre em Icon com o IconPicker; com logo abre em Upload logo com prévia", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent());
+      const screen = await render(<Harness />);
+      await expect.element(toggle(screen, "Icon")).toBeChecked();
+      await expect
+        .element(screen.getByRole("button", { name: "Choose workspace icon" }))
+        .toBeVisible();
+      await screen.unmount();
+
+      fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "admin", LOGO));
+      const withLogo = await render(<Harness />);
+      await expect.element(toggle(withLogo, "Upload logo")).toBeChecked();
+      await expect.element(withLogo.getByRole("button", { name: "Change" })).toBeVisible();
+      await expect.element(withLogo.getByRole("button", { name: "Remove" })).toBeVisible();
+      expect(document.querySelector(`img[src="${LOGO}"]`)).not.toBeNull();
+      await expect
+        .element(withLogo.getByRole("button", { name: "Choose workspace icon" }))
+        .not.toBeInTheDocument();
+    });
+
+    it("alternar para Upload logo sem logo não chama update", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent());
+      const screen = await render(<Harness />);
+      await toggle(screen, "Upload logo").click();
+
+      await expect.element(screen.getByRole("button", { name: "Upload" })).toBeVisible();
+      expect(saveWorkspace).not.toHaveBeenCalled();
+    });
+
+    it("escolher um arquivo envia o upload e grava { logoUrl } com o toast Saved", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent());
+      saveWorkspace.mockResolvedValue({});
+      uploadLogo.mockResolvedValue({ logoUrl: LOGO });
+      const screen = await render(<Harness />);
+      await toggle(screen, "Upload logo").click();
+
+      const file = new File(["x"], "logo.png", { type: "image/png" });
+      await userEvent.upload(screen.getByLabelText("Workspace logo file"), file);
+
+      await vi.waitFor(() => expect(uploadLogo).toHaveBeenCalledTimes(1));
+      expect(uploadLogo.mock.calls[0]![0].name).toBe("logo.png");
+      await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
+      expect(saveWorkspace.mock.calls[0]![0]).toEqual({ logoUrl: LOGO });
+      await expect.element(screen.getByText("Saved")).toBeVisible();
+    });
+
+    it("erro de upload mostra a mensagem na linha e não chama update", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent());
+      uploadLogo.mockRejectedValue(new Error("Choose a PNG, JPG, WebP, or SVG image."));
+      const screen = await render(<Harness />);
+      await toggle(screen, "Upload logo").click();
+
+      await userEvent.upload(
+        screen.getByLabelText("Workspace logo file"),
+        new File(["x"], "logo.gif", { type: "image/gif" }),
+      );
+
+      await expect
+        .element(screen.getByText("Choose a PNG, JPG, WebP, or SVG image."))
+        .toBeVisible();
+      expect(saveWorkspace).not.toHaveBeenCalled();
+    });
+
+    it("Remove grava { logoUrl: null } e o Undo regrava a URL anterior", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "admin", LOGO));
+      saveWorkspace.mockResolvedValue({});
+      const screen = await render(<Harness />);
+
+      await screen.getByRole("button", { name: "Remove" }).click();
+      await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
+      expect(saveWorkspace.mock.calls[0]![0]).toEqual({ logoUrl: null });
+
+      await screen.getByRole("button", { name: "Undo" }).click();
+      await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(2));
+      expect(saveWorkspace.mock.calls[1]![0]).toEqual({ logoUrl: LOGO });
+    });
+
+    it("com logo, voltar para Icon grava { logoUrl: null }", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "admin", LOGO));
+      saveWorkspace.mockResolvedValue({});
+      const screen = await render(<Harness />);
+
+      await toggle(screen, "Icon").click();
+
+      await vi.waitFor(() => expect(saveWorkspace).toHaveBeenCalledTimes(1));
+      expect(saveWorkspace.mock.calls[0]![0]).toEqual({ logoUrl: null });
+    });
+
+    it("não-admin não vê alternador nem botões de logo", async () => {
+      fetchCurrent.mockResolvedValue(makeCurrent("Zynox Dev", "member", LOGO));
+      const screen = await render(<Harness />);
+      await expect.element(screen.getByLabelText("Name")).toBeDisabled();
+
+      await expect.element(screen.getByRole("radio", { name: "Icon" })).not.toBeInTheDocument();
+      for (const name of ["Change", "Remove", "Upload"]) {
+        await expect.element(screen.getByRole("button", { name })).not.toBeInTheDocument();
+      }
     });
   });
 

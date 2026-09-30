@@ -1,6 +1,7 @@
 import type { Db } from "./index";
 import { ne, or } from "drizzle-orm";
 import { member, team, teamMember, workspace } from "./schema";
+import { createTeamIssueEmailAddress } from "./team-issue-email";
 
 /** Stable identifiers used while authentication is deferred (ADR-0015). */
 export const WORKSPACE_ID = "00000000-0000-4000-8000-000000000001";
@@ -64,6 +65,11 @@ export async function seedWorkspace(db: Db): Promise<void> {
           slug: "zynox",
           key: "ZYN",
           icon: { kind: "icon", name: "Navigation", color: "cyan" },
+          timezone: "America/Sao_Paulo",
+          estimation: "none",
+          detailedIssueHistory: false,
+          issueEmailEnabled: false,
+          issueEmailAddress: createTeamIssueEmailAddress("zynox"),
         },
         {
           id: VYZER_TEAM_ID,
@@ -72,6 +78,11 @@ export async function seedWorkspace(db: Db): Promise<void> {
           slug: "vyzer",
           key: "VYZ",
           icon: { kind: "icon", name: "Layers", color: "purple" },
+          timezone: "America/Sao_Paulo",
+          estimation: "none",
+          detailedIssueHistory: false,
+          issueEmailEnabled: false,
+          issueEmailAddress: createTeamIssueEmailAddress("vyzer"),
         },
       ])
       .onConflictDoNothing({ target: team.id });

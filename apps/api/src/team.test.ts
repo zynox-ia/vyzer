@@ -38,7 +38,17 @@ const fixtureMemberIds: string[] = [];
 const fixtureTeamIds: string[] = [];
 
 function uniqueTeamKey(): string {
-  return `T${randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
+  return `T${randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase()}`;
+}
+
+function issueEmailAddressFor(slug: string): string {
+  const token = randomUUID().replaceAll("-", "").slice(0, 12);
+  return `${slug}-${token}@intake.vyzer.app.br`;
+}
+
+function expectIssueEmailAddress(address: string, slug: string): void {
+  expect(address.startsWith(`${slug}-`)).toBe(true);
+  expect(address.slice(`${slug}-`.length)).toMatch(/^[a-f0-9]{12}@intake\.vyzer\.app\.br$/);
 }
 
 function createWorkspaceApi(workspaceId: string, memberId: string) {
@@ -109,13 +119,15 @@ describe("Workspace-scoped Team procedures", () => {
   it("team.list includes only current Workspace Teams and their member/issue counts", async () => {
     const foreign = await createForeignWorkspaceAndMember();
     const foreignTeamId = randomUUID();
+    const foreignTeamSlug = `foreign-team-${foreign.suffix}`;
     await db.insert(team).values({
       id: foreignTeamId,
       workspaceId: foreign.workspaceId,
       name: `Foreign Team ${foreign.suffix}`,
-      slug: `foreign-team-${foreign.suffix}`,
+      slug: foreignTeamSlug,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
+      issueEmailAddress: issueEmailAddressFor(foreignTeamSlug),
     });
 
     const teams = await api.team.list();
@@ -137,7 +149,7 @@ describe("Workspace-scoped Team procedures", () => {
 
   it("team.create derives a slug and persists the Team in the resolved Workspace", async () => {
     const suffix = randomUUID();
-    const name = `Integration Team ${suffix}`;
+    const name = `Integration Team ${suffix.slice(0, 20)}`;
     const key = uniqueTeamKey();
     const icon = { kind: "icon" as const, name: "Navigation", color: "cyan" as const };
 
@@ -150,13 +162,17 @@ describe("Workspace-scoped Team procedures", () => {
     expect(created).toMatchObject({
       id: expect.any(String),
       name,
-      slug: `integration-team-${suffix}`,
+      slug: `integration-team-${suffix.slice(0, 20)}`,
       key,
       icon,
       description: null,
+      detailedIssueHistory: false,
+      issueEmailEnabled: false,
+      estimation: "none",
       createdAt: expect.any(String),
       updatedAt: expect.any(String),
     });
+    expectIssueEmailAddress(created.issueEmailAddress, created.slug);
     expect(Number.isNaN(Date.parse(created.createdAt))).toBe(false);
     expect(Number.isNaN(Date.parse(created.updatedAt))).toBe(false);
     expect(persisted?.workspace_id).toBe(WORKSPACE_ID);
@@ -166,7 +182,7 @@ describe("Workspace-scoped Team procedures", () => {
     const foreign = await createForeignWorkspaceAndMember("admin");
     const foreignApi = createWorkspaceApi(foreign.workspaceId, foreign.memberId);
     const suffix = randomUUID();
-    const name = `Conflict Team ${suffix}`;
+    const name = `Conflict Team ${suffix.slice(0, 20)}`;
     const key = uniqueTeamKey();
 
     await foreignApi.team.create({
@@ -185,7 +201,7 @@ describe("Workspace-scoped Team procedures", () => {
 
     await expect(
       foreignApi.team.create({
-        name: `Another Conflict Team ${suffix}`,
+        name: `Other Conflict ${suffix.slice(0, 20)}`,
         key,
         icon: { kind: "emoji", emoji: "🧭" },
       }),
@@ -195,13 +211,15 @@ describe("Workspace-scoped Team procedures", () => {
   it("team.delete only deletes a Team in the resolved Workspace", async () => {
     const foreign = await createForeignWorkspaceAndMember("admin");
     const foreignTeamId = randomUUID();
+    const foreignTeamSlug = `foreign-team-${foreign.suffix}`;
     await db.insert(team).values({
       id: foreignTeamId,
       workspaceId: foreign.workspaceId,
       name: `Foreign Team ${foreign.suffix}`,
-      slug: `foreign-team-${foreign.suffix}`,
+      slug: foreignTeamSlug,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
+      issueEmailAddress: issueEmailAddressFor(foreignTeamSlug),
     });
 
     await expect(api.team.delete({ id: foreignTeamId })).rejects.toMatchObject({
@@ -256,13 +274,15 @@ describe("Workspace-scoped Team procedures", () => {
 
     const foreign = await createForeignWorkspaceAndMember();
     const foreignTeamId = randomUUID();
+    const foreignTeamSlug = `foreign-team-${foreign.suffix}`;
     await db.insert(team).values({
       id: foreignTeamId,
       workspaceId: foreign.workspaceId,
       name: `Foreign Team ${foreign.suffix}`,
-      slug: `foreign-team-${foreign.suffix}`,
+      slug: foreignTeamSlug,
       key: uniqueTeamKey(),
       icon: { kind: "icon", name: "Layers", color: "purple" },
+      issueEmailAddress: issueEmailAddressFor(foreignTeamSlug),
     });
     await db.insert(teamMember).values({ teamId: foreignTeamId, memberId: foreign.memberId });
 

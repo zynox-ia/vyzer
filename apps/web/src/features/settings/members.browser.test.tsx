@@ -24,6 +24,7 @@ type MemberItem = {
   email: string;
   role: string;
   createdAt: string;
+  teamCount: number;
 };
 
 const fetchMembers = vi.fn<() => Promise<MemberItem[]>>();
@@ -52,6 +53,7 @@ function makeMembers(): MemberItem[] {
       email: "zoe@example.com",
       role: "member",
       createdAt: "2026-01-03T00:00:00.000Z",
+      teamCount: 2,
     },
     {
       id: ADMIN_ID,
@@ -59,6 +61,7 @@ function makeMembers(): MemberItem[] {
       email: "andre@example.com",
       role: "admin",
       createdAt: "2026-01-01T00:00:00.000Z",
+      teamCount: 1,
     },
     {
       id: MEMBER_ID,
@@ -66,6 +69,7 @@ function makeMembers(): MemberItem[] {
       email: "bianca@example.com",
       role: "member",
       createdAt: "2026-01-02T00:00:00.000Z",
+      teamCount: 0,
     },
   ];
 }
@@ -140,6 +144,40 @@ describe("MembersPage", () => {
       .toHaveTextContent("/settings/members?filter=active&sort=name&dir=desc");
     await expect.element(rows.nth(1)).toHaveTextContent("Zoe");
     await expect.element(rows.nth(3)).toHaveTextContent("Andre");
+  });
+
+  it("mostra a coluna Teams com singular/plural e ordena por ela", async () => {
+    fetchMembers.mockResolvedValue(makeMembers());
+    fetchCurrent.mockResolvedValue(makeCurrent());
+    const screen = await render(<Harness />);
+
+    const table = screen.getByRole("table", { name: "Members" });
+    await expect.element(table.getByRole("row", { name: /Zoe/ })).toHaveTextContent("2 teams");
+    await expect.element(table.getByRole("row", { name: /Andre/ })).toHaveTextContent("1 team");
+    await expect.element(table.getByRole("row", { name: /Bianca/ })).toHaveTextContent("0 teams");
+
+    await screen
+      .getByRole("columnheader", { name: "Teams" })
+      .getByRole("button", { name: "Teams" })
+      .click();
+    await expect
+      .element(screen.getByLabelText("Current URL"))
+      .toHaveTextContent("/settings/members?sort=teams&dir=asc");
+    const rows = table.getByRole("row");
+    await expect.element(rows.nth(1)).toHaveTextContent("Bianca");
+    await expect.element(rows.nth(2)).toHaveTextContent("Andre");
+    await expect.element(rows.nth(3)).toHaveTextContent("Zoe");
+  });
+
+  it("lista vazia mostra No Members found. sem quebrar a tabela", async () => {
+    fetchMembers.mockResolvedValue([]);
+    fetchCurrent.mockResolvedValue(makeCurrent());
+    const screen = await render(<Harness />);
+
+    const cell = screen.getByRole("cell", { name: "No Members found." });
+    await expect.element(cell).toBeVisible();
+    expect(cell.element().getAttribute("colspan")).toBe("6");
+    await expect.element(screen.getByRole("columnheader", { name: "Teams" })).toBeVisible();
   });
 
   it("admin renomeia um Member e atualiza a lista", async () => {

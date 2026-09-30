@@ -12,7 +12,13 @@ import { SearchInput } from "@vyzer/design-system/components";
 import { Icon, type IconProps } from "@vyzer/design-system/icons";
 import { cn } from "@vyzer/design-system/cn";
 
-export type SettingsLink = { to: string; label: string; icon: IconProps["icon"] };
+export type SettingsLink = {
+  to: string;
+  label: string;
+  /** Ícone lucide; ignorado quando `leading` existe (ex.: o ícone colorido de um Team). */
+  icon?: IconProps["icon"];
+  leading?: ReactNode;
+};
 export type SettingsGroup = { title: string; links: SettingsLink[] };
 
 const navItem =
@@ -28,7 +34,7 @@ export function SettingsNavGroups({ groups }: { groups: SettingsGroup[] }) {
             {group.links.map((link) => (
               <li key={link.to}>
                 <NavLink to={link.to} className={navItem}>
-                  <Icon icon={link.icon} size="sm" />
+                  {link.leading ?? (link.icon && <Icon icon={link.icon} size="sm" />)}
                   <span className="min-w-0 flex-1 truncate">{link.label}</span>
                 </NavLink>
               </li>

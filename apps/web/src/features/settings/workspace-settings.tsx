@@ -5,8 +5,8 @@
  * desabilitado: quatro cartões, cada linha com rótulo e ajuda à esquerda e controle à direita
  * (input de 256 px), como o `SettingsGroup`/`SettingsRow` de Preferences.
  *
- * - Sem título: ícone (`IconPicker`, no lugar do upload de logo — sem storage de arquivos, ver
- *   spec D1), Name e URL (prefixo + slug).
+ * - Sem título: Logo (alternador Icon com `IconPicker` / Upload logo, ver `WorkspaceLogoField`),
+ *   Name e URL (prefixo + slug).
  * - Time & region: primeiro mês do ano fiscal (Select) e Region, só leitura.
  * - Member onboarding: Welcome message e Default home view, sempre desabilitados com "Available
  *   on Enterprise", como o Linear mostra fora do plano Enterprise. Só apresentação.
@@ -20,7 +20,7 @@
  * controles ficam desabilitados para não convidar a uma ação que falha.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type { ApiClient } from "@vyzer/contract";
 import {
   Alert,
@@ -30,7 +30,7 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-  ProjectIcon,
+  SegmentedControl,
   Select,
   Skeleton,
   TextInput,
@@ -38,10 +38,12 @@ import {
   type ListOption,
   type ProjectIconValue,
 } from "@vyzer/design-system/components";
+import { WorkspaceMark } from "@/layouts/app-shell/workspace-mark";
 import {
   currentWorkspaceQueryOptions,
   deleteWorkspaceMutationOptions,
   updateWorkspaceMutationOptions,
+  uploadWorkspaceLogoMutationOptions,
 } from "@/services/workspace";
 import { SettingsGroup, SettingsRow } from "./settings-row";
 
@@ -75,6 +77,113 @@ type WorkspacePatch = Parameters<ApiClient["workspace"]["update"]>[0];
 
 function sameIcon(a: ProjectIconValue, b: ProjectIconValue) {
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+type LogoMode = "icon" | "logo";
+
+const LOGO_TYPES = "image/png,image/jpeg,image/webp,image/svg+xml";
+
+/**
+ * Linha "Logo": alternador Icon / Upload logo (aprovado 29/09, "melhor dos dois mundos"). Icon é o
+ * IconPicker; Upload logo envia uma imagem, mostra a prévia e a grava no Workspace. Com um logo
+ * gravado ele aparece no lugar do ícone na sidebar; voltar para Icon remove o logo (o Undo do
+ * toast "Saved" o restaura). Escolher Upload logo sozinho não muda nada até a imagem subir.
+ */
+function WorkspaceLogoField({
+  canEdit,
+  icon,
+  logoUrl,
+  onIconChange,
+  onLogoChange,
+}: {
+  canEdit: boolean;
+  icon: ProjectIconValue;
+  logoUrl: string | null;
+  onIconChange: (icon: ProjectIconValue) => void;
+  onLogoChange: (logoUrl: string | null) => void;
+}) {
+  const [mode, setMode] = useState<LogoMode>(logoUrl ? "logo" : "icon");
+  const [uploadError, setUploadError] = useState<string>();
+  const upload = useMutation(uploadWorkspaceLogoMutationOptions());
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const changeMode = (next: LogoMode) => {
+    setMode(next);
+    setUploadError(undefined);
+    if (next === "icon" && logoUrl) onLogoChange(null);
+  };
+
+  const onFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // Limpa para poder escolher o mesmo arquivo de novo depois de um erro.
+    event.target.value = "";
+    if (!file) return;
+    setUploadError(undefined);
+    upload.mutate(file, {
+      onSuccess: (uploaded) => onLogoChange(uploaded.logoUrl),
+      onError: (error) => setUploadError(error.message),
+    });
+  };
+
+  const description =
+    mode === "icon" && canEdit
+      ? "Shown next to the workspace name in the sidebar"
+      : canEdit
+        ? "Recommended size is 256x256px. PNG, JPG, WebP or SVG, up to 5 MB."
+        : "Shown next to the workspace name in the sidebar";
+
+  return (
+    <SettingsRow label="Logo" description={description} error={uploadError}>
+      {() =>
+        !canEdit ? (
+          <WorkspaceMark icon={icon} logoUrl={logoUrl} className="size-icon-md" />
+        ) : (
+          <div className="flex flex-col items-end gap-2">
+            <SegmentedControl<LogoMode>
+              label="Workspace logo type"
+              value={mode}
+              onValueChange={changeMode}
+              options={[
+                { value: "icon", label: "Icon" },
+                { value: "logo", label: "Upload logo" },
+              ]}
+            />
+            {mode === "icon" ? (
+              <IconPicker
+                value={icon}
+                onValueChange={onIconChange}
+                triggerLabel="Choose workspace icon"
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                <WorkspaceMark icon={icon} logoUrl={logoUrl} className="size-control-md" />
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept={LOGO_TYPES}
+                  aria-label="Workspace logo file"
+                  hidden
+                  onChange={onFile}
+                />
+                <Button
+                  type="button"
+                  loading={upload.isPending}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  {logoUrl ? "Change" : "Upload"}
+                </Button>
+                {logoUrl && (
+                  <Button type="button" variant="ghost" onClick={() => onLogoChange(null)}>
+                    Remove
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      }
+    </SettingsRow>
+  );
 }
 
 function SkeletonRow({ last, control }: { last?: boolean; control: string }) {
@@ -187,6 +296,7 @@ export function WorkspaceSettingsPage() {
   const name = draft.name ?? workspace.name;
   const icon = draft.icon ?? workspace.icon;
   const slug = draft.slug ?? workspace.slug;
+  const logoUrl = draft.logoUrl !== undefined ? draft.logoUrl : workspace.logoUrl;
   const month = String(draft.fiscalYearStartMonth ?? workspace.fiscalYearStartMonth);
   const trimmedName = name.trim();
   const trimmedSlug = slug.trim();
@@ -206,9 +316,19 @@ export function WorkspaceSettingsPage() {
     if ("fiscalYearStartMonth" in patch) {
       previous.fiscalYearStartMonth = workspace.fiscalYearStartMonth;
     }
+    if ("logoUrl" in patch) previous.logoUrl = workspace.logoUrl;
     update.mutate(patch, {
       onSuccess: () =>
         toast({ title: "Saved", variant: "success", onUndo: () => update.mutate(previous) }),
+      // O logo não é digitado: se a gravação falhar, volta ao que está salvo em vez de fingir.
+      onError: () => {
+        if ("logoUrl" in patch) {
+          setDraft((prev) => {
+            const { logoUrl: _dropped, ...rest } = prev;
+            return rest;
+          });
+        }
+      },
     });
   };
   const commitName = () => {
@@ -226,22 +346,19 @@ export function WorkspaceSettingsPage() {
       <h1 className="type-heading-1 pb-4 text-primary">Workspace</h1>
       <div className="flex flex-col gap-4">
         <SettingsGroup>
-          <SettingsRow label="Icon" description="Shown next to the workspace name in the sidebar">
-            {() =>
-              canEdit ? (
-                <IconPicker
-                  value={icon}
-                  onValueChange={(next) => {
-                    setDraft((prev) => ({ ...prev, icon: next }));
-                    if (!sameIcon(next, workspace.icon)) save({ icon: next });
-                  }}
-                  triggerLabel="Choose workspace icon"
-                />
-              ) : (
-                <ProjectIcon value={icon} className="size-icon-md" />
-              )
-            }
-          </SettingsRow>
+          <WorkspaceLogoField
+            canEdit={canEdit}
+            icon={icon}
+            logoUrl={logoUrl}
+            onIconChange={(next) => {
+              setDraft((prev) => ({ ...prev, icon: next }));
+              if (!sameIcon(next, workspace.icon)) save({ icon: next });
+            }}
+            onLogoChange={(next) => {
+              setDraft((prev) => ({ ...prev, logoUrl: next }));
+              save({ logoUrl: next });
+            }}
+          />
           <SettingsRow label="Name" error={nameError}>
             {(id) => (
               <TextInput

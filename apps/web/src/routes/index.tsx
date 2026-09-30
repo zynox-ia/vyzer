@@ -6,9 +6,20 @@ import { AgentPersonalizationPage } from "@/features/agent/personalization";
 import { HealthPage } from "@/features/health";
 import { PlaceholderPage } from "@/features/placeholder";
 import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "@/features/projects";
-import { MembersPage, PreferencesPage, SettingsRoute } from "@/features/settings";
+import {
+  MembersPage,
+  PreferencesPage,
+  SettingsRoute,
+  TeamCreatePage,
+  TeamGeneralPage,
+  TeamMembersPage,
+  TeamOverviewPage,
+  TeamSettingsLayout,
+  TeamsPage,
+} from "@/features/settings";
 import { SettingsPlaceholderPage } from "@/features/settings/settings-placeholder";
 import { WorkspaceSettingsPage } from "@/features/settings/workspace-settings";
+import { teamsQueryOptions } from "@/services/teams";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 
 /** Rotas só de desenvolvimento: ficam fora do build de produção. */
@@ -58,19 +69,16 @@ const settingsPlaceholderPages: { path: string; title: string }[] = [
   { path: "asks", title: "Asks" },
   { path: "emojis", title: "Emojis" },
   { path: "integrations", title: "Integrations" },
-  { path: "teams", title: "Teams" },
   { path: "security-admin", title: "Security" },
   { path: "api", title: "API" },
   { path: "applications", title: "Applications" },
   { path: "usage", title: "Usage & limits" },
-  { path: "teams/vyzer", title: "Vyzer" },
-  { path: "teams/zynox", title: "Zynox" },
-  { path: "teams/new", title: "Create a team" },
 ];
 
 /** Product-only data wrapper; the `/design-system` documentation keeps its static sidebar. */
 function WorkspaceAppShell() {
   const currentWorkspace = useQuery(currentWorkspaceQueryOptions());
+  const teams = useQuery(teamsQueryOptions());
   const workspaceStatus = currentWorkspace.isPending
     ? "Loading workspace name."
     : currentWorkspace.isError
@@ -84,6 +92,8 @@ function WorkspaceAppShell() {
         (currentWorkspace.isError ? "Workspace unavailable" : "Workspace")
       }
       workspaceIcon={currentWorkspace.data?.workspace.icon}
+      workspaceLogoUrl={currentWorkspace.data?.workspace.logoUrl}
+      teams={teams.data ?? []}
       workspaceStatus={workspaceStatus}
       onWorkspaceRetry={
         currentWorkspace.isError ? () => void currentWorkspace.refetch() : undefined
@@ -106,6 +116,17 @@ export const router = createBrowserRouter([
       { path: "agent-personalization", Component: AgentPersonalizationPage },
       { path: "workspace", Component: WorkspaceSettingsPage },
       { path: "members", Component: MembersPage },
+      { path: "teams", Component: TeamsPage },
+      { path: "teams/new", Component: TeamCreatePage },
+      {
+        path: "teams/:team",
+        Component: TeamSettingsLayout,
+        children: [
+          { index: true, Component: TeamOverviewPage },
+          { path: "general", Component: TeamGeneralPage },
+          { path: "members", Component: TeamMembersPage },
+        ],
+      },
       ...settingsPlaceholderPages.map(({ path, title }) => ({
         path,
         element: <SettingsPlaceholderPage title={title} />,
