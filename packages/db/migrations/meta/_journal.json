@@ -64,6 +64,13 @@
       "when": 1790729166461,
       "tag": "0008_parallel_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790732274066,
+      "tag": "0009_brainy_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

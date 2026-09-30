@@ -9,6 +9,9 @@ import { SettingsLayout } from "@/layouts/app-shell/settings-layout";
 import { readLastShellPath } from "@/layouts/app-shell/lib/last-path";
 import { SETTINGS_GROUPS } from "./nav-data";
 
+/** Páginas com tabela larga (72 rem) em vez da coluna de 640 px, além das que casam por padrão abaixo. */
+const WIDE_PATHS = ["/settings/members", "/settings/teams", "/settings/api/keys"];
+
 /**
  * O grupo "Your teams" vem da API (spec 2.1): um link por Team, com o ícone e a cor dele, e
  * "Create a team" no fim. O grupo fixo de `nav-data.ts` só serve à documentação em /design-system.
@@ -46,9 +49,7 @@ export function SettingsRoute() {
       backTo={readLastShellPath("/projects")}
       groups={groups}
       contentWidth={
-        pathname === "/settings/members" ||
-        pathname === "/settings/teams" ||
-        /^\/settings\/teams\/[^/]+\/members$/.test(pathname)
+        WIDE_PATHS.includes(pathname) || /^\/settings\/teams\/[^/]+\/members$/.test(pathname)
           ? "wide"
           : "narrow"
       }

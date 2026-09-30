@@ -73,7 +73,8 @@ const MONTH_OPTIONS: ListOption[] = MONTHS.map((label, index) => ({
   label,
 }));
 
-type WorkspacePatch = Parameters<ApiClient["workspace"]["update"]>[0];
+/** Campos que esta tela edita; `apiKeyPolicy` é da página API (spec settings-security-api-usage). */
+type WorkspacePatch = Omit<Parameters<ApiClient["workspace"]["update"]>[0], "apiKeyPolicy">;
 
 function sameIcon(a: ProjectIconValue, b: ProjectIconValue) {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -223,7 +224,7 @@ export function WorkspaceSettingsPage() {
       await queryClient.invalidateQueries({ queryKey: currentWorkspaceQueryOptions().queryKey });
       setDraft((prev) => {
         const next = { ...prev };
-        for (const key of Object.keys(patch) as (keyof typeof patch)[]) delete next[key];
+        for (const key of Object.keys(patch) as (keyof WorkspacePatch)[]) delete next[key];
         return next;
       });
     },

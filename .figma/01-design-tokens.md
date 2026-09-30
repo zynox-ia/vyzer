@@ -290,3 +290,27 @@ Team → General, grupos de 29/09 (Estimates, Create issues by email, Timezone, 
 
 - **Link "Docs" em Estimates:** o Linear mostra um link para a documentação dele ao lado do subtítulo; omitido porque apontaria para a documentação de outro produto.
 - **Endereço de e-mail do Team:** em `text-secondary` (texto discreto, como no Linear), em fonte de código; só configuração, o Vyzer ainda não recebe e-mail (spec, "Team → General: decisões de 29/09").
+
+Settings → Security & access → Personal API keys (API.2), sem frame no Figma; referência é o Linear ao vivo (`/zynox-dev/settings/account/security` e `/api-keys/...`, medido 29/09):
+
+- **Só a seção "Personal API keys":** Sessions, Passkeys, Commit signing key e Authorized applications dependem de auth/OAuth (ADR-0015) e não aparecem, nem como cabeçalho vazio.
+- **Texto de apoio:** "Use API keys to connect your own integrations and tools to Vyzer" no lugar de "Use Linear's GraphQL API…" (a API é oRPC, não GraphQL).
+- **Team access ausente** no formulário e na página da chave até existir o vínculo Team↔chave (spec D6, API.4). A página da chave (`/api-keys/:id`) não estava na spec: existe no Linear e foi incluída, só leitura.
+- **Vazio da lista:** "No API keys" no cabeçalho do cartão com o botão "New API key" (mesmo padrão de "No passkeys registered" do Linear), não o `EmptyState` da spec.
+- **Link "Security settings":** fica na coluna de conteúdo, acima do título; no Linear ele está numa barra de 48 px no canto superior esquerdo do cartão (`SettingsLayout` não tem slot de cabeçalho).
+- **Medidas do DS, não do Linear:** título 22 px (Linear 24), subtítulo de seção 16 px (Linear 15), metadados 11 px (Linear 12), botões e menu 28 px (Linear 32 e 24/32), linha da chave 71 px (Linear 67). São os degraus do design system; não foram ajustados por pixel.
+- **Chave revogada** some da lista pessoal (o Linear não mostra o que acontece; o histórico fica na tabela Issued keys de Settings → API, API.3).
+- **Depois de "Create":** diálogo com o token e "Copy", que só fecha por "Done" ou pelo X (o que o Linear mostra não foi observado, spec D12).
+- **Edit API key** (`/api-keys/:id/edit`, achado da revisão de fidelidade): mesmo formulário do Create, com nome e permissões atuais, "Back" no topo e Cancel/Save. O que o Linear faz depois de "Save" não foi observado (mudaria uma chave real); aqui volta para a página da chave com o toast "API key updated". Team access fora até a API.4.
+- **Menu da chave:** "Edit API key" e "Revoke API key", como no Linear, na linha da lista e na página da chave. Ícone da linha em `text-secondary`.
+
+Settings → Administration → API e Issued keys (API.3), sem frame no Figma; referência é o Linear ao vivo (`/zynox-dev/settings/api` e `/settings/api/keys`, medido 29/09):
+
+- **Só a seção "API keys":** OAuth applications e Webhooks não aparecem (spec D9, D10: exigem auth e Issues). "Join our Slack" e "Docs" também não (sem docs nem canal); o texto de abertura fala do Vyzer, sem GraphQL.
+- **Export CSV** fora, adiado (spec D11). O resto da barra de ferramentas do Linear entrou: filtro por chave ou membro e filtro de status.
+- **Seleção em lote (não estava na spec):** o Linear marca linhas e mostra "N selected · Actions · ✕", com "Revoke API key" no menu Actions; entrou com a `SelectionBar` do DS. O checkbox fica na primeira coluna da tabela (no Linear ele está na margem esquerda). Linha inativa não é selecionável.
+- **Coluna Key:** nome com o prefixo do token embaixo (spec); o Linear mostra só o nome.
+- **Permissions:** chave "Full access" é texto simples; chave com permissões selecionadas abre um `Popover` com cada permissão e a descrição. O popover do Linear não foi observado (a chave real é Full access), então o conteúdo é palpite.
+- **"Last used" nunca usada:** mostra "Never" (o Linear não mostrou esse caso).
+- **"Back" para "API"** fica na coluna de conteúdo, como nas telas de chave (sem slot de barra superior no `SettingsLayout`).
+- **Linha "Issued keys":** contagem só de chaves ativas.

@@ -20,6 +20,27 @@ export const projectIconValueSchema = z.discriminatedUnion("kind", [
 
 export type ProjectIconValue = z.infer<typeof projectIconValueSchema>;
 
+export const apiKeyPermissionSchema = z.enum([
+  "read",
+  "write",
+  "issues:create",
+  "comments:create",
+  "admin",
+]);
+
+export const apiKeyPermissionsSchema = z.union([
+  z.literal("full"),
+  z
+    .array(apiKeyPermissionSchema)
+    .min(1)
+    .refine((items) => new Set(items).size === items.length),
+]);
+
+export type ApiKeyPermission = z.infer<typeof apiKeyPermissionSchema>;
+export type ApiKeyPermissions = z.infer<typeof apiKeyPermissionsSchema>;
+export const apiKeyPolicySchema = z.enum(["all_members", "admins"]);
+export type ApiKeyPolicy = z.infer<typeof apiKeyPolicySchema>;
+
 const workspaceSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -28,6 +49,7 @@ const workspaceSchema = z.object({
   region: z.string(),
   logoUrl: z.string().nullable(),
   icon: projectIconValueSchema,
+  apiKeyPolicy: apiKeyPolicySchema,
 });
 
 const workspaceSlugSchema = z
@@ -90,6 +112,19 @@ const teamListItemSchema = teamSchema.extend({
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
 
+const apiKeySchema = z.object({
+  id: z.string().uuid(),
+  memberId: z.string().uuid(),
+  memberName: z.string(),
+  memberEmail: z.string().email(),
+  name: z.string(),
+  tokenPrefix: z.string(),
+  permissions: apiKeyPermissionsSchema,
+  createdAt: z.iso.datetime(),
+  lastUsedAt: z.iso.datetime().nullable(),
+  revokedAt: z.iso.datetime().nullable(),
+});
+
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
   health: oc.output(
@@ -120,6 +155,7 @@ export const contract = {
           fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
           logoUrl: workspaceLogoUrlSchema.nullable().optional(),
           icon: projectIconValueSchema.optional(),
+          apiKeyPolicy: apiKeyPolicySchema.optional(),
         }),
       )
       .output(workspaceSchema),
@@ -176,6 +212,28 @@ export const contract = {
     members: oc.input(z.object({ id: z.string().uuid() })).output(z.array(memberSchema)),
     /** Exclui imediatamente um Team do Workspace resolvido. */
     delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
+  },
+  apiKey: {
+    /** Creates a personal API key; the raw token is returned exactly once. */
+    create: oc
+      .input(z.object({ name: z.string().trim().min(1), permissions: apiKeyPermissionsSchema }))
+      .output(z.object({ key: apiKeySchema, token: z.string() })),
+    /** Updates an active API key without exposing or changing its token. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().trim().min(1),
+          permissions: apiKeyPermissionsSchema,
+        }),
+      )
+      .output(apiKeySchema),
+    /** Lists personal keys or all keys in the resolved Workspace. */
+    list: oc
+      .input(z.object({ scope: z.enum(["mine", "workspace"]) }))
+      .output(z.array(apiKeySchema)),
+    /** Revokes one key within the resolved Workspace. */
+    revoke: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
 };
 

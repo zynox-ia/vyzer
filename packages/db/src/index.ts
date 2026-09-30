@@ -1,5 +1,5 @@
 /** Acesso ao banco (Drizzle + postgres.js). Ver ADR-0005. */
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
@@ -18,6 +18,12 @@ export type WorkspaceMemberContext = {
   workspace: typeof schema.workspace.$inferSelect;
   member: typeof schema.member.$inferSelect;
 };
+
+export type ApiKeyCreateValues = Pick<
+  typeof schema.apiKey.$inferInsert,
+  "name" | "tokenPrefix" | "tokenHash" | "permissions"
+>;
+export type ApiKeyUpdateValues = Pick<typeof schema.apiKey.$inferInsert, "name" | "permissions">;
 
 /** Resolve a fixed workspace/member pair and ensure that the member belongs to that workspace. */
 export async function resolveWorkspaceMember(
@@ -54,7 +60,7 @@ export async function updateWorkspaceSettings(
   values: Partial<
     Pick<
       typeof schema.workspace.$inferInsert,
-      "name" | "slug" | "fiscalYearStartMonth" | "logoUrl" | "icon"
+      "name" | "slug" | "fiscalYearStartMonth" | "logoUrl" | "icon" | "apiKeyPolicy"
     >
   >,
 ) {
@@ -65,6 +71,138 @@ export async function updateWorkspaceSettings(
     .returning();
 
   return updatedWorkspace ?? null;
+}
+
+/** Persists only the secret hash and metadata for a personal API key. */
+export async function createWorkspaceApiKey(
+  db: Db,
+  workspaceId: string,
+  memberId: string,
+  values: ApiKeyCreateValues,
+) {
+  const [createdKey] = await db
+    .insert(schema.apiKey)
+    .values({ ...values, workspaceId, memberId })
+    .returning();
+
+  return createdKey ?? null;
+}
+
+/** Finds an active key by its one-way token hash. */
+export async function findActiveApiKeyByTokenHash(db: Db, tokenHash: string) {
+  const [foundKey] = await db
+    .select()
+    .from(schema.apiKey)
+    .where(and(eq(schema.apiKey.tokenHash, tokenHash), isNull(schema.apiKey.revokedAt)))
+    .limit(1);
+
+  return foundKey ?? null;
+}
+
+/** Touches last_used_at no more than once per key per minute, including concurrent requests. */
+export async function touchWorkspaceApiKey(db: Db, keyId: string): Promise<void> {
+  const oneMinuteAgo = new Date(Date.now() - 60_000);
+  await db
+    .update(schema.apiKey)
+    .set({ lastUsedAt: new Date() })
+    .where(
+      and(
+        eq(schema.apiKey.id, keyId),
+        or(isNull(schema.apiKey.lastUsedAt), lt(schema.apiKey.lastUsedAt, oneMinuteAgo)),
+      ),
+    );
+}
+
+/** Lists keys and their creator only within the resolved Workspace and optional Member scope. */
+export async function listWorkspaceApiKeys(db: Db, workspaceId: string, memberId?: string) {
+  const conditions = [eq(schema.apiKey.workspaceId, workspaceId)];
+  if (memberId) conditions.push(eq(schema.apiKey.memberId, memberId));
+
+  return db
+    .select({
+      id: schema.apiKey.id,
+      workspaceId: schema.apiKey.workspaceId,
+      memberId: schema.apiKey.memberId,
+      memberName: schema.member.name,
+      memberEmail: schema.member.email,
+      name: schema.apiKey.name,
+      tokenPrefix: schema.apiKey.tokenPrefix,
+      permissions: schema.apiKey.permissions,
+      createdAt: schema.apiKey.createdAt,
+      lastUsedAt: schema.apiKey.lastUsedAt,
+      revokedAt: schema.apiKey.revokedAt,
+    })
+    .from(schema.apiKey)
+    .innerJoin(schema.member, eq(schema.member.id, schema.apiKey.memberId))
+    .where(and(...conditions, eq(schema.member.workspaceId, workspaceId)))
+    .orderBy(desc(schema.apiKey.createdAt), asc(schema.apiKey.id));
+}
+
+/** Reads a key only when it belongs to the resolved Workspace. */
+export async function findWorkspaceApiKey(db: Db, workspaceId: string, keyId: string) {
+  const [foundKey] = await db
+    .select()
+    .from(schema.apiKey)
+    .where(and(eq(schema.apiKey.id, keyId), eq(schema.apiKey.workspaceId, workspaceId)))
+    .limit(1);
+
+  return foundKey ?? null;
+}
+
+/** Updates editable fields only on an active key within the resolved Workspace. */
+export async function updateWorkspaceApiKey(
+  db: Db,
+  workspaceId: string,
+  keyId: string,
+  values: ApiKeyUpdateValues,
+) {
+  const [updatedKey] = await db
+    .update(schema.apiKey)
+    .set(values)
+    .where(
+      and(
+        eq(schema.apiKey.id, keyId),
+        eq(schema.apiKey.workspaceId, workspaceId),
+        isNull(schema.apiKey.revokedAt),
+      ),
+    )
+    .returning({
+      id: schema.apiKey.id,
+      workspaceId: schema.apiKey.workspaceId,
+      memberId: schema.apiKey.memberId,
+      name: schema.apiKey.name,
+      tokenPrefix: schema.apiKey.tokenPrefix,
+      permissions: schema.apiKey.permissions,
+      createdAt: schema.apiKey.createdAt,
+      lastUsedAt: schema.apiKey.lastUsedAt,
+      revokedAt: schema.apiKey.revokedAt,
+    });
+
+  if (!updatedKey) return null;
+
+  const [owner] = await db
+    .select({
+      memberName: schema.member.name,
+      memberEmail: schema.member.email,
+    })
+    .from(schema.member)
+    .where(
+      and(eq(schema.member.id, updatedKey.memberId), eq(schema.member.workspaceId, workspaceId)),
+    )
+    .limit(1);
+
+  return owner ? { ...updatedKey, ...owner } : null;
+}
+
+/** Marks a key revoked only inside the resolved Workspace. */
+export async function revokeWorkspaceApiKey(db: Db, workspaceId: string, keyId: string) {
+  const [revokedKey] = await db
+    .update(schema.apiKey)
+    .set({ revokedAt: new Date() })
+    .where(and(eq(schema.apiKey.id, keyId), eq(schema.apiKey.workspaceId, workspaceId)))
+    .returning({ id: schema.apiKey.id });
+
+  return revokedKey ?? null;
 }
 
 /** Permanently delete a Workspace; Member rows cascade through the foreign key. */
@@ -281,4 +419,5 @@ export async function checkConnection(db: Db): Promise<void> {
 }
 
 export { MEMBER_ID, VYZER_TEAM_ID, WORKSPACE_ID, WORKSPACE_REGION, ZYNOX_TEAM_ID } from "./seed";
-export { member, team, teamMember, workspace } from "./schema";
+export { apiKey, member, team, teamMember, workspace } from "./schema";
+export type { ApiKeyPermission, ApiKeyPermissions, ApiKeyPolicy } from "./schema";
