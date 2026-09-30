@@ -195,10 +195,10 @@ export function TeamOverviewPage() {
           <Button
             type="button"
             variant="ghost"
-            className="mt-7 h-control-sm gap-1 pr-2 pl-1.5 text-label-sm"
+            icon={ChevronRight}
+            className="mt-7 h-control-sm gap-1 text-label-sm"
             onClick={() => navigate(`/teams/${team.slug}`)}
           >
-            <Icon icon={ChevronRight} size="xs" />
             Team overview
           </Button>
         </div>
