@@ -292,11 +292,21 @@ export {
   updateWorkspaceLabel,
 } from "./labels";
 export {
+  archiveAllWorkspaceNotifications,
+  archiveWorkspaceNotifications,
+  countUnreadWorkspaceNotifications,
+  listWorkspaceNotifications,
+  markWorkspaceNotificationsRead,
+  markWorkspaceNotificationsUnread,
+  notifyIssueEvent,
+} from "./notifications";
+export {
   issue,
   issueEvent,
   issueLabel,
   label,
   member,
+  notification,
   team,
   teamMember,
   workflowStatus,
@@ -315,7 +325,9 @@ export type {
   IssueEventType,
   IssuePriority,
   LabelColor,
+  NotificationType,
   WorkflowStatusCategory,
   WorkflowStatusColor,
 } from "./schema";
 export type { IssueLabelSummary } from "./labels";
+export type { NotificationIssueEvent, NotificationListOptions } from "./notifications";
