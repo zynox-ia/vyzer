@@ -9,5 +9,8 @@ export const apiKeysQueryOptions = (scope: ApiKeyListScope) =>
 /** Creates a personal API key and returns its one-time token. */
 export const createApiKeyMutationOptions = () => api.apiKey.create.mutationOptions();
 
+/** Updates the name and permissions of an active API key. */
+export const updateApiKeyMutationOptions = () => api.apiKey.update.mutationOptions();
+
 /** Revokes an API key within the current Workspace. */
 export const revokeApiKeyMutationOptions = () => api.apiKey.revoke.mutationOptions();

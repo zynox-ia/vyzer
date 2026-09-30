@@ -242,6 +242,129 @@ describe("API key procedures", () => {
     expect(persisted?.count).toBe("0");
   });
 
+  it("lets a key owner edit name and permissions after the Workspace restricts creation", async () => {
+    const fixture = await createForeignWorkspace("admin");
+    const owner = await createMember(fixture.workspaceId);
+    const ownerApi = createApiForMember(fixture.workspaceId, owner.id);
+    const adminApi = createApiForMember(fixture.workspaceId, fixture.member.id);
+    const created = await createApiKey(ownerApi, ["read"]);
+    const originalHash = createHash("sha256").update(created.token).digest("hex");
+
+    await adminApi.workspace.update({ apiKeyPolicy: "admins" });
+    await ownerApi.apiKey.update({
+      id: created.key.id,
+      name: "Updated owner key",
+      permissions: ["write"],
+    });
+
+    const [persisted] = await db.$client<
+      { name: string; token_prefix: string; token_hash: string; permissions: ApiKeyPermissions }[]
+    >`
+      SELECT name, token_prefix, token_hash, permissions
+      FROM "api_key" WHERE id = ${created.key.id}
+    `;
+    expect(persisted).toEqual({
+      name: "Updated owner key",
+      token_prefix: created.token.slice(0, 8),
+      token_hash: originalHash,
+      permissions: ["write"],
+    });
+    await expect(createBearerApi(created.token).workspace.current()).resolves.toMatchObject({
+      member: { id: owner.id },
+    });
+  });
+
+  it("prevents a non-admin key owner from updating permissions to admin or full", async () => {
+    const fixture = await createForeignWorkspace("admin");
+    const owner = await createMember(fixture.workspaceId);
+    const ownerApi = createApiForMember(fixture.workspaceId, owner.id);
+    const created = await createApiKey(ownerApi, ["read"]);
+
+    await expect(
+      ownerApi.apiKey.update({
+        id: created.key.id,
+        name: created.key.name,
+        permissions: ["admin"],
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      ownerApi.apiKey.update({
+        id: created.key.id,
+        name: created.key.name,
+        permissions: "full",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    const [persisted] = await db.$client<{ name: string; permissions: ApiKeyPermissions }[]>`
+      SELECT name, permissions FROM "api_key" WHERE id = ${created.key.id}
+    `;
+    expect(persisted).toEqual({ name: created.key.name, permissions: ["read"] });
+  });
+
+  it("does not let a non-admin Member edit another Member's API key", async () => {
+    const fixture = await createForeignWorkspace("admin");
+    const owner = await createMember(fixture.workspaceId);
+    const otherMember = await createMember(fixture.workspaceId);
+    const ownerApi = createApiForMember(fixture.workspaceId, owner.id);
+    const otherMemberApi = createApiForMember(fixture.workspaceId, otherMember.id);
+    const created = await createApiKey(ownerApi, ["read"]);
+
+    await expect(
+      otherMemberApi.apiKey.update({
+        id: created.key.id,
+        name: "Unauthorized rename",
+        permissions: ["write"],
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    const [persisted] = await db.$client<{ name: string; permissions: ApiKeyPermissions }[]>`
+      SELECT name, permissions FROM "api_key" WHERE id = ${created.key.id}
+    `;
+    expect(persisted).toEqual({ name: created.key.name, permissions: ["read"] });
+  });
+
+  it("lets an Admin edit a Member's API key", async () => {
+    const fixture = await createForeignWorkspace("admin");
+    const owner = await createMember(fixture.workspaceId);
+    const ownerApi = createApiForMember(fixture.workspaceId, owner.id);
+    const adminApi = createApiForMember(fixture.workspaceId, fixture.member.id);
+    const created = await createApiKey(ownerApi, ["read"]);
+
+    await adminApi.apiKey.update({
+      id: created.key.id,
+      name: "Updated by workspace Admin",
+      permissions: ["write"],
+    });
+
+    const [persisted] = await db.$client<{ name: string; permissions: ApiKeyPermissions }[]>`
+      SELECT name, permissions FROM "api_key" WHERE id = ${created.key.id}
+    `;
+    expect(persisted).toEqual({ name: "Updated by workspace Admin", permissions: ["write"] });
+  });
+
+  it("returns NOT_FOUND when updating a revoked key or a key from another Workspace", async () => {
+    const revokedKey = await createApiKey(api, ["read"]);
+    await api.apiKey.revoke({ id: revokedKey.key.id });
+    await expect(
+      api.apiKey.update({
+        id: revokedKey.key.id,
+        name: "Cannot update revoked key",
+        permissions: ["write"],
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    const foreign = await createForeignWorkspace("admin");
+    const foreignApi = createApiForMember(foreign.workspaceId, foreign.member.id);
+    const foreignKey = await createApiKey(foreignApi, ["read"]);
+    await expect(
+      api.apiKey.update({
+        id: foreignKey.key.id,
+        name: "Cannot update foreign key",
+        permissions: ["write"],
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   it("scopes personal and workspace lists and revocation to the resolved Workspace", async () => {
     const ownKey = await createApiKey(api, ["read"]);
     const foreign = await createForeignWorkspace();

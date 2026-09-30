@@ -12,6 +12,7 @@ import {
   listWorkspaceMembers,
   listWorkspaceApiKeys,
   revokeWorkspaceApiKey,
+  updateWorkspaceApiKey,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
   WORKSPACE_REGION,
@@ -224,6 +225,42 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
             revokedAt: createdKey.revokedAt?.toISOString() ?? null,
           },
           token,
+        };
+      }),
+      update: middleware.workspaceResolved.apiKey.update.handler(async ({ context, input }) => {
+        const key = await findWorkspaceApiKey(context.db, context.workspace.id, input.id);
+        if (!key || key.revokedAt) throw new ORPCError("NOT_FOUND");
+
+        if (key.memberId === context.member.id) {
+          requireApiKeyPermission(context, "write");
+        } else {
+          requireAdminOnly(context);
+        }
+
+        if (
+          context.member.role !== "admin" &&
+          (input.permissions === "full" || input.permissions.includes("admin"))
+        ) {
+          throw new ORPCError("FORBIDDEN");
+        }
+
+        const updatedKey = await updateWorkspaceApiKey(context.db, context.workspace.id, input.id, {
+          name: input.name,
+          permissions: input.permissions,
+        });
+        if (!updatedKey) throw new ORPCError("NOT_FOUND");
+
+        return {
+          id: updatedKey.id,
+          memberId: updatedKey.memberId,
+          memberName: updatedKey.memberName,
+          memberEmail: updatedKey.memberEmail,
+          name: updatedKey.name,
+          tokenPrefix: updatedKey.tokenPrefix,
+          permissions: updatedKey.permissions,
+          createdAt: updatedKey.createdAt.toISOString(),
+          lastUsedAt: updatedKey.lastUsedAt?.toISOString() ?? null,
+          revokedAt: updatedKey.revokedAt?.toISOString() ?? null,
         };
       }),
       list: middleware.workspaceResolved.apiKey.list.handler(async ({ context, input }) => {

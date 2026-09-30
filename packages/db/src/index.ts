@@ -22,6 +22,7 @@ export type ApiKeyCreateValues = Pick<
   typeof schema.apiKey.$inferInsert,
   "name" | "tokenPrefix" | "tokenHash" | "permissions"
 >;
+export type ApiKeyUpdateValues = Pick<typeof schema.apiKey.$inferInsert, "name" | "permissions">;
 
 /** Resolve a fixed workspace/member pair and ensure that the member belongs to that workspace. */
 export async function resolveWorkspaceMember(
@@ -145,6 +146,51 @@ export async function findWorkspaceApiKey(db: Db, workspaceId: string, keyId: st
     .limit(1);
 
   return foundKey ?? null;
+}
+
+/** Updates editable fields only on an active key within the resolved Workspace. */
+export async function updateWorkspaceApiKey(
+  db: Db,
+  workspaceId: string,
+  keyId: string,
+  values: ApiKeyUpdateValues,
+) {
+  const [updatedKey] = await db
+    .update(schema.apiKey)
+    .set(values)
+    .where(
+      and(
+        eq(schema.apiKey.id, keyId),
+        eq(schema.apiKey.workspaceId, workspaceId),
+        isNull(schema.apiKey.revokedAt),
+      ),
+    )
+    .returning({
+      id: schema.apiKey.id,
+      workspaceId: schema.apiKey.workspaceId,
+      memberId: schema.apiKey.memberId,
+      name: schema.apiKey.name,
+      tokenPrefix: schema.apiKey.tokenPrefix,
+      permissions: schema.apiKey.permissions,
+      createdAt: schema.apiKey.createdAt,
+      lastUsedAt: schema.apiKey.lastUsedAt,
+      revokedAt: schema.apiKey.revokedAt,
+    });
+
+  if (!updatedKey) return null;
+
+  const [owner] = await db
+    .select({
+      memberName: schema.member.name,
+      memberEmail: schema.member.email,
+    })
+    .from(schema.member)
+    .where(
+      and(eq(schema.member.id, updatedKey.memberId), eq(schema.member.workspaceId, workspaceId)),
+    )
+    .limit(1);
+
+  return owner ? { ...updatedKey, ...owner } : null;
 }
 
 /** Marks a key revoked only inside the resolved Workspace. */

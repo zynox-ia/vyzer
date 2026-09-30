@@ -182,6 +182,16 @@ export const contract = {
     create: oc
       .input(z.object({ name: z.string().trim().min(1), permissions: apiKeyPermissionsSchema }))
       .output(z.object({ key: apiKeySchema, token: z.string() })),
+    /** Updates an active API key without exposing or changing its token. */
+    update: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().trim().min(1),
+          permissions: apiKeyPermissionsSchema,
+        }),
+      )
+      .output(apiKeySchema),
     /** Lists personal keys or all keys in the resolved Workspace. */
     list: oc
       .input(z.object({ scope: z.enum(["mine", "workspace"]) }))
