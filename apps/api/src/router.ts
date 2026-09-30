@@ -17,18 +17,19 @@ import {
   listWorkspaceIssueEvents,
   getWorkspaceIssueByIdentifier,
   listWorkspaceMembers,
+  listWorkspaceTeamIssueFacets,
   updateWorkspaceMemberName,
   updateWorkspaceSettings,
   updateWorkspaceTeam,
   updateWorkspaceWorkflowStatus,
   reorderWorkspaceWorkflowStatus,
+  reorderWorkspaceIssue,
   setWorkspaceDefaultWorkflowStatus,
   updateWorkspaceIssue,
   IssueConflictError,
   IssueRuleError,
   type IssueEventType,
   type IssuePriority,
-  type IssueView,
   WorkflowStatusRuleError,
   type WorkflowStatusCategory,
   type WorkflowStatusColor,
@@ -328,11 +329,22 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           context.db,
           context.workspace.id,
           input.team,
-          input.view as IssueView | undefined,
+          input,
         );
         if (!issues) throw new ORPCError("NOT_FOUND");
 
         return issues.map(serializeIssue);
+      }),
+      facets: middleware.workspaceScoped.issue.facets.handler(async ({ context, input }) => {
+        const facets = await listWorkspaceTeamIssueFacets(
+          context.db,
+          context.workspace.id,
+          input.team,
+          input,
+        );
+        if (!facets) throw new ORPCError("NOT_FOUND");
+
+        return facets;
       }),
       get: middleware.workspaceScoped.issue.get.handler(async ({ context, input }) => {
         const issue = await getWorkspaceIssueByIdentifier(
@@ -378,6 +390,85 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
 
         return events.map(serializeIssueEvent);
       }),
+      reorder: middleware.workspaceScoped.issue.reorder.handler(async ({ context, input }) => {
+        const reorderedIssue = await withIssueErrors(() =>
+          reorderWorkspaceIssue(context.db, context.workspace.id, input.id, input.position, {
+            groupBy: input.groupBy,
+            subgroupBy: input.subgroupBy,
+          }),
+        );
+        if (!reorderedIssue) throw new ORPCError("NOT_FOUND");
+      }),
+      bulkUpdate: middleware.workspaceScoped.issue.bulkUpdate.handler(
+        async ({ context, input }) => {
+          const outcomes = await Promise.all(
+            input.ids.map(async (id) => {
+              try {
+                const updatedIssue = await updateWorkspaceIssue(
+                  context.db,
+                  context.workspace.id,
+                  context.member.id,
+                  id,
+                  input.changes,
+                );
+                return updatedIssue
+                  ? { id, success: true as const }
+                  : {
+                      id,
+                      success: false as const,
+                      code: "NOT_FOUND" as const,
+                      message: "Issue not found in this Workspace.",
+                    };
+              } catch (error) {
+                return { id, success: false as const, ...issueFailureDetails(error) };
+              }
+            }),
+          );
+
+          return {
+            updatedIds: outcomes.filter((outcome) => outcome.success).map((outcome) => outcome.id),
+            failed: outcomes.flatMap((outcome) =>
+              outcome.success
+                ? []
+                : [{ id: outcome.id, code: outcome.code, message: outcome.message }],
+            ),
+          };
+        },
+      ),
+      bulkDelete: middleware.workspaceScoped.issue.bulkDelete.handler(
+        async ({ context, input }) => {
+          const outcomes = await Promise.all(
+            input.ids.map(async (id) => {
+              try {
+                const deletedIssue = await deleteWorkspaceIssue(
+                  context.db,
+                  context.workspace.id,
+                  id,
+                );
+                return deletedIssue
+                  ? { id, success: true as const }
+                  : {
+                      id,
+                      success: false as const,
+                      code: "NOT_FOUND" as const,
+                      message: "Issue not found in this Workspace.",
+                    };
+              } catch (error) {
+                return { id, success: false as const, ...issueFailureDetails(error) };
+              }
+            }),
+          );
+
+          return {
+            deletedIds: outcomes.filter((outcome) => outcome.success).map((outcome) => outcome.id),
+            failed: outcomes.flatMap((outcome) =>
+              outcome.success
+                ? []
+                : [{ id: outcome.id, code: outcome.code, message: outcome.message }],
+            ),
+          };
+        },
+      ),
     },
   });
 }
@@ -495,4 +586,20 @@ async function withIssueErrors<T>(operation: () => Promise<T>): Promise<T> {
     }
     throw error;
   }
+}
+
+function issueFailureDetails(error: unknown) {
+  if (error instanceof IssueRuleError) {
+    return { code: "BAD_REQUEST" as const, message: error.message };
+  }
+  if (error instanceof IssueConflictError) {
+    return { code: "CONFLICT" as const, message: error.message };
+  }
+  if (isUniqueConstraintViolation(error)) {
+    return { code: "CONFLICT" as const, message: "This Issue number is already in use." };
+  }
+  return {
+    code: "INTERNAL_SERVER_ERROR" as const,
+    message: "This Issue operation failed unexpectedly.",
+  };
 }

@@ -271,12 +271,22 @@ export {
   createWorkspaceIssue,
   deleteWorkspaceIssue,
   getWorkspaceIssueByIdentifier,
+  listWorkspaceTeamIssueFacets,
   listWorkspaceIssueEvents,
   listWorkspaceTeamIssues,
+  reorderWorkspaceIssue,
   updateWorkspaceIssue,
 } from "./issues";
 export { issue, issueEvent, member, team, teamMember, workflowStatus, workspace } from "./schema";
-export type { IssueCreateValues, IssueUpdateValues, IssueView } from "./issues";
+export type {
+  IssueCreateValues,
+  IssueFilters,
+  IssueGroupBy,
+  IssueListOptions,
+  IssueOrderBy,
+  IssueUpdateValues,
+  IssueView,
+} from "./issues";
 export type {
   IssueEventType,
   IssuePriority,

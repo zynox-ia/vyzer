@@ -108,6 +108,8 @@ const workflowStatusSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
+const teamSlugSchema = z.string().trim().min(1);
+
 const issuePrioritySchema = z.union([
   z.literal(0),
   z.literal(1),
@@ -116,6 +118,117 @@ const issuePrioritySchema = z.union([
   z.literal(4),
 ]);
 const issueViewSchema = z.enum(["active", "backlog", "all"]);
+const issueDateRangeSchema = (dateOnly = false) => {
+  const dateSchema = dateOnly ? z.iso.date() : z.iso.datetime();
+  return z
+    .object({
+      from: dateSchema.optional(),
+      to: dateSchema.optional(),
+      isEmpty: z.boolean().optional(),
+    })
+    .refine(
+      (range) => range.from !== undefined || range.to !== undefined || range.isEmpty !== undefined,
+      "Choose a date range or whether the field is empty.",
+    )
+    .refine(
+      (range) =>
+        range.isEmpty === undefined || (range.from === undefined && range.to === undefined),
+      "A date range cannot be combined with an empty check.",
+    );
+};
+const issueDurationRangeSchema = z
+  .object({
+    minSeconds: z.number().int().nonnegative().optional(),
+    maxSeconds: z.number().int().nonnegative().optional(),
+  })
+  .refine(
+    (range) => range.minSeconds !== undefined || range.maxSeconds !== undefined,
+    "Choose a minimum or maximum duration.",
+  )
+  .refine(
+    (range) =>
+      range.minSeconds === undefined ||
+      range.maxSeconds === undefined ||
+      range.minSeconds <= range.maxSeconds,
+    "The minimum duration must not exceed the maximum duration.",
+  );
+const issueFiltersSchema = z.object({
+  statusIds: z.array(z.string().uuid()).min(1).optional(),
+  assigneeIds: z.array(z.string().uuid()).min(1).optional(),
+  unassigned: z.boolean().optional(),
+  creatorIds: z.array(z.string().uuid()).min(1).optional(),
+  priorities: z.array(issuePrioritySchema).min(1).optional(),
+  dueDate: issueDateRangeSchema(true).optional(),
+  createdAt: issueDateRangeSchema().optional(),
+  updatedAt: issueDateRangeSchema().optional(),
+  startedAt: issueDateRangeSchema().optional(),
+  completedAt: issueDateRangeSchema().optional(),
+  timeInStatus: issueDurationRangeSchema.optional(),
+  content: z.string().trim().min(1).max(500).optional(),
+});
+const issueOrderBySchema = z.enum([
+  "manual",
+  "title",
+  "status",
+  "priority",
+  "assignee",
+  "updated",
+  "created",
+  "dueDate",
+  "timeInStatus",
+]);
+const issueGroupBySchema = z.enum(["none", "status", "assignee", "priority"]);
+const issueIdsSchema = z
+  .array(z.string().uuid())
+  .min(1)
+  .refine((ids) => new Set(ids).size === ids.length, "Issue ids must be unique.");
+const issueBulkFailureSchema = z.object({
+  id: z.string().uuid(),
+  code: z.enum(["NOT_FOUND", "BAD_REQUEST", "CONFLICT", "INTERNAL_SERVER_ERROR"]),
+  message: z.string(),
+});
+const issueFacetCountSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  count: z.number().int().nonnegative(),
+});
+const issueFacetsSchema = z.object({
+  status: z.array(
+    z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      description: z.string().nullable(),
+      category: workflowStatusCategorySchema,
+      count: z.number().int().nonnegative(),
+    }),
+  ),
+  assignees: z.array(
+    z.object({
+      id: z.string().uuid().nullable(),
+      name: z.string().nullable(),
+      count: z.number().int().nonnegative(),
+    }),
+  ),
+  creators: z.array(issueFacetCountSchema),
+  priority: z.array(
+    z.object({ value: issuePrioritySchema, count: z.number().int().nonnegative() }),
+  ),
+});
+const issueListInputSchema = z.object({
+  team: teamSlugSchema,
+  view: issueViewSchema.optional(),
+  filters: issueFiltersSchema.optional(),
+  orderBy: issueOrderBySchema.optional(),
+  orderDirection: z.enum(["asc", "desc"]).optional(),
+  groupBy: issueGroupBySchema.optional(),
+  subgroupBy: issueGroupBySchema.optional(),
+  orderCompletedByRecency: z.boolean().optional(),
+});
+const issueFacetsInputSchema = z.object({
+  team: teamSlugSchema,
+  view: issueViewSchema.optional(),
+  filters: issueFiltersSchema.optional(),
+});
 
 const issueTeamSchema = z.object({
   id: z.string().uuid(),
@@ -177,13 +290,14 @@ const issueEventSchema = z.object({
   createdAt: z.iso.datetime(),
 });
 
-const teamSlugSchema = z.string().trim().min(1);
-
 export type Team = z.infer<typeof teamSchema>;
 export type TeamListItem = z.infer<typeof teamListItemSchema>;
 export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
 export type Issue = z.infer<typeof issueSchema>;
 export type IssueEvent = z.infer<typeof issueEventSchema>;
+export type IssueFilters = z.infer<typeof issueFiltersSchema>;
+export type IssueListInput = z.infer<typeof issueListInputSchema>;
+export type IssueFacetsInput = z.infer<typeof issueFacetsInputSchema>;
 
 export const contract = {
   /** Confirma que a API está no ar e alcança o banco. */
@@ -302,10 +416,10 @@ export const contract = {
     setDefault: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
   },
   issue: {
-    /** Lista Issues de um Team; Active inclui Unstarted/Started, Backlog é separado. */
-    list: oc
-      .input(z.object({ team: teamSlugSchema, view: issueViewSchema.optional() }))
-      .output(z.array(issueSchema)),
+    /** Lista Issues de um Team, filtradas e ordenadas para a view escolhida. */
+    list: oc.input(issueListInputSchema).output(z.array(issueSchema)),
+    /** Contagens por filtro e grupos, incluindo opções sem Issues. */
+    facets: oc.input(issueFacetsInputSchema).output(issueFacetsSchema),
     /** Busca pelo identificador derivado da Team key atual (ex.: VYZ-35). */
     get: oc.input(z.object({ identifier: z.string().trim().min(1) })).output(issueSchema),
     /** Cria uma Issue; omitir statusId usa o Status padrão do Team. */
@@ -341,6 +455,47 @@ export const contract = {
     delete: oc.input(z.object({ id: z.string().uuid() })).output(z.void()),
     /** Activity persistida para uma Issue dentro do Workspace atual. */
     events: oc.input(z.object({ id: z.string().uuid() })).output(z.array(issueEventSchema)),
+    /** Reordena manualmente uma Issue dentro do grupo selecionado. */
+    reorder: oc
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          position: z.number().int().nonnegative(),
+          groupBy: issueGroupBySchema.optional(),
+          subgroupBy: issueGroupBySchema.optional(),
+        }),
+      )
+      .output(z.void()),
+    /** Aplica mudanças em massa; a resposta identifica falhas por Issue. */
+    bulkUpdate: oc
+      .input(
+        z.object({
+          ids: issueIdsSchema,
+          changes: z
+            .object({
+              statusId: z.string().uuid().optional(),
+              priority: issuePrioritySchema.optional(),
+              assigneeId: z.string().uuid().nullable().optional(),
+            })
+            .refine(
+              (changes) => Object.values(changes).some((value) => value !== undefined),
+              "Choose at least one Issue property to update.",
+            ),
+        }),
+      )
+      .output(
+        z.object({
+          updatedIds: z.array(z.string().uuid()),
+          failed: z.array(issueBulkFailureSchema),
+        }),
+      ),
+    /** Exclui várias Issues; a resposta identifica falhas por Issue. */
+    bulkDelete: oc.input(z.object({ ids: issueIdsSchema })).output(
+      z.object({
+        deletedIds: z.array(z.string().uuid()),
+        failed: z.array(issueBulkFailureSchema),
+      }),
+    ),
   },
 };
 

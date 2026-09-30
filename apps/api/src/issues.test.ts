@@ -106,6 +106,7 @@ type IssueRow = {
   status_id: string;
   priority: number;
   assignee_id: string | null;
+  sort_order: number;
   started_at: Date | null;
   completed_at: Date | null;
   canceled_at: Date | null;
@@ -113,7 +114,7 @@ type IssueRow = {
 
 async function issueRowsForTeam(teamId: string): Promise<IssueRow[]> {
   const rows = await db.$client<IssueRow[]>`
-    SELECT id, team_id, number, title, status_id, priority, assignee_id,
+    SELECT id, team_id, number, title, status_id, priority, assignee_id, sort_order,
            started_at, completed_at, canceled_at
     FROM "issue" WHERE team_id = ${teamId}
   `;
@@ -137,6 +138,19 @@ async function issueEventRowsForIssue(issueId: string): Promise<IssueEventRow[]>
   return rows
     .map((row) => ({ ...row, created_at: new Date(row.created_at) }))
     .sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+}
+
+/** Backdate an Issue's latest 'status' event so its time-in-status becomes deterministic. */
+async function backdateLatestStatusEvent(issueId: string, secondsAgo: number) {
+  const backdatedTo = new Date(Date.now() - secondsAgo * 1000).toISOString();
+  await db.$client`
+    UPDATE "issue_event" SET created_at = ${backdatedTo}
+    WHERE id = (
+      SELECT id FROM "issue_event"
+      WHERE issue_id = ${issueId} AND type = 'status'
+      ORDER BY created_at DESC LIMIT 1
+    )
+  `;
 }
 
 async function teamRow(teamId: string) {
@@ -600,5 +614,579 @@ describe("Workspace-scoped Issue procedures", () => {
     const listed = await ownerApi.team.list();
     const currentTeam = listed.find((row) => row.id === created.id);
     expect(currentTeam?.issueCount).toBe(2);
+  });
+});
+
+/**
+ * Stage 3.3: `issue.list` gains `filters`, `orderBy`, `orderDirection`, `groupBy` and
+ * `subgroupBy`; `issue.reorder`, `issue.bulkUpdate`, `issue.bulkDelete` and `issue.facets`
+ * are new.
+ */
+describe("Workspace-scoped Issue list filters, ordering, grouping and bulk actions (Stage 3.3)", () => {
+  it("issue.list filters.statusIds narrows to the given Statuses", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Filter Status Team");
+    const statuses = await statusRowsForTeam(created.id);
+    const todo = getStatus(statuses, "Todo");
+    const inProgress = getStatus(statuses, "In Progress");
+    const todoIssue = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Todo issue",
+      statusId: todo.id,
+    });
+    await ownerApi.issue.create({
+      team: created.slug,
+      title: "In progress issue",
+      statusId: inProgress.id,
+    });
+
+    const filtered = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { statusIds: [todo.id] },
+    });
+
+    expect(filtered.map((issue) => issue.id)).toEqual([todoIssue.id]);
+  });
+
+  it("issue.list filters.assigneeIds and filters.unassigned narrow by Assignee", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Filter Assignee Team");
+    const assignee = await createMemberInWorkspace(owner.workspaceId, "member");
+    const assigned = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Assigned",
+      assigneeId: assignee.id,
+    });
+    const unassigned = await ownerApi.issue.create({ team: created.slug, title: "Unassigned" });
+
+    const byAssignee = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { assigneeIds: [assignee.id] },
+    });
+    expect(byAssignee.map((issue) => issue.id)).toEqual([assigned.id]);
+
+    const onlyUnassigned = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { unassigned: true },
+    });
+    expect(onlyUnassigned.map((issue) => issue.id)).toEqual([unassigned.id]);
+  });
+
+  it("issue.list filters.creatorIds narrows by who filed the Issue", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Filter Creator Team");
+    const otherMember = await createMemberInWorkspace(owner.workspaceId, "member");
+    const otherApi = createWorkspaceApi(owner.workspaceId, otherMember.id);
+    const ownerIssue = await ownerApi.issue.create({ team: created.slug, title: "By owner" });
+    await otherApi.issue.create({ team: created.slug, title: "By other Member" });
+
+    const byOwner = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { creatorIds: [owner.memberId] },
+    });
+
+    expect(byOwner.map((issue) => issue.id)).toEqual([ownerIssue.id]);
+  });
+
+  it("issue.list filters.priorities narrows by Priority", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Filter Priority Team");
+    const urgent = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Urgent",
+      priority: 1,
+    });
+    await ownerApi.issue.create({ team: created.slug, title: "No priority", priority: 0 });
+
+    const filtered = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { priorities: [1] },
+    });
+
+    expect(filtered.map((issue) => issue.id)).toEqual([urgent.id]);
+  });
+
+  it("issue.list filters.dueDate range includes only Issues due within the window", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Filter Due Date Team");
+    const dueInWindow = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Due in window",
+      dueDate: "2026-06-15",
+    });
+    await ownerApi.issue.create({
+      team: created.slug,
+      title: "Due outside window",
+      dueDate: "2026-01-01",
+    });
+    await ownerApi.issue.create({ team: created.slug, title: "No due date" });
+
+    const filtered = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { dueDate: { from: "2026-06-01", to: "2026-06-30" } },
+    });
+
+    expect(filtered.map((issue) => issue.id)).toEqual([dueInWindow.id]);
+  });
+
+  it("issue.list filters.content matches title/description substrings", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Filter Content Team");
+    const matching = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Fix the login redirect",
+    });
+    await ownerApi.issue.create({ team: created.slug, title: "Unrelated issue" });
+
+    const filtered = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { content: "login redirect" },
+    });
+
+    expect(filtered.map((issue) => issue.id)).toEqual([matching.id]);
+  });
+
+  it("issue.list orderBy=title sorts alphabetically ascending by default", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Order Title Team");
+    await ownerApi.issue.create({ team: created.slug, title: "Charlie" });
+    await ownerApi.issue.create({ team: created.slug, title: "Alpha" });
+    await ownerApi.issue.create({ team: created.slug, title: "Bravo" });
+
+    const ordered = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      orderBy: "title",
+    });
+
+    expect(ordered.map((issue) => issue.title)).toEqual(["Alpha", "Bravo", "Charlie"]);
+  });
+
+  it("issue.list orderBy=title with orderDirection=desc reverses the order", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Order Title Desc Team");
+    await ownerApi.issue.create({ team: created.slug, title: "Charlie" });
+    await ownerApi.issue.create({ team: created.slug, title: "Alpha" });
+    await ownerApi.issue.create({ team: created.slug, title: "Bravo" });
+
+    const ordered = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      orderBy: "title",
+      orderDirection: "desc",
+    });
+
+    expect(ordered.map((issue) => issue.title)).toEqual(["Charlie", "Bravo", "Alpha"]);
+  });
+
+  it("issue.list filters.createdAt range is inclusive of both bounds", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Filter CreatedAt Team");
+    const issue = await ownerApi.issue.create({ team: created.slug, title: "Created now" });
+    const createdAtIso = issue.createdAt;
+
+    const inclusive = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { createdAt: { from: createdAtIso, to: createdAtIso } },
+    });
+    expect(inclusive.map((row) => row.id)).toEqual([issue.id]);
+
+    const before = new Date(new Date(createdAtIso).getTime() - 60_000).toISOString();
+    const excluding = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { createdAt: { from: before, to: before } },
+    });
+    expect(excluding.map((row) => row.id)).not.toContain(issue.id);
+  });
+
+  it("issue.list groupBy=status keeps Issues of the same Status contiguous", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Group Status Team");
+    const statuses = await statusRowsForTeam(created.id);
+    const todo = getStatus(statuses, "Todo");
+    const inProgress = getStatus(statuses, "In Progress");
+    await ownerApi.issue.create({ team: created.slug, title: "T1", statusId: todo.id });
+    await ownerApi.issue.create({ team: created.slug, title: "P1", statusId: inProgress.id });
+    await ownerApi.issue.create({ team: created.slug, title: "T2", statusId: todo.id });
+    await ownerApi.issue.create({ team: created.slug, title: "P2", statusId: inProgress.id });
+
+    const grouped = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      groupBy: "status",
+    });
+
+    // Every run of the same Status is unbroken: once a Status's block closes, it never reopens.
+    const statusSequence = grouped.map((issue) => issue.statusId);
+    const closedStatusIds = new Set<string>();
+    let previousStatusId: string | null = null;
+    for (const statusId of statusSequence) {
+      if (statusId !== previousStatusId) {
+        expect(closedStatusIds.has(statusId)).toBe(false);
+        if (previousStatusId) closedStatusIds.add(previousStatusId);
+        previousStatusId = statusId;
+      }
+    }
+  });
+
+  it("issue.reorder changes the manual position of an Issue within its Status", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Reorder Team");
+    const statuses = await statusRowsForTeam(created.id);
+    const todo = getStatus(statuses, "Todo");
+    const first = await ownerApi.issue.create({
+      team: created.slug,
+      title: "First",
+      statusId: todo.id,
+    });
+    const second = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Second",
+      statusId: todo.id,
+    });
+    const third = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Third",
+      statusId: todo.id,
+    });
+
+    // All three share the default sortOrder (0), so ties break by newest-first (Issue number
+    // desc) before any reorder — the same tiebreak `issue.list`'s default ordering already uses.
+    const beforeReorder = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { statusIds: [todo.id] },
+      orderBy: "manual",
+    });
+    expect(beforeReorder.map((issue) => issue.id)).toEqual([third.id, second.id, first.id]);
+
+    await expect(ownerApi.issue.reorder({ id: first.id, position: 0 })).resolves.toBeUndefined();
+
+    const ordered = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { statusIds: [todo.id] },
+      orderBy: "manual",
+    });
+    expect(ordered.map((issue) => issue.id)).toEqual([first.id, third.id, second.id]);
+  });
+
+  it("issue.reorder returns NOT_FOUND for a foreign Workspace's Issue", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Reorder Isolation Team");
+    const issue = await ownerApi.issue.create({ team: created.slug, title: "Unreachable" });
+
+    await expect(api.issue.reorder({ id: issue.id, position: 0 })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
+  it("issue.bulkUpdate applies a Status change to every Issue and returns updatedIds", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Bulk Update Team");
+    const inProgress = getStatus(await statusRowsForTeam(created.id), "In Progress");
+    const issueOne = await ownerApi.issue.create({ team: created.slug, title: "Bulk one" });
+    const issueTwo = await ownerApi.issue.create({ team: created.slug, title: "Bulk two" });
+
+    const result = await ownerApi.issue.bulkUpdate({
+      ids: [issueOne.id, issueTwo.id],
+      changes: { statusId: inProgress.id },
+    });
+
+    expect(new Set(result.updatedIds)).toEqual(new Set([issueOne.id, issueTwo.id]));
+    expect(result.failed).toHaveLength(0);
+    const rows = await issueRowsForTeam(created.id);
+    expect(rows.every((row) => row.status_id === inProgress.id)).toBe(true);
+  });
+
+  it("issue.bulkUpdate isolates a per-Issue failure when the Status belongs to a different Team", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const teamA = await createFixtureTeam(ownerApi, "Bulk Cross Team A");
+    const teamB = await createFixtureTeam(ownerApi, "Bulk Cross Team B");
+    const teamBInProgress = getStatus(await statusRowsForTeam(teamB.id), "In Progress");
+    const issueInA = await ownerApi.issue.create({ team: teamA.slug, title: "Stays in A" });
+    const issueInB = await ownerApi.issue.create({ team: teamB.slug, title: "Belongs to B" });
+
+    const result = await ownerApi.issue.bulkUpdate({
+      ids: [issueInA.id, issueInB.id],
+      changes: { statusId: teamBInProgress.id },
+    });
+
+    expect(result.updatedIds).toEqual([issueInB.id]);
+    expect(result.failed).toEqual([
+      expect.objectContaining({ id: issueInA.id, code: "BAD_REQUEST" }),
+    ]);
+  });
+
+  it("issue.bulkUpdate isolates NOT_FOUND for an Issue outside the resolved Workspace", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Bulk Isolation Team");
+    const reachable = await ownerApi.issue.create({ team: created.slug, title: "Reachable" });
+    const foreignOwner = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreignOwner.workspaceId, foreignOwner.memberId);
+    const foreignTeam = await createFixtureTeam(foreignApi, "Bulk Foreign Team");
+    const unreachable = await foreignApi.issue.create({
+      team: foreignTeam.slug,
+      title: "Not yours",
+    });
+
+    const result = await ownerApi.issue.bulkUpdate({
+      ids: [reachable.id, unreachable.id],
+      changes: { priority: 1 },
+    });
+
+    expect(result.updatedIds).toEqual([reachable.id]);
+    expect(result.failed).toEqual([
+      expect.objectContaining({ id: unreachable.id, code: "NOT_FOUND" }),
+    ]);
+  });
+
+  it("issue.bulkDelete hard deletes every reachable Issue and isolates NOT_FOUND for the rest", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Bulk Delete Team");
+    const issueOne = await ownerApi.issue.create({ team: created.slug, title: "Delete one" });
+    const issueTwo = await ownerApi.issue.create({ team: created.slug, title: "Delete two" });
+    const foreignOwner = await createWorkspaceAndMember();
+    const foreignApi = createWorkspaceApi(foreignOwner.workspaceId, foreignOwner.memberId);
+    const foreignTeam = await createFixtureTeam(foreignApi, "Bulk Delete Foreign Team");
+    const unreachable = await foreignApi.issue.create({
+      team: foreignTeam.slug,
+      title: "Not yours",
+    });
+
+    const result = await ownerApi.issue.bulkDelete({
+      ids: [issueOne.id, issueTwo.id, unreachable.id],
+    });
+
+    expect(new Set(result.deletedIds)).toEqual(new Set([issueOne.id, issueTwo.id]));
+    expect(result.failed).toEqual([
+      expect.objectContaining({ id: unreachable.id, code: "NOT_FOUND" }),
+    ]);
+    const remaining = await issueRowsForTeam(created.id);
+    expect(remaining).toHaveLength(0);
+  });
+
+  it("issue.facets counts Issues per Status, including Statuses with no Issues", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Facets Status Team");
+    const statuses = await statusRowsForTeam(created.id);
+    const todo = getStatus(statuses, "Todo");
+    const inProgress = getStatus(statuses, "In Progress");
+    await ownerApi.issue.create({ team: created.slug, title: "T1", statusId: todo.id });
+    await ownerApi.issue.create({ team: created.slug, title: "T2", statusId: todo.id });
+    await ownerApi.issue.create({ team: created.slug, title: "P1", statusId: inProgress.id });
+
+    const facets = await ownerApi.issue.facets({ team: created.slug, view: "all" });
+
+    const todoFacet = facets.status.find((row: { id: string }) => row.id === todo.id);
+    const inProgressFacet = facets.status.find((row: { id: string }) => row.id === inProgress.id);
+    const doneFacet = facets.status.find(
+      (row: { id: string }) => row.id === getStatus(statuses, "Done").id,
+    );
+    expect(todoFacet?.count).toBe(2);
+    expect(inProgressFacet?.count).toBe(1);
+    // "Done" has no Issues but must still appear as a selectable, empty option.
+    expect(doneFacet).toBeDefined();
+    expect(doneFacet?.count).toBe(0);
+  });
+
+  it("issue.facets counts by Assignee (including unassigned) and by Priority", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Facets Assignee Priority Team");
+    const assignee = await createMemberInWorkspace(owner.workspaceId, "member");
+    await ownerApi.issue.create({
+      team: created.slug,
+      title: "Assigned urgent",
+      assigneeId: assignee.id,
+      priority: 1,
+    });
+    await ownerApi.issue.create({ team: created.slug, title: "Unassigned none", priority: 0 });
+
+    const facets = await ownerApi.issue.facets({ team: created.slug, view: "all" });
+
+    const assigneeFacet = facets.assignees.find(
+      (row: { id: string | null }) => row.id === assignee.id,
+    );
+    const unassignedFacet = facets.assignees.find((row: { id: string | null }) => row.id === null);
+    expect(assigneeFacet?.count).toBe(1);
+    expect(unassignedFacet).toMatchObject({ id: null, name: null, count: 1 });
+    const urgentFacet = facets.priority.find((row: { value: number }) => row.value === 1);
+    const noneFacet = facets.priority.find((row: { value: number }) => row.value === 0);
+    expect(urgentFacet?.count).toBe(1);
+    expect(noneFacet?.count).toBe(1);
+    // Priority 2 (High) has no Issues but must still appear as a selectable, empty option.
+    const highFacet = facets.priority.find((row: { value: number }) => row.value === 2);
+    expect(highFacet).toBeDefined();
+    expect(highFacet?.count).toBe(0);
+  });
+
+  it("issue.facets returns NOT_FOUND for a Team outside the resolved Workspace", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Facets Isolation Team");
+
+    await expect(api.issue.facets({ team: created.slug, view: "all" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
+  it("issue.list filters.timeInStatus narrows by seconds spent in the current Status, inclusive of both bounds", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Filter TimeInStatus Team");
+    const statuses = await statusRowsForTeam(created.id);
+    const inProgress = getStatus(statuses, "In Progress");
+
+    // longLived's Status change happened ~100s ago; freshlyMoved's Status is brand new (~0s).
+    const longLived = await ownerApi.issue.create({ team: created.slug, title: "Long lived" });
+    await ownerApi.issue.update({ id: longLived.id, statusId: inProgress.id });
+    await backdateLatestStatusEvent(longLived.id, 100);
+    const freshlyMoved = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Freshly moved",
+      statusId: inProgress.id,
+    });
+
+    const aroundHundredSeconds = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { timeInStatus: { minSeconds: 90, maxSeconds: 110 } },
+    });
+    expect(aroundHundredSeconds.map((issue) => issue.id)).toEqual([longLived.id]);
+
+    const nearZeroSeconds = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { timeInStatus: { maxSeconds: 10 } },
+    });
+    expect(nearZeroSeconds.map((issue) => issue.id)).toEqual([freshlyMoved.id]);
+  });
+
+  it("issue.list orderBy=timeInStatus sorts by duration in the current Status (desc default = longest first)", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Order TimeInStatus Team");
+    const statuses = await statusRowsForTeam(created.id);
+    const inProgress = getStatus(statuses, "In Progress");
+
+    const longLived = await ownerApi.issue.create({ team: created.slug, title: "Long lived" });
+    await ownerApi.issue.update({ id: longLived.id, statusId: inProgress.id });
+    await backdateLatestStatusEvent(longLived.id, 24 * 60 * 60);
+    const freshlyMoved = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Freshly moved",
+      statusId: inProgress.id,
+    });
+
+    const longestFirst = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { statusIds: [inProgress.id] },
+      orderBy: "timeInStatus",
+    });
+    expect(longestFirst.map((issue) => issue.id)).toEqual([longLived.id, freshlyMoved.id]);
+
+    const shortestFirst = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { statusIds: [inProgress.id] },
+      orderBy: "timeInStatus",
+      orderDirection: "asc",
+    });
+    expect(shortestFirst.map((issue) => issue.id)).toEqual([freshlyMoved.id, longLived.id]);
+  });
+
+  it("issue.reorder with groupBy=assignee reorders an Assignee's Issues across different Statuses", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Reorder By Assignee Team");
+    const statuses = await statusRowsForTeam(created.id);
+    const todo = getStatus(statuses, "Todo");
+    const inProgress = getStatus(statuses, "In Progress");
+    const assignee = await createMemberInWorkspace(owner.workspaceId, "member");
+    const inTodo = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Assignee's Todo Issue",
+      statusId: todo.id,
+      assigneeId: assignee.id,
+    });
+    const inProgressIssue = await ownerApi.issue.create({
+      team: created.slug,
+      title: "Assignee's In Progress Issue",
+      statusId: inProgress.id,
+      assigneeId: assignee.id,
+    });
+
+    await expect(
+      ownerApi.issue.reorder({ id: inProgressIssue.id, position: 0, groupBy: "assignee" }),
+    ).resolves.toBeUndefined();
+
+    const grouped = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      groupBy: "assignee",
+      orderBy: "manual",
+    });
+    const assigneeBlock = grouped.filter((issue) => issue.assigneeId === assignee.id);
+    expect(assigneeBlock.map((issue) => issue.id)).toEqual([inProgressIssue.id, inTodo.id]);
+  });
+
+  it("concurrent issue.reorder calls within the same Status complete without deadlock or losing Issues", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Concurrent Reorder Team");
+    const statuses = await statusRowsForTeam(created.id);
+    const todo = getStatus(statuses, "Todo");
+    const issues = await Promise.all(
+      Array.from({ length: 5 }, (_, index) =>
+        ownerApi.issue.create({ team: created.slug, title: `Sibling ${index}`, statusId: todo.id }),
+      ),
+    );
+
+    await expect(
+      Promise.all(
+        issues.map((issue, index) =>
+          ownerApi.issue.reorder({ id: issue.id, position: (issues.length - 1 - index) % 5 }),
+        ),
+      ),
+    ).resolves.toBeDefined();
+
+    const ordered = await ownerApi.issue.list({
+      team: created.slug,
+      view: "all",
+      filters: { statusIds: [todo.id] },
+      orderBy: "manual",
+    });
+    expect(new Set(ordered.map((issue) => issue.id))).toEqual(
+      new Set(issues.map((issue) => issue.id)),
+    );
+    expect(ordered).toHaveLength(issues.length);
   });
 });

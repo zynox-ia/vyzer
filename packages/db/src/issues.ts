@@ -1,5 +1,6 @@
-import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, ne, or, sql } from "drizzle-orm";
+import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import type { Db } from "./index";
 import * as schema from "./schema";
 
@@ -18,6 +19,42 @@ export type IssueUpdateValues = Partial<
 > & { teamId?: string };
 
 export type IssueView = "active" | "backlog" | "all";
+export type IssueDateRange = { from?: string; to?: string; isEmpty?: boolean };
+export type IssueDurationRange = { minSeconds?: number; maxSeconds?: number };
+export type IssueFilters = {
+  statusIds?: string[];
+  assigneeIds?: string[];
+  unassigned?: boolean;
+  creatorIds?: string[];
+  priorities?: schema.IssuePriority[];
+  dueDate?: IssueDateRange;
+  createdAt?: IssueDateRange;
+  updatedAt?: IssueDateRange;
+  startedAt?: IssueDateRange;
+  completedAt?: IssueDateRange;
+  timeInStatus?: IssueDurationRange;
+  content?: string;
+};
+export type IssueOrderBy =
+  | "manual"
+  | "title"
+  | "status"
+  | "priority"
+  | "assignee"
+  | "updated"
+  | "created"
+  | "dueDate"
+  | "timeInStatus";
+export type IssueGroupBy = "none" | "status" | "assignee" | "priority";
+export type IssueListOptions = {
+  view?: IssueView;
+  filters?: IssueFilters;
+  orderBy?: IssueOrderBy;
+  orderDirection?: "asc" | "desc";
+  groupBy?: IssueGroupBy;
+  subgroupBy?: IssueGroupBy;
+  orderCompletedByRecency?: boolean;
+};
 
 export class IssueRuleError extends Error {
   readonly code = "BAD_REQUEST" as const;
@@ -37,11 +74,17 @@ const categoryOrder = sql<number>`case ${schema.workflowStatus.category}
   when 'duplicate' then 6
   else 7
 end`;
+const priorityOrder = sql<number>`case ${schema.issue.priority}
+  when 1 then 0
+  when 2 then 1
+  when 3 then 2
+  when 4 then 3
+  else 4
+end`;
+const issueAssignee = alias(schema.member, "issue_assignee");
+const issueCreator = alias(schema.member, "issue_creator");
 
 function issueRows(executor: DbSession) {
-  const assignee = alias(schema.member, "issue_assignee");
-  const creator = alias(schema.member, "issue_creator");
-
   return executor
     .select({
       id: schema.issue.id,
@@ -72,8 +115,8 @@ function issueRows(executor: DbSession) {
         category: schema.workflowStatus.category,
         color: schema.workflowStatus.color,
       },
-      assignee: { id: assignee.id, name: assignee.name },
-      creator: { id: creator.id, name: creator.name },
+      assignee: { id: issueAssignee.id, name: issueAssignee.name },
+      creator: { id: issueCreator.id, name: issueCreator.name },
     })
     .from(schema.issue)
     .innerJoin(
@@ -91,17 +134,17 @@ function issueRows(executor: DbSession) {
       ),
     )
     .leftJoin(
-      assignee,
+      issueAssignee,
       and(
-        eq(assignee.id, schema.issue.assigneeId),
-        eq(assignee.workspaceId, schema.issue.workspaceId),
+        eq(issueAssignee.id, schema.issue.assigneeId),
+        eq(issueAssignee.workspaceId, schema.issue.workspaceId),
       ),
     )
     .innerJoin(
-      creator,
+      issueCreator,
       and(
-        eq(creator.id, schema.issue.creatorId),
-        eq(creator.workspaceId, schema.issue.workspaceId),
+        eq(issueCreator.id, schema.issue.creatorId),
+        eq(issueCreator.workspaceId, schema.issue.workspaceId),
       ),
     );
 }
@@ -164,11 +207,230 @@ async function getIssueRow(executor: DbSession, workspaceId: string, id: string)
   return currentIssue ? withIdentifier(currentIssue) : null;
 }
 
+type IssueFilterDimension = "status" | "assignee" | "creator" | "priority";
+
+function addTimestampRange(conditions: SQL[], column: AnyPgColumn, range: IssueDateRange) {
+  if (range.isEmpty !== undefined) {
+    conditions.push(range.isEmpty ? isNull(column) : isNotNull(column));
+  }
+  if (range.from !== undefined) conditions.push(gte(column, new Date(range.from)));
+  if (range.to !== undefined) conditions.push(lte(column, new Date(range.to)));
+}
+
+function currentStatusEnteredAt() {
+  return sql`coalesce((
+    select max(${schema.issueEvent.createdAt})
+    from ${schema.issueEvent}
+    where ${schema.issueEvent.issueId} = ${schema.issue.id}
+      and ${schema.issueEvent.type} = 'status'
+  ), ${schema.issue.createdAt})`;
+}
+
+function issueConditions(
+  workspaceId: string,
+  teamId: string,
+  view: IssueView,
+  filters: IssueFilters | undefined,
+  ignoreDimension?: IssueFilterDimension,
+) {
+  const conditions: SQL[] = [
+    eq(schema.issue.workspaceId, workspaceId),
+    eq(schema.issue.teamId, teamId),
+  ];
+
+  if (view === "active") {
+    conditions.push(inArray(schema.workflowStatus.category, ["unstarted", "started"]));
+  } else if (view === "backlog") {
+    conditions.push(eq(schema.workflowStatus.category, "backlog"));
+  } else {
+    conditions.push(ne(schema.workflowStatus.category, "triage"));
+  }
+
+  if (ignoreDimension !== "status" && filters?.statusIds) {
+    conditions.push(inArray(schema.issue.statusId, filters.statusIds));
+  }
+
+  if (ignoreDimension !== "assignee") {
+    const assigneeConditions: SQL[] = [];
+    if (filters?.assigneeIds) {
+      assigneeConditions.push(inArray(schema.issue.assigneeId, filters.assigneeIds));
+    }
+    if (filters?.unassigned) assigneeConditions.push(isNull(schema.issue.assigneeId));
+    if (assigneeConditions.length === 1) conditions.push(assigneeConditions[0]!);
+    else if (assigneeConditions.length > 1) conditions.push(or(...assigneeConditions)!);
+  }
+
+  if (ignoreDimension !== "creator" && filters?.creatorIds) {
+    conditions.push(inArray(schema.issue.creatorId, filters.creatorIds));
+  }
+  if (ignoreDimension !== "priority" && filters?.priorities) {
+    conditions.push(inArray(schema.issue.priority, filters.priorities));
+  }
+  if (filters?.dueDate) {
+    const range = filters.dueDate;
+    if (range.isEmpty !== undefined) {
+      conditions.push(
+        range.isEmpty ? isNull(schema.issue.dueDate) : isNotNull(schema.issue.dueDate),
+      );
+    }
+    if (range.from !== undefined)
+      conditions.push(sql`${schema.issue.dueDate} >= ${range.from}::date`);
+    if (range.to !== undefined) conditions.push(sql`${schema.issue.dueDate} <= ${range.to}::date`);
+  }
+  if (filters?.createdAt) addTimestampRange(conditions, schema.issue.createdAt, filters.createdAt);
+  if (filters?.updatedAt) addTimestampRange(conditions, schema.issue.updatedAt, filters.updatedAt);
+  if (filters?.startedAt) addTimestampRange(conditions, schema.issue.startedAt, filters.startedAt);
+  if (filters?.completedAt)
+    addTimestampRange(conditions, schema.issue.completedAt, filters.completedAt);
+  if (filters?.timeInStatus) {
+    const timeInStatusSeconds = sql`extract(epoch from (now() - (${currentStatusEnteredAt()})))`;
+    if (filters.timeInStatus.minSeconds !== undefined) {
+      conditions.push(sql`${timeInStatusSeconds} >= ${filters.timeInStatus.minSeconds}`);
+    }
+    if (filters.timeInStatus.maxSeconds !== undefined) {
+      conditions.push(sql`${timeInStatusSeconds} <= ${filters.timeInStatus.maxSeconds}`);
+    }
+  }
+  if (filters?.content) {
+    const content = filters.content.toLowerCase();
+    conditions.push(sql`(
+      strpos(lower(${schema.issue.title}), ${content}) > 0
+      or strpos(lower(coalesce(${schema.issue.description}, '')), ${content}) > 0
+    )`);
+  }
+
+  return conditions;
+}
+
+function groupOrderTerms(groupBy: IssueGroupBy | undefined) {
+  switch (groupBy) {
+    case "status":
+      return [categoryOrder, asc(schema.workflowStatus.position)];
+    case "assignee":
+      return [sql`${issueAssignee.name} asc nulls last`];
+    case "priority":
+      return [asc(priorityOrder)];
+    default:
+      return [];
+  }
+}
+
+type IssueOrderTerm = SQL | AnyPgColumn;
+
+function issueOrderTerms(options: IssueListOptions): IssueOrderTerm[] {
+  const orderBy = options.orderBy ?? "manual";
+  const groupBy = options.groupBy ?? "status";
+  const subgroupBy = options.subgroupBy ?? "none";
+  const groupTerms: IssueOrderTerm[] = [];
+  const seenGroups = new Set<IssueGroupBy>();
+
+  for (const dimension of [groupBy, subgroupBy]) {
+    if (dimension === "none" || seenGroups.has(dimension)) continue;
+    seenGroups.add(dimension);
+    groupTerms.push(...groupOrderTerms(dimension));
+  }
+
+  if (orderBy === "manual") {
+    return [...groupTerms, asc(schema.issue.sortOrder), desc(schema.issue.number)];
+  }
+
+  const defaultDirection: "asc" | "desc" =
+    orderBy === "updated" || orderBy === "created" || orderBy === "timeInStatus" ? "desc" : "asc";
+  const direction = options.orderDirection ?? defaultDirection;
+  const directed = (column: IssueOrderTerm) => (direction === "desc" ? desc(column) : asc(column));
+
+  let primaryOrder: IssueOrderTerm;
+  let secondaryOrder: IssueOrderTerm | undefined;
+  switch (orderBy) {
+    case "title":
+      primaryOrder = directed(schema.issue.title);
+      break;
+    case "status":
+      primaryOrder = directed(categoryOrder);
+      secondaryOrder = directed(schema.workflowStatus.position);
+      break;
+    case "priority":
+      primaryOrder = directed(priorityOrder);
+      break;
+    case "assignee":
+      primaryOrder = sql`${issueAssignee.name} ${sql.raw(direction)} nulls last`;
+      break;
+    case "updated":
+      primaryOrder = directed(schema.issue.updatedAt);
+      break;
+    case "created":
+      primaryOrder = directed(schema.issue.createdAt);
+      break;
+    case "dueDate":
+      primaryOrder = sql`${schema.issue.dueDate} ${sql.raw(direction)} nulls last`;
+      break;
+    case "timeInStatus": {
+      const enteredAt = currentStatusEnteredAt();
+      primaryOrder = direction === "desc" ? asc(enteredAt) : desc(enteredAt);
+      break;
+    }
+  }
+
+  return [
+    ...groupTerms,
+    primaryOrder,
+    ...(secondaryOrder ? [secondaryOrder] : []),
+    asc(schema.issue.sortOrder),
+    desc(schema.issue.number),
+  ];
+}
+
+function orderCompletedIssuesByRecency<
+  T extends {
+    status: { id: string; category: schema.WorkflowStatusCategory };
+    assigneeId: string | null;
+    priority: schema.IssuePriority;
+    completedAt: Date | null;
+  },
+>(rows: T[], options: IssueListOptions): T[] {
+  if (!options.orderCompletedByRecency) return rows;
+
+  const dimensions = [options.groupBy ?? "status", options.subgroupBy ?? "none"].filter(
+    (dimension, index, all) => dimension !== "none" && all.indexOf(dimension) === index,
+  );
+  const completedSlotsByGroup = new Map<string, number[]>();
+
+  rows.forEach((row, index) => {
+    if (row.status.category !== "completed") return;
+
+    const groupKey = JSON.stringify(
+      dimensions.map((dimension) => {
+        if (dimension === "status") return row.status.id;
+        if (dimension === "assignee") return row.assigneeId;
+        if (dimension === "priority") return row.priority;
+        return null;
+      }),
+    );
+    const indexes = completedSlotsByGroup.get(groupKey) ?? [];
+    indexes.push(index);
+    completedSlotsByGroup.set(groupKey, indexes);
+  });
+
+  for (const indexes of completedSlotsByGroup.values()) {
+    const completedRows = indexes.map((index) => rows[index]!);
+    completedRows.sort((left, right) => {
+      if (left.completedAt === null) return right.completedAt === null ? 0 : 1;
+      if (right.completedAt === null) return -1;
+      return right.completedAt.getTime() - left.completedAt.getTime();
+    });
+    indexes.forEach((index, offset) => {
+      rows[index] = completedRows[offset]!;
+    });
+  }
+
+  return rows;
+}
+
 export async function listWorkspaceTeamIssues(
   db: Db,
   workspaceId: string,
   teamSlug: string,
-  view: IssueView = "active",
+  options: IssueListOptions = {},
 ) {
   const [currentTeam] = await db
     .select({ id: schema.team.id })
@@ -178,28 +440,234 @@ export async function listWorkspaceTeamIssues(
 
   if (!currentTeam) return null;
 
-  const conditions = [
-    eq(schema.issue.workspaceId, workspaceId),
-    eq(schema.issue.teamId, currentTeam.id),
-  ];
-  if (view === "active") {
-    conditions.push(inArray(schema.workflowStatus.category, ["unstarted", "started"]));
-  } else if (view === "backlog") {
-    conditions.push(eq(schema.workflowStatus.category, "backlog"));
-  } else {
-    conditions.push(ne(schema.workflowStatus.category, "triage"));
-  }
-
+  const conditions = issueConditions(
+    workspaceId,
+    currentTeam.id,
+    options.view ?? "active",
+    options.filters,
+  );
   const rows = await issueRows(db)
     .where(and(...conditions))
-    .orderBy(
-      categoryOrder,
-      asc(schema.workflowStatus.position),
-      asc(schema.issue.sortOrder),
-      desc(schema.issue.number),
+    .orderBy(...issueOrderTerms(options));
+
+  return orderCompletedIssuesByRecency(rows, options).map(withIdentifier);
+}
+
+export async function listWorkspaceTeamIssueFacets(
+  db: Db,
+  workspaceId: string,
+  teamSlug: string,
+  options: Pick<IssueListOptions, "view" | "filters"> = {},
+) {
+  const [currentTeam] = await db
+    .select({ id: schema.team.id })
+    .from(schema.team)
+    .where(and(eq(schema.team.workspaceId, workspaceId), eq(schema.team.slug, teamSlug)))
+    .limit(1);
+
+  if (!currentTeam) return null;
+
+  const view = options.view ?? "active";
+  const [statusRows, assigneeRows, creatorRows, priorityRows, statuses, members] =
+    await Promise.all([
+      db
+        .select({ value: schema.issue.statusId, count: sql<number>`count(*)::int` })
+        .from(schema.issue)
+        .innerJoin(
+          schema.workflowStatus,
+          and(
+            eq(schema.workflowStatus.id, schema.issue.statusId),
+            eq(schema.workflowStatus.teamId, schema.issue.teamId),
+          ),
+        )
+        .where(
+          and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "status")),
+        )
+        .groupBy(schema.issue.statusId),
+      db
+        .select({ value: schema.issue.assigneeId, count: sql<number>`count(*)::int` })
+        .from(schema.issue)
+        .innerJoin(
+          schema.workflowStatus,
+          and(
+            eq(schema.workflowStatus.id, schema.issue.statusId),
+            eq(schema.workflowStatus.teamId, schema.issue.teamId),
+          ),
+        )
+        .where(
+          and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "assignee")),
+        )
+        .groupBy(schema.issue.assigneeId),
+      db
+        .select({ value: schema.issue.creatorId, count: sql<number>`count(*)::int` })
+        .from(schema.issue)
+        .innerJoin(
+          schema.workflowStatus,
+          and(
+            eq(schema.workflowStatus.id, schema.issue.statusId),
+            eq(schema.workflowStatus.teamId, schema.issue.teamId),
+          ),
+        )
+        .where(
+          and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "creator")),
+        )
+        .groupBy(schema.issue.creatorId),
+      db
+        .select({ value: schema.issue.priority, count: sql<number>`count(*)::int` })
+        .from(schema.issue)
+        .innerJoin(
+          schema.workflowStatus,
+          and(
+            eq(schema.workflowStatus.id, schema.issue.statusId),
+            eq(schema.workflowStatus.teamId, schema.issue.teamId),
+          ),
+        )
+        .where(
+          and(...issueConditions(workspaceId, currentTeam.id, view, options.filters, "priority")),
+        )
+        .groupBy(schema.issue.priority),
+      db
+        .select({
+          id: schema.workflowStatus.id,
+          name: schema.workflowStatus.name,
+          description: schema.workflowStatus.description,
+          category: schema.workflowStatus.category,
+        })
+        .from(schema.workflowStatus)
+        .where(eq(schema.workflowStatus.teamId, currentTeam.id))
+        .orderBy(categoryOrder, asc(schema.workflowStatus.position)),
+      db
+        .select({ id: schema.member.id, name: schema.member.name })
+        .from(schema.member)
+        .where(eq(schema.member.workspaceId, workspaceId))
+        .orderBy(asc(schema.member.name)),
+    ]);
+
+  const statusCounts = new Map(statusRows.map((row) => [row.value, row.count]));
+  const assigneeCounts = new Map(assigneeRows.map((row) => [row.value, row.count]));
+  const creatorCounts = new Map(creatorRows.map((row) => [row.value, row.count]));
+  const priorityCounts = new Map(priorityRows.map((row) => [row.value, row.count]));
+
+  return {
+    status: statuses.map((status) => ({
+      ...status,
+      count: statusCounts.get(status.id) ?? 0,
+    })),
+    assignees: [
+      ...members.map((currentMember) => ({
+        ...currentMember,
+        count: assigneeCounts.get(currentMember.id) ?? 0,
+      })),
+      { id: null, name: null, count: assigneeCounts.get(null) ?? 0 },
+    ],
+    creators: members.map((currentMember) => ({
+      ...currentMember,
+      count: creatorCounts.get(currentMember.id) ?? 0,
+    })),
+    priority: ([0, 1, 2, 3, 4] as const).map((value) => ({
+      value,
+      count: priorityCounts.get(value) ?? 0,
+    })),
+  };
+}
+
+export async function reorderWorkspaceIssue(
+  db: Db,
+  workspaceId: string,
+  id: string,
+  position: number,
+  options: Pick<IssueListOptions, "groupBy" | "subgroupBy"> = {},
+) {
+  return db.transaction(async (tx) => {
+    const [initialIssue] = await tx
+      .select({ teamId: schema.issue.teamId })
+      .from(schema.issue)
+      .where(and(eq(schema.issue.id, id), eq(schema.issue.workspaceId, workspaceId)))
+      .limit(1);
+
+    if (!initialIssue) return null;
+
+    // Reorders in a Team take this lock before any Issue locks, preventing sibling-row deadlocks.
+    const [lockedTeam] = await tx
+      .select({ id: schema.team.id })
+      .from(schema.team)
+      .where(and(eq(schema.team.id, initialIssue.teamId), eq(schema.team.workspaceId, workspaceId)))
+      .limit(1)
+      .for("update");
+
+    if (!lockedTeam) return null;
+
+    const teamIssues = await tx
+      .select({
+        id: schema.issue.id,
+        statusId: schema.issue.statusId,
+        assigneeId: schema.issue.assigneeId,
+        priority: schema.issue.priority,
+      })
+      .from(schema.issue)
+      .where(
+        and(
+          eq(schema.issue.workspaceId, workspaceId),
+          eq(schema.issue.teamId, initialIssue.teamId),
+        ),
+      )
+      .orderBy(asc(schema.issue.sortOrder), desc(schema.issue.number))
+      .for("update");
+
+    const currentIssue = teamIssues.find((row) => row.id === id);
+    if (!currentIssue) {
+      const [movedIssue] = await tx
+        .select({ id: schema.issue.id })
+        .from(schema.issue)
+        .where(and(eq(schema.issue.id, id), eq(schema.issue.workspaceId, workspaceId)))
+        .limit(1);
+
+      if (movedIssue)
+        throw new IssueConflictError("The Issue moved to another Team; retry the reorder.");
+      return null;
+    }
+
+    const dimensions = [options.groupBy ?? "status", options.subgroupBy ?? "none"].filter(
+      (dimension, index, all) => dimension !== "none" && all.indexOf(dimension) === index,
+    );
+    const keyFor = (issue: (typeof teamIssues)[number]) =>
+      JSON.stringify(
+        dimensions.map((dimension) => {
+          if (dimension === "status") return issue.statusId;
+          if (dimension === "assignee") return issue.assigneeId;
+          if (dimension === "priority") return issue.priority;
+          return null;
+        }),
+      );
+    const targetGroupKey = keyFor(currentIssue);
+    const groupSlots: number[] = [];
+    const groupIds: string[] = [];
+    teamIssues.forEach((teamIssue, index) => {
+      if (keyFor(teamIssue) !== targetGroupKey) return;
+      groupSlots.push(index);
+      groupIds.push(teamIssue.id);
+    });
+
+    const currentIndex = groupIds.indexOf(id);
+    if (currentIndex < 0) return null;
+    groupIds.splice(currentIndex, 1);
+    groupIds.splice(Math.min(position, groupIds.length), 0, id);
+
+    const groupSlotSet = new Set(groupSlots);
+    let groupOffset = 0;
+    const orderedIds = teamIssues.map((teamIssue, index) =>
+      groupSlotSet.has(index) ? groupIds[groupOffset++]! : teamIssue.id,
     );
 
-  return rows.map(withIdentifier);
+    for (const [nextPosition, issueId] of orderedIds.entries()) {
+      await tx
+        .update(schema.issue)
+        .set({ sortOrder: nextPosition })
+        .where(and(eq(schema.issue.id, issueId), eq(schema.issue.workspaceId, workspaceId)));
+    }
+
+    return { id };
+  });
 }
 
 export async function getWorkspaceIssueByIdentifier(
@@ -314,6 +782,8 @@ export async function createWorkspaceIssue(
         assigneeId: values.assigneeId ?? null,
         creatorId: actorId,
         dueDate: values.dueDate ?? null,
+        createdAt: now,
+        updatedAt: now,
         ...statusTimes,
       })
       .returning({ id: schema.issue.id });
