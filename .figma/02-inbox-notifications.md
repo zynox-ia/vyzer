@@ -14,12 +14,12 @@ Sem frame confirmado no Figma (MCP não autorizado na sessão da spec). Nós con
 - **Priority notifications (Settings):** Assigned to you, Document activity, Issue activity, Mentions, Project activity, Project updates, Replies, Resolved threads, Reviews, Update reminders (todos ligados por padrão) + Custom filters.
 - **Tipos de notificação (Settings, canal Desktop):** Assignments, Status changes, Comments and replies, Mentions, Reactions (desligado por padrão), Subscriptions, Document changes, Updates, Reminders and deadlines, Loops, Apps and integrations, Billing, Reviews, Triage.
 
-## Divergências intencionais do Vyzer (uma linha cada)
+## Divergências intencionais do Zynox (uma linha cada)
 
-- **Seleção na URL:** `/inbox/:notificationId` (Vyzer) em vez de trocar para a URL da issue com `#comment-…` (Linear), para sobreviver a recarregar sem perder a lista (spec D10).
-- **Filtro e Display options só na URL:** o Linear os persiste por usuário (observado); o Vyzer segue a regra 8 do `AGENTS.md`, sem persistência por usuário (spec D11). Formato legível em search params, sem o `?filter=` em base64.
+- **Seleção na URL:** `/inbox/:notificationId` (Zynox) em vez de trocar para a URL da issue com `#comment-…` (Linear), para sobreviver a recarregar sem perder a lista (spec D10).
+- **Filtro e Display options só na URL:** o Linear os persiste por usuário (observado); o Zynox segue a regra 8 do `AGENTS.md`, sem persistência por usuário (spec D11). Formato legível em search params, sem o `?filter=` em base64.
 - **Filtro/Display options: a preferência de Priority inbox é a exceção:** é configuração de Settings e fica no banco por Member.
-- **Só o que funciona aparece na UI:** canais Desktop/Mobile/Email/Slack, agentes, Loops, Reviews, Document/Project activity e o sino de View **não são cortados**: estão sequenciados no backlog da spec (etapas 4.9 a 4.16) e entram quando o domínio, o gatilho ou a credencial existir (spec D2/D3); até lá, nenhum item morto na UI. "Updates from Linear" (comunicações do fornecedor) não tem contraparte no Vyzer e fica fora, sem etapa (confirmado).
+- **Só o que funciona aparece na UI:** canais Desktop/Mobile/Email/Slack, agentes, Loops, Reviews, Document/Project activity e o sino de View **não são cortados**: estão sequenciados no backlog da spec (etapas 4.9 a 4.16) e entram quando o domínio, o gatilho ou a credencial existir (spec D2/D3); até lá, nenhum item morto na UI. "Updates from Linear" (comunicações do fornecedor) não tem contraparte no Zynox e fica fora, sem etapa (confirmado).
 - **Altura da Notification Row:** 56 px (dada pelo conteúdo: py-2.5 + 20 + 16), contra 55 px no Linear; sem altura fixa para não criar valor fora dos tokens.
 - **Peso do ID e do resumo:** 400 (lida) e 500 (não lida, label-md), contra 450 e 500 no Linear; o DS não tem o peso 450.
 - **Avatar lg (32 px)** novo no DS para a linha; ícone de fallback de 20 px.

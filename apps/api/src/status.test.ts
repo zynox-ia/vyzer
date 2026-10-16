@@ -10,9 +10,8 @@ import {
   team,
   workflowStatus,
   workspace,
-  VYZER_TEAM_ID,
   ZYNOX_TEAM_ID,
-} from "@vyzer/db";
+} from "@zynox/db";
 import { createRouter, router } from "./router";
 
 function testDatabaseUrl(): string {
@@ -431,17 +430,14 @@ describe("Workspace-scoped Status procedures", () => {
     expect(startedAfter.map(({ name }) => name)).toEqual(["In Review", "In Progress"]);
   });
 
-  it("status.list reflects the real Vyzer/Zynox seed when the local fixture is populated", async () => {
-    const vyzerStatuses = await statusRowsForTeam(VYZER_TEAM_ID);
+  it("status.list reflects the real Zynox seed when the local fixture is populated", async () => {
     const zynoxStatuses = await statusRowsForTeam(ZYNOX_TEAM_ID);
-    if (vyzerStatuses.length === 0 && zynoxStatuses.length === 0) {
+    if (zynoxStatuses.length === 0) {
       // Local fixture predates the Status seed migration; nothing to assert yet.
       return;
     }
 
-    expect(vyzerStatuses).toHaveLength(7);
     expect(zynoxStatuses).toHaveLength(10);
-    expect(vyzerStatuses.map(({ name }) => name)).toContain("Backlog");
     expect(zynoxStatuses.map(({ name }) => name)).toEqual(
       expect.arrayContaining([
         "Backlog",
@@ -456,9 +452,9 @@ describe("Workspace-scoped Status procedures", () => {
       ]),
     );
 
-    const [vyzerTeam] = await db.$client<{ default_status_id: string | null }[]>`
-      SELECT default_status_id FROM "team" WHERE id = ${VYZER_TEAM_ID}
+    const [zynoxTeam] = await db.$client<{ default_status_id: string | null }[]>`
+      SELECT default_status_id FROM "team" WHERE id = ${ZYNOX_TEAM_ID}
     `;
-    expect(vyzerTeam?.default_status_id).toBeTruthy();
+    expect(zynoxTeam?.default_status_id).toBeTruthy();
   });
 });

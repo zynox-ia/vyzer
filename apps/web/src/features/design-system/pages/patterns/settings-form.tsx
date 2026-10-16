@@ -20,7 +20,7 @@ import {
   TextArea,
   TextInput,
   type ListOption,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { PatternPage } from "../../kit/pattern-page";
 import { StatesGrid } from "../../kit/states";
@@ -92,7 +92,7 @@ type Values = {
 };
 
 const INITIAL: Values = {
-  name: "Vyzer",
+  name: "Zynox",
   identifier: "VYZ",
   description: "",
   estimation: "none",
@@ -243,20 +243,20 @@ function States() {
         states={[
           {
             label: "padrão",
-            node: <Row label="Name">{(id) => <TextInput id={id} defaultValue="Vyzer" />}</Row>,
+            node: <Row label="Name">{(id) => <TextInput id={id} defaultValue="Zynox" />}</Row>,
           },
           {
             label: "foco",
             node: (
               <Row label="Name">
-                {(id) => <TextInput id={id} defaultValue="Vyzer" data-preview="focus" />}
+                {(id) => <TextInput id={id} defaultValue="Zynox" data-preview="focus" />}
               </Row>
             ),
           },
           {
             label: "desabilitado",
             node: (
-              <Row label="Name">{(id) => <TextInput id={id} defaultValue="Vyzer" disabled />}</Row>
+              <Row label="Name">{(id) => <TextInput id={id} defaultValue="Zynox" disabled />}</Row>
             ),
           },
           {

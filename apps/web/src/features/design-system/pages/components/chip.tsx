@@ -2,8 +2,8 @@
  * Chip / Tag (Figma 1:6914, 1:6948, 1:8881, 1:8888; chips de vista em 1:7524 e 1:5655, na tela
  * Projects 1:4813 e nas vistas de issues).
  */
-import { Button, Chip, ProjectIcon, type ChipVariant } from "@vyzer/design-system/components";
-import { Icon, PriorityIcon } from "@vyzer/design-system/icons";
+import { Button, Chip, ProjectIcon, type ChipVariant } from "@zynox/design-system/components";
+import { Icon, PriorityIcon } from "@zynox/design-system/icons";
 import { Layers, OctagonMinus, Pencil } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -347,7 +347,7 @@ export function Page() {
           "Não use chip para estado: use Badge",
           "Não misture chips clicáveis e só de leitura no mesmo grupo",
         ],
-        usage: `import { Chip } from "@vyzer/design-system/components";
+        usage: `import { Chip } from "@zynox/design-system/components";
 
 <Chip icon={<ProjectIcon value={project.icon} />}>Plugga OS</Chip>
 <Chip icon={<Icon icon={OctagonMinus} className="text-red" />} count={2} label="Blocked by 2 issues" />

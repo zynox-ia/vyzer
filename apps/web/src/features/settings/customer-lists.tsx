@@ -30,7 +30,7 @@ import {
   useToast,
   type LabelColor,
   type ListOption,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { SettingsGroup } from "./settings-row";
 
 export type CustomerLabel = { id: string; name: string; color: string; position: number };

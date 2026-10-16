@@ -35,7 +35,7 @@ export type IconProps = Omit<SVGProps<SVGSVGElement>, "ref"> & {
 };
 
 /**
- * Ícone de linha da biblioteca lucide com tamanhos e traço do Vyzer.
+ * Ícone de linha da biblioteca lucide com tamanhos e traço do Zynox.
  * A cor vem de `currentColor`: use uma classe `text-*` no ícone ou no pai.
  */
 export function Icon({ icon: Glyph, size = "sm", label, className, ...rest }: IconProps) {

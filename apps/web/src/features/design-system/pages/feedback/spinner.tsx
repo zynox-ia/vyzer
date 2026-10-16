@@ -1,8 +1,8 @@
 /**
  * Spinner: o glifo de carregamento do Button (LoaderCircle girando), solto.
  */
-import { Button, Spinner } from "@vyzer/design-system/components";
-import type { IconSize } from "@vyzer/design-system/icons";
+import { Button, Spinner } from "@zynox/design-system/components";
+import type { IconSize } from "@zynox/design-system/icons";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -79,7 +79,7 @@ export function Page() {
         content: ['Rótulo diz o que carrega quando há mais de um ("Loading issues").'],
         dos: ["Ao lado de um texto curto que explica a espera"],
         donts: ["Não mostre vários spinners ao mesmo tempo", "Não bloqueie a tela inteira"],
-        usage: `import { Spinner } from "@vyzer/design-system/components";
+        usage: `import { Spinner } from "@zynox/design-system/components";
 
 <Spinner />
 <Spinner size="lg" label="Loading issues" />`,

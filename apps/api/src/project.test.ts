@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { createRouterClient } from "@orpc/server";
-import { createDb, member, project, resolveWorkspaceMember, team, workspace } from "@vyzer/db";
+import { createDb, member, project, resolveWorkspaceMember, team, workspace } from "@zynox/db";
 import { createRouter } from "./router";
 
 function testDatabaseUrl(): string {
@@ -81,7 +81,7 @@ async function createTeam(workspaceId: string, suffix = randomUUID()) {
     slug,
     key,
     icon,
-    issueEmailAddress: `${slug}-${randomUUID().replaceAll("-", "").slice(0, 12)}@intake.vyzer.app.br`,
+    issueEmailAddress: `${slug}-${randomUUID().replaceAll("-", "").slice(0, 12)}@intake.zynox.app.br`,
   });
 
   return { id, name, slug, key, icon };
@@ -124,7 +124,7 @@ describe("Workspace-scoped Project procedures", () => {
       "Teste",
     ]);
     expect(projectsByName.get("Aname CRM")?.teams.map(({ slug }) => slug)).toEqual(["zynox"]);
-    expect(projectsByName.get("Teste")?.teams.map(({ slug }) => slug)).toEqual(["vyzer"]);
+    expect(projectsByName.get("Teste")?.teams.map(({ slug }) => slug)).toEqual(["zynox"]);
     expect(projectsByName.get("Zynox OS")).toMatchObject({
       healthNote: "20min",
       targetDate: "2026-12-18",

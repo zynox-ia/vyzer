@@ -2,7 +2,7 @@
  * ChartTooltip (sem desenho dedicado no Figma; reaproveita tooltipStyles do Tooltip existente;
  * ADR-0014): miolo visual que serve de `content` custom do Tooltip do Recharts.
  */
-import { ChartTooltip } from "@vyzer/design-system/components";
+import { ChartTooltip } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -100,7 +100,7 @@ export function Page() {
           "Não o posicione você mesmo — isso é do Recharts",
           "Não importe o Recharts numa tela para montar um tooltip próprio (ADR-0014): use um dos três gráficos do DS",
         ],
-        usage: `import { ChartTooltip } from "@vyzer/design-system/components";
+        usage: `import { ChartTooltip } from "@zynox/design-system/components";
 
 <ChartTooltip
   active

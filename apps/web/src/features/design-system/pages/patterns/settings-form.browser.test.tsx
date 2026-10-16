@@ -49,7 +49,7 @@ describe("Settings Form: Save e alterações pendentes", () => {
 
   it("alterar o campo Name habilita o Save", async () => {
     const screen = await renderAt(PATH);
-    await liveName(screen).fill("Vyzer Labs");
+    await liveName(screen).fill("Zynox Labs");
     await expect.element(liveSave(screen)).toBeEnabled();
   });
 
@@ -58,7 +58,7 @@ describe("Settings Form: Save e alterações pendentes", () => {
     const name = liveName(screen);
     const save = liveSave(screen);
 
-    await name.fill("Vyzer Labs");
+    await name.fill("Zynox Labs");
     await expect.element(save).toBeEnabled();
 
     await userEvent.click(name.element());
@@ -66,7 +66,7 @@ describe("Settings Form: Save e alterações pendentes", () => {
 
     await expect.element(save).not.toHaveAttribute("aria-busy", "true");
     await expect.element(save).toBeEnabled();
-    await expect.element(name).toHaveValue("Vyzer Labs");
+    await expect.element(name).toHaveValue("Zynox Labs");
   });
 
   it("Enter no campo Identifier também não submete a seção", async () => {
@@ -89,7 +89,7 @@ describe("Settings Form: Save e alterações pendentes", () => {
     const name = liveName(screen);
     const save = liveSave(screen);
 
-    await name.fill("Vyzer Labs");
+    await name.fill("Zynox Labs");
     await save.click();
 
     await expect.element(save).toHaveAttribute("aria-busy", "true");

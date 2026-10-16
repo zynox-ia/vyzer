@@ -4,7 +4,7 @@
  * e remover Members de um Team entra com o seu próprio domínio.
  */
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Avatar, Button, Skeleton } from "@vyzer/design-system/components";
+import { Alert, Avatar, Button, Skeleton } from "@zynox/design-system/components";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { teamMembersQueryOptions } from "@/services/teams";
 import { TeamBreadcrumb, useTeam } from "./layout";
 

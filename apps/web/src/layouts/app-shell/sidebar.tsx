@@ -1,288 +1,328 @@
 /**
- * Sidebar do workspace (Figma 27:6905 → 1:6569): seletor de workspace, busca (⌘K) e criar issue
- * ("C") no topo, itens de navegação, seções recolhíveis (Workspace, Favorites, Your teams, Try)
- * e o botão de ajuda no rodapé. Recolhe com "[" (some por completo; um controle discreto reabre),
- * redimensiona por arraste na borda (200–360 px, guardado em localStorage) e vira gaveta abaixo de
- * `tablet:` (768 px, foundations/grid.tsx).
+ * Sidebar do workspace (Unifie Refinement):
+ * - Barra lateral única (sem rail secundário) com fundo escuro #080808 e 276 px de largura (+15%)
+ * - Cabeçalho: logotipo oficial Zynox (vetorial exclusivo) e ações rápidas (criar issue, busca e menu de 3 pontinhos)
+ * - Navegação: Sitemap V3 (Home, Business, Platform) com linhas de árvore contínuas e destaque âmbar nos subitens ativos
+ * - Card promocional: "Zynox workspace PRO", "Your team. Every conversation.", link com seta
+ * - Rodapé: itens "Support" (badge "• Online") e "Settings"
+ * - Gaveta mobile abaixo de tablet (Radix Dialog)
  */
 import {
-  CircleHelp,
-  GitPullRequest,
-  Layers,
+  ArrowUpRight,
+  EllipsisVertical,
+  Headphones,
   PanelLeft,
   Plus,
-  RefreshCcw,
   Search,
-  Target,
-  House,
-  ListChecks,
-  Inbox as InboxIcon,
-  Box,
-  Ellipsis,
-  Bot,
-  PenLine,
-  UserRound,
-  UserRoundPlus,
-  Users,
-  UsersRound,
-  type LucideIcon,
+  Settings,
+  User,
+  UserPlus,
 } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import {
-  IconButton,
-  ProjectIcon,
   dialogStyles,
+  IconButton,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuTrigger,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
-import { cn } from "@vyzer/design-system/cn";
-// TEAMS de `features/projects`: mesma fonte da lista de Projects do time e do breadcrumb, para
-// o ícone e a cor do time (Navigation/cyan no Zynox, medido ao vivo no Linear) baterem nos três
-// lugares em vez de três cópias divergentes.
-import { TEAMS, type Team } from "@/features/projects/project-data";
-import { NavAction, NavItem, NavList, SidebarSection, TeamNavGroup } from "./sidebar-nav";
-import { WorkspaceMenu } from "./workspace-menu";
+} from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
+import { SITEMAP, type NavEntry, type NavLink } from "./navigation";
 import { useAppShell } from "./use-app-shell";
-import {
-  isSidebarItemShown,
-  resolveSidebar,
-  type SidebarItemKey,
-  type SidebarPreferencesData,
-} from "./sidebar-items";
+import { isSidebarItemShown, resolveSidebar, type SidebarPreferencesData } from "./sidebar-items";
+import { NavGroup, NavItem, NavList, SidebarSection } from "./sidebar-nav";
+import { ZynoxLogo } from "./zynox-logo";
+import "./sidebar.css";
 
-/** Exportado para a documentação mostrar a gaveta aberta de forma estática (sem Dialog modal). */
-export function SidebarContent({
-  workspaceName = "Zynox",
-  workspaceIcon,
-  workspaceLogoUrl,
-  teams = TEAMS,
-  workspaceStatus,
-  onWorkspaceRetry,
-  inboxUnreadCount = 0,
-  draftsCount = 0,
-  sidebarPreferences,
-}: {
-  workspaceName?: string;
-  workspaceIcon?: ProjectIconValue;
-  workspaceLogoUrl?: string | null;
-  /** Teams da seção "Your teams"; sem a prop, os de exemplo (a documentação em /design-system). */
-  teams?: Team[];
-  workspaceStatus?: string;
-  onWorkspaceRetry?: () => void;
-  /** Não lidas da Inbox; o contador só aparece com pelo menos uma. */
-  inboxUnreadCount?: number;
-  /** Rascunhos de issue do Member; o item Drafts só mostra contador com pelo menos um. */
-  draftsCount?: number;
-  /** Customize sidebar: visibilidade, ordem e estilo do badge; sem a prop, o padrão. */
-  sidebarPreferences?: SidebarPreferencesData;
-}) {
+/** Descobre o id do grupo macro que contém o pathname ativo para auto-expansão. */
+function findActiveAncestorGroupId(pathname: string): string | null {
+  for (const section of SITEMAP) {
+    for (const item of section.items) {
+      if (item.kind === "group") {
+        const matches = item.children.some((child) => {
+          if (child.id === "projects-link" || child.to === "/projects") {
+            return pathname === "/projects" || pathname.startsWith("/projects/");
+          }
+          return pathname === child.to || pathname.startsWith(`${child.to}/`);
+        });
+        if (matches) return item.id;
+      }
+    }
+  }
+  return null;
+}
+
+/** Cabeçalho da sidebar com logotipo Zynox oficial e ações rápidas (novo item, busca, opções). */
+function SidebarHeader() {
   const { setCommandMenuOpen, setCreateIssueOpen } = useAppShell();
-  const sidebar = resolveSidebar(sidebarPreferences);
-  const badges: Partial<Record<SidebarItemKey, number>> = {
-    inbox: inboxUnreadCount,
-    reviews: 5,
-    drafts: draftsCount,
-  };
-  const items: Record<SidebarItemKey, { to: string; icon: LucideIcon; label: string }> = {
-    inbox: { to: "/inbox", icon: InboxIcon, label: "Inbox" },
-    reviews: { to: "/reviews", icon: GitPullRequest, label: "Reviews" },
-    "my-issues": { to: "/my-issues", icon: UserRound, label: "My issues" },
-    agent: { to: "/agent", icon: Bot, label: "Agent" },
-    drafts: { to: "/drafts", icon: PenLine, label: "Drafts" },
-    projects: { to: "/projects", icon: Box, label: "Projects" },
-    views: { to: "/views", icon: Layers, label: "Views" },
-    members: { to: "/settings/members", icon: UsersRound, label: "Members" },
-    teams: { to: "/settings/teams", icon: Users, label: "Teams" },
-  };
-  const renderItems = (group: "personal" | "workspace") =>
-    sidebar.order[group]
-      .filter((key) => isSidebarItemShown(sidebar.visibility[key], badges[key] ?? 0))
-      .map((key) => {
-        const item = items[key];
-        const badge = badges[key];
-        return (
-          <NavItem
-            key={key}
-            to={item.to}
-            icon={<Icon icon={item.icon} size="14" />}
-            count={badge !== undefined && badge > 0 ? badge : undefined}
-            countTone={key === "inbox" ? "accent" : undefined}
-            badgeStyle={sidebar.badgeStyle}
-          >
-            {item.label}
-          </NavItem>
-        );
-      });
+  const navigate = useNavigate();
+
   return (
-    <div className="flex h-full flex-col">
-      {/* items-start + pt-4: medido ao vivo no Linear (x=12, y=16 até os botões do cabeçalho,
-          contra x=8/y=10 daqui) — 16 px de topo, não centralização vertical num h-11. */}
-      <div className="flex h-11 shrink-0 items-start gap-1 px-3 pt-4">
-        <WorkspaceMenu
-          name={workspaceName}
-          icon={workspaceIcon}
-          logoUrl={workspaceLogoUrl}
-          onRetry={onWorkspaceRetry}
-        />
-        {workspaceStatus && (
-          <output aria-live="polite" className="sr-only">
-            {workspaceStatus}
-          </output>
-        )}
-        <div className="ml-auto flex items-center gap-1">
-          {/* iconSize="14": pedido do responsável, 28/09 — o ícone de 16 (padrão do sm) ficava
-              grande na linha do seletor de workspace; o botão continua 24 px (size="sm"). */}
-          <IconButton
-            icon={Search}
-            label="Search workspace"
-            variant="ghost"
-            size="sm"
-            iconSize="14"
-            onClick={() => setCommandMenuOpen(true)}
-          />
-          <IconButton
-            icon={Plus}
-            label="Create new issue"
-            variant="ghost"
-            size="sm"
-            iconSize="14"
-            onClick={() => setCreateIssueOpen(true)}
-          />
-        </div>
-      </div>
+    <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--vz-sb-divider)] px-3.5">
+      <Link
+        to="/"
+        aria-label="Zynox"
+        className="ml-2.5 flex items-center text-white transition-opacity hover:opacity-90 focus-ring rounded-[6px]"
+      >
+        <ZynoxLogo className="h-[14.4px] w-auto max-w-[130px] text-white" />
+      </Link>
 
-      {/* px-3/pt-4: medido ao vivo no Linear (12 px de cada lado, primeiro item em y=60 — 16 px
-          depois do fim da linha do seletor de workspace, não colado nela). */}
-      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pt-4 pb-2">
-        <NavList label="Navegação principal">{renderItems("personal")}</NavList>
-
-        <SidebarSection title="Workspace">
-          <NavList label="Workspace">
-            {renderItems("workspace")}
-            <NavAction icon={<Icon icon={Ellipsis} size="14" />}>More</NavAction>
-          </NavList>
-        </SidebarSection>
-
-        {/* Favorites: sem exemplo populado no Figma; oculta enquanto vazia, como no Linear. */}
-        <SidebarSection title="Favorites" hidden={true} />
-
-        <SidebarSection title="Your teams" hidden={teams.length === 0}>
-          <NavList label="Your teams">
-            {teams.map((team) => (
-              <TeamNavGroup
-                key={team.slug}
-                name={team.name}
-                slug={team.slug}
-                icon={<ProjectIcon value={team.icon} className="size-icon-14" />}
-              >
-                <NavItem
-                  to={`/teams/${team.slug}`}
-                  end
-                  icon={<Icon icon={House} size="14" />}
-                  indent
-                >
-                  Home
-                </NavItem>
-                <NavItem
-                  to={`/teams/${team.slug}/issues`}
-                  icon={<Icon icon={ListChecks} size="14" />}
-                  indent
-                >
-                  Issues
-                </NavItem>
-                <NavItem
-                  to={`/teams/${team.slug}/projects`}
-                  icon={<Icon icon={Box} size="14" />}
-                  indent
-                >
-                  Projects
-                </NavItem>
-                <NavItem
-                  to={`/teams/${team.slug}/views`}
-                  icon={<Icon icon={Layers} size="14" />}
-                  indent
-                >
-                  Views
-                </NavItem>
-              </TeamNavGroup>
-            ))}
-          </NavList>
-        </SidebarSection>
-
-        {/* "Connect Cursor"/"Connect Codex" (Linear) tirados a pedido do responsável, 28/09 — a
-            seção não esvaziou (Invite people/Initiatives/Cycles ficam), então continua com o
-            título. Divergência deliberada, registrada em .figma/01-design-tokens.md. */}
-        <SidebarSection title="Try">
-          <NavList label="Try">
-            <NavAction icon={<Icon icon={UserRoundPlus} size="14" />}>Invite people</NavAction>
-            <NavItem to="/initiatives" icon={<Icon icon={Target} size="14" />}>
-              Initiatives
-            </NavItem>
-            <NavItem to="/cycles" icon={<Icon icon={RefreshCcw} size="14" />}>
-              Cycles
-            </NavItem>
-          </NavList>
-        </SidebarSection>
-      </div>
-
-      {/* p-2.5 (10 px): medido ao vivo no Linear, x=10 e ~10 px do fundo (contra 8 px daqui). */}
-      <div className="shrink-0 p-2.5">
+      <div className="flex items-center gap-0.5">
         <IconButton
-          icon={CircleHelp}
-          label="Open help menu"
-          variant="secondary"
+          icon={Plus}
+          label="New issue"
+          variant="ghost"
           size="sm"
-          className="rounded-full"
+          onClick={() => setCreateIssueOpen(true)}
+          className="size-7 rounded-[6px] text-[var(--vz-sb-muted)] hover:bg-[var(--vz-sb-hover-bg)] hover:text-white"
         />
+        <IconButton
+          icon={Search}
+          label="Search"
+          variant="ghost"
+          size="sm"
+          onClick={() => setCommandMenuOpen(true)}
+          className="size-7 rounded-[6px] text-[var(--vz-sb-muted)] hover:bg-[var(--vz-sb-hover-bg)] hover:text-white"
+        />
+        <Menu>
+          <MenuTrigger asChild>
+            <IconButton
+              icon={EllipsisVertical}
+              label="Workspace options"
+              variant="ghost"
+              size="sm"
+              className="size-7 rounded-[6px] text-[var(--vz-sb-muted)] hover:bg-[var(--vz-sb-hover-bg)] hover:text-white"
+            />
+          </MenuTrigger>
+          <MenuContent align="end" side="bottom" className="w-52">
+            <MenuItem icon={Settings} onSelect={() => navigate("/settings")}>
+              Workspace settings
+            </MenuItem>
+            <MenuItem icon={UserPlus} onSelect={() => navigate("/settings/members")}>
+              Invite people
+            </MenuItem>
+            <MenuItem icon={User} onSelect={() => navigate("/settings/profile")}>
+              Profile settings
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem onSelect={() => navigate("/auth/sign-out")}>Log out</MenuItem>
+          </MenuContent>
+        </Menu>
       </div>
     </div>
   );
 }
 
-/** Alça de 7 px na borda direita da sidebar: arraste redimensiona (200–360 px, só de mouse). */
-function ResizeHandle() {
-  const { sidebarWidth, setSidebarWidth } = useAppShell();
-  const startRef = useRef<{ x: number; width: number } | null>(null);
-
-  const onPointerDown = (event: ReactPointerEvent) => {
-    event.preventDefault();
-    startRef.current = { x: event.clientX, width: sidebarWidth };
-    const onMove = (e: PointerEvent) => {
-      const start = startRef.current;
-      if (!start) return;
-      setSidebarWidth(start.width + (e.clientX - start.x));
-    };
-    const onUp = () => {
-      startRef.current = null;
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-  };
+/** Card promocional "Zynox workspace PRO" no rodapé da navegação. */
+function SidebarPromoCard() {
+  const navigate = useNavigate();
 
   return (
-    // Só de mouse (pedido do responsável): sem alvo de teclado, o recolhimento cobre esse caso.
-    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div
-      onPointerDown={onPointerDown}
-      // 8 px (w-2): o degrau da grade de 4 mais perto dos 7 px confirmados ao vivo no Linear
-      // (divergência registrada em .figma/01-design-tokens.md — sem token novo).
-      className="absolute top-0 right-0 h-full w-2 shrink-0 cursor-col-resize select-none"
-      aria-hidden
-    />
+    <div className="mx-3 mt-1.5 mb-3.5 flex flex-col gap-1.5 rounded-[12px] border border-[var(--vz-sb-card-border)] bg-[var(--vz-sb-card-bg)] p-3.5 select-none">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="size-1.5 rounded-full bg-[var(--vz-sb-amber-glow)]" />
+          <span className="text-[13px] font-medium text-white">Zynox workspace</span>
+        </div>
+        <span className="text-[11px] font-semibold tracking-wider text-[var(--vz-sb-amber-glow)] uppercase">
+          PRO
+        </span>
+      </div>
+      <p className="text-[12px] leading-snug text-[var(--vz-sb-muted)]">
+        Your team. Every conversation.
+      </p>
+      <div className="mt-1 flex items-center justify-between pt-1">
+        <button
+          type="button"
+          onClick={() => navigate("/inbox")}
+          className="text-[12.5px] font-normal text-[var(--vz-sb-amber-glow)] transition-opacity hover:opacity-80"
+        >
+          Open support inbox
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate("/inbox")}
+          aria-label="Open support inbox link"
+          className="flex size-6 items-center justify-center rounded-[6px] border border-[rgba(245,166,35,0.25)] bg-[rgba(245,166,35,0.08)] text-[var(--vz-sb-amber-glow)] hover:bg-[rgba(245,166,35,0.15)]"
+        >
+          <ArrowUpRight className="size-3.5" />
+        </button>
+      </div>
+    </div>
   );
 }
 
+/** Conteúdo unificado da sidebar. */
+export function SidebarContent({
+  inboxUnreadCount,
+  sidebarPreferences,
+  onItemClick,
+}: {
+  onCollapse?: () => void;
+  inboxUnreadCount?: number;
+  draftsCount?: number;
+  sidebarPreferences?: SidebarPreferencesData;
+  onItemClick?: () => void;
+}) {
+  const { pathname } = useLocation();
+  const activeAncestorGroupId = useMemo(() => findActiveAncestorGroupId(pathname), [pathname]);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  const isGroupOpen = (groupId: string): boolean => {
+    if (openGroups[groupId] !== undefined) return openGroups[groupId];
+    return activeAncestorGroupId === groupId;
+  };
+
+  const setGroupOpen = (groupId: string, open: boolean) => {
+    setOpenGroups((prev) => ({ ...prev, [groupId]: open }));
+  };
+
+  const resolved = useMemo(() => resolveSidebar(sidebarPreferences), [sidebarPreferences]);
+
+  const shouldShowItem = (entry: NavEntry): boolean => {
+    if (entry.kind === "link" && entry.prefKey) {
+      const visibility = resolved.visibility[entry.prefKey] ?? "always";
+      const badge = entry.prefKey === "inbox" ? (inboxUnreadCount ?? 0) : 0;
+      return isSidebarItemShown(visibility, badge);
+    }
+    return true;
+  };
+
+  const shouldShowChild = (child: NavLink): boolean => {
+    if (child.prefKey) {
+      const visibility = resolved.visibility[child.prefKey] ?? "always";
+      const badge = 0;
+      return isSidebarItemShown(visibility, badge);
+    }
+    return true;
+  };
+
+  return (
+    <div className="flex h-full flex-col bg-[var(--vz-sb-bg)] text-[var(--vz-sb-text)]">
+      <SidebarHeader />
+
+      {/* Navegação rolável do sitemap */}
+      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pt-3 pb-2">
+        {SITEMAP.map((section) => (
+          <SidebarSection key={section.id} title={section.title}>
+            <NavList label={section.title}>
+              {section.items.filter(shouldShowItem).map((item) => {
+                if (item.kind === "link") {
+                  const IconComp = item.icon;
+                  const count = item.prefKey === "inbox" ? inboxUnreadCount : undefined;
+                  return (
+                    <NavItem
+                      key={item.id}
+                      to={item.to}
+                      icon={<IconComp className="size-4" />}
+                      count={count}
+                      badgeStyle={resolved.badgeStyle}
+                    >
+                      {item.label}
+                    </NavItem>
+                  );
+                }
+
+                const GroupIcon = item.icon;
+                const childPaths = item.children.map((c) => c.to);
+                const isProjectsMacroActive =
+                  item.id === "projects" &&
+                  (pathname === "/projects" || pathname.startsWith("/projects/"));
+
+                const visibleChildren = item.children.filter(shouldShowChild);
+
+                return (
+                  <NavGroup
+                    key={item.id}
+                    label={item.label}
+                    icon={<GroupIcon className="size-4" />}
+                    childPaths={childPaths}
+                    open={isGroupOpen(item.id)}
+                    onOpenChange={(open) => setGroupOpen(item.id, open)}
+                    isActive={isProjectsMacroActive || undefined}
+                  >
+                    {visibleChildren.map((child, index) => {
+                      const isProjectsMicroActive =
+                        child.id === "projects-link" &&
+                        (pathname === "/projects" || pathname.startsWith("/projects/"));
+
+                      const isExact =
+                        child.to === "/dashboard" ||
+                        child.to === "/crm" ||
+                        child.to === "/finance" ||
+                        child.to === "/projects";
+
+                      const isLastChild = index === visibleChildren.length - 1;
+
+                      return (
+                        <NavItem
+                          key={child.id}
+                          to={child.to}
+                          end={isExact}
+                          indent
+                          isLastChild={isLastChild}
+                          isActive={isProjectsMicroActive ? true : undefined}
+                        >
+                          {child.label}
+                        </NavItem>
+                      );
+                    })}
+                  </NavGroup>
+                );
+              })}
+            </NavList>
+          </SidebarSection>
+        ))}
+      </div>
+
+      {/* Card promocional */}
+      <SidebarPromoCard />
+
+      {/* Rodapé: Support e Settings */}
+      <div className="flex shrink-0 flex-col gap-1 px-3 pt-0 pb-3">
+        <Link
+          to="/inbox"
+          onClick={onItemClick}
+          className="flex h-[38px] w-full items-center justify-between rounded-[10px] px-3 text-[13.5px] text-[var(--vz-sb-secondary)] no-underline transition-colors select-none hover:bg-[var(--vz-sb-hover-bg)] hover:text-white"
+        >
+          <div className="flex items-center gap-3">
+            <Headphones className="size-4 text-[var(--vz-sb-secondary)]" />
+            <span>Support</span>
+          </div>
+          <span className="flex items-center gap-1.5 rounded-full border border-[#163820] bg-[#0d1f14] px-2 py-0.5 text-[11px] font-medium text-[#34d399]">
+            <span className="size-1.5 rounded-full bg-[#34d399]" />
+            Online
+          </span>
+        </Link>
+
+        <Link
+          to="/settings"
+          onClick={onItemClick}
+          className={cn(
+            "flex h-[38px] w-full items-center justify-between rounded-[10px] px-3 text-[13.5px] no-underline transition-colors select-none",
+            pathname === "/settings" || pathname.startsWith("/settings/")
+              ? "border border-[var(--vz-sb-active-border)] bg-[var(--vz-sb-active-bg)] text-white font-medium"
+              : "border border-transparent text-[var(--vz-sb-secondary)] hover:bg-[var(--vz-sb-hover-bg)] hover:text-white",
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <Settings className="size-4 text-[var(--vz-sb-secondary)]" />
+            <span>Settings</span>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/** Componente principal da Sidebar. */
 export function Sidebar({
   label = "Sidebar do workspace",
-  workspaceName = "Zynox",
-  workspaceIcon,
-  workspaceLogoUrl,
-  teams,
-  workspaceStatus,
-  onWorkspaceRetry,
   inboxUnreadCount,
   draftsCount,
   sidebarPreferences,
@@ -291,45 +331,32 @@ export function Sidebar({
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
   workspaceLogoUrl?: string | null;
-  /** Teams da seção "Your teams"; sem a prop, os de exemplo (a documentação em /design-system). */
-  teams?: Team[];
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
   inboxUnreadCount?: number;
   draftsCount?: number;
   sidebarPreferences?: SidebarPreferencesData;
 }) {
-  const { sidebarCollapsed, toggleSidebar, sidebarWidth, sidebarDrawerOpen, setSidebarDrawerOpen } =
+  const { sidebarCollapsed, toggleSidebar, sidebarDrawerOpen, setSidebarDrawerOpen } =
     useAppShell();
 
   return (
     <>
-      {/* Rail fixo (tablet e acima) */}
+      {/* Sidebar Desktop (tablet e acima) */}
       {!sidebarCollapsed && (
         <nav
           aria-label={label}
-          style={{ width: sidebarWidth }}
-          // Sem fundo nem borda próprios: a sidebar fica no canvas do app (bg-app, herdado da
-          // raiz do AppShell) — a separação visual do painel de conteúdo é a borda dele, não uma
-          // segunda aqui (refinamento, medido ao vivo no Linear, 28/09).
-          className="relative hidden shrink-0 tablet:block"
+          className="vz-sidebar relative hidden h-full w-[276px] shrink-0 flex-col border-r border-[var(--vz-sb-divider)] bg-[var(--vz-sb-bg)] tablet:flex"
         >
           <SidebarContent
-            workspaceName={workspaceName}
-            workspaceIcon={workspaceIcon}
-            workspaceLogoUrl={workspaceLogoUrl}
-            teams={teams}
-            workspaceStatus={workspaceStatus}
-            onWorkspaceRetry={onWorkspaceRetry}
             inboxUnreadCount={inboxUnreadCount}
             draftsCount={draftsCount}
             sidebarPreferences={sidebarPreferences}
           />
-          <ResizeHandle />
         </nav>
       )}
 
-      {/* Controle discreto para reabrir, com a sidebar recolhida (desktop) */}
+      {/* Botão discreto para reabrir a sidebar quando recolhida */}
       {sidebarCollapsed && (
         <div className="hidden shrink-0 items-start p-2 tablet:flex">
           <IconButton
@@ -338,39 +365,46 @@ export function Sidebar({
             variant="ghost"
             size="sm"
             onClick={toggleSidebar}
+            className="size-8 rounded-[8px] text-[var(--vz-sb-muted)] hover:bg-[var(--vz-sb-hover-bg)] hover:text-white"
           />
         </div>
       )}
 
-      {/* Gaveta (abaixo de tablet:): Radix Dialog, como em foundations/grid.tsx. O gatilho precisa
-          ser um DialogPrimitive.Trigger — sem ele, o Radix não sabe para onde devolver o foco ao
-          fechar (só volta ao gatilho registrado; ver packages/design-system/src/components/dialog.tsx). */}
+      {/* Gaveta mobile (abaixo de tablet) */}
       <DialogPrimitive.Root open={sidebarDrawerOpen} onOpenChange={setSidebarDrawerOpen}>
         <div className="flex shrink-0 items-start p-2 tablet:hidden">
           <DialogPrimitive.Trigger asChild>
-            <IconButton icon={PanelLeft} label="Open sidebar" variant="ghost" size="sm" />
+            <IconButton
+              icon={PanelLeft}
+              label="Open sidebar"
+              variant="ghost"
+              size="sm"
+              className="size-8 rounded-[8px] text-[var(--vz-sb-muted)] hover:bg-[var(--vz-sb-hover-bg)] hover:text-white"
+            />
           </DialogPrimitive.Trigger>
         </div>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className={cn(dialogStyles.overlay, "p-0")}>
-            <DialogPrimitive.Content
-              className="h-dvh w-70 border-r border-default bg-app outline-none data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out"
-              aria-describedby={undefined}
-            >
-              <DialogPrimitive.Title className="sr-only">{label}</DialogPrimitive.Title>
-              <SidebarContent
-                workspaceName={workspaceName}
-                workspaceIcon={workspaceIcon}
-                workspaceLogoUrl={workspaceLogoUrl}
-                teams={teams}
-                workspaceStatus={workspaceStatus}
-                onWorkspaceRetry={onWorkspaceRetry}
-                inboxUnreadCount={inboxUnreadCount}
-                draftsCount={draftsCount}
-                sidebarPreferences={sidebarPreferences}
-              />
-            </DialogPrimitive.Content>
-          </DialogPrimitive.Overlay>
+          <DialogPrimitive.Overlay className={dialogStyles.overlay} />
+          <DialogPrimitive.Content
+            aria-label={label}
+            className={cn(
+              dialogStyles.content,
+              "vz-sidebar fixed inset-y-0 left-0 z-modal flex w-[280px] max-w-[85vw] flex-col border-r border-[var(--vz-sb-divider)] bg-[var(--vz-sb-bg)] p-0 shadow-2xl focus:outline-hidden",
+            )}
+          >
+            <div className="sr-only">
+              <DialogPrimitive.Title>{label}</DialogPrimitive.Title>
+              <DialogPrimitive.Description>
+                Navegação principal da aplicação com sitemap e atalhos rápidos.
+              </DialogPrimitive.Description>
+            </div>
+            <SidebarContent
+              inboxUnreadCount={inboxUnreadCount}
+              draftsCount={draftsCount}
+              sidebarPreferences={sidebarPreferences}
+              onItemClick={() => setSidebarDrawerOpen(false)}
+            />
+          </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>
     </>

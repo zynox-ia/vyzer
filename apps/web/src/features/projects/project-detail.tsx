@@ -48,7 +48,7 @@ import {
   TabsList,
   TabsTrigger,
   useToast,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { TopBar } from "@/layouts/app-shell/top-bar";
 import { RightPanel, RightPanelSection } from "@/layouts/app-shell/right-panel";
 import { useAppShell } from "@/layouts/app-shell/use-app-shell";

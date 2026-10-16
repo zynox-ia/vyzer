@@ -22,7 +22,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { Smile, Trash2, Upload } from "lucide-react";
-import type { ApiClient } from "@vyzer/contract";
+import type { ApiClient } from "@zynox/contract";
 import {
   Alert,
   Button,
@@ -44,8 +44,8 @@ import {
   useToast,
   type ListOption,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
+} from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
 import { WorkspaceMark } from "@/layouts/app-shell/workspace-mark";
 import {
   currentWorkspaceQueryOptions,
@@ -60,7 +60,7 @@ const SLUG_INVALID = "Use lowercase letters, numbers and hyphens, e.g. my-worksp
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 /** Prefixo do endereço do Workspace, mostrado antes do slug (no Linear: `linear.app/`). */
-const URL_PREFIX = "vyzer.app/";
+const URL_PREFIX = "zynox.app.br/";
 
 const MONTHS = [
   "January",

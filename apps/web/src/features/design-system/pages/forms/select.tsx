@@ -1,5 +1,5 @@
-import { Field as FormField, Select, type ListOption } from "@vyzer/design-system/components";
-import { PriorityIcon } from "@vyzer/design-system/icons";
+import { Field as FormField, Select, type ListOption } from "@zynox/design-system/components";
+import { PriorityIcon } from "@zynox/design-system/icons";
 import { CalendarRange } from "lucide-react";
 import { ComponentPage } from "../../kit/component-page";
 import { StatesGrid } from "../../kit/states";
@@ -122,7 +122,7 @@ export function Page() {
         content: ["Opções curtas e paralelas; placeholder diz o que escolher."],
         dos: ["Ordene por significado (prioridade) ou alfabeticamente"],
         donts: ["Não use para mais de ~10 opções sem busca"],
-        usage: `import { Field, Select } from "@vyzer/design-system/components";
+        usage: `import { Field, Select } from "@zynox/design-system/components";
 
 <Field label="Cycle length">
   <Select options={[{ value: "1", label: "1 week" }, …]} value={v} onValueChange={setV} />

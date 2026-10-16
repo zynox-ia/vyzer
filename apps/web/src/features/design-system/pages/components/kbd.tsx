@@ -1,4 +1,4 @@
-import { Kbd, KbdSequence } from "@vyzer/design-system/components";
+import { Kbd, KbdSequence } from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 
 export function Page() {
@@ -55,7 +55,7 @@ export function Page() {
         content: ["Nomes curtos: Ctrl, Alt, ⇧, Esc, Enter; letras em maiúscula."],
         dos: ["Mostre o atalho ao lado da ação que ele dispara"],
         donts: ["Não use Kbd como botão"],
-        usage: `import { Kbd, KbdSequence } from "@vyzer/design-system/components";
+        usage: `import { Kbd, KbdSequence } from "@zynox/design-system/components";
 
 <KbdSequence keys={["P", "P"]} />      // P then P
 <KbdSequence keys={["Ctrl", "K"]} mode="plus" />

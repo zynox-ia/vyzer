@@ -1,4 +1,4 @@
-import { Field as FormField, PasswordInput } from "@vyzer/design-system/components";
+import { Field as FormField, PasswordInput } from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 import { StatesGrid } from "../../kit/states";
 
@@ -77,7 +77,7 @@ export function Page() {
         content: ['Ajuda diz a regra antes do erro: "At least 12 characters."'],
         dos: ["Mostre a regra de senha na ajuda"],
         donts: ["Não bloqueie colar no campo"],
-        usage: `import { Field, PasswordInput } from "@vyzer/design-system/components";
+        usage: `import { Field, PasswordInput } from "@zynox/design-system/components";
 
 <Field label="Password" description="At least 12 characters.">
   <PasswordInput autoComplete="new-password" />

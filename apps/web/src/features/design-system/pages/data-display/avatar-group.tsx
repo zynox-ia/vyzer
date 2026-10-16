@@ -1,7 +1,7 @@
 /**
  * Avatar Group: membros de um projeto ou time (sem frame no Figma; segue o Linear).
  */
-import { AvatarGroup, type AvatarSize } from "@vyzer/design-system/components";
+import { AvatarGroup, type AvatarSize } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -95,7 +95,7 @@ export function Page() {
         content: ["Ordem: o responsável ou o lead primeiro, depois por atividade."],
         dos: ["Limite a 4 ou 5 lugares", "Dê nome ao grupo (Members, Assignees)"],
         donts: ["Não use o grupo como botão sem um gatilho focável em volta"],
-        usage: `import { AvatarGroup } from "@vyzer/design-system/components";
+        usage: `import { AvatarGroup } from "@zynox/design-system/components";
 
 <AvatarGroup label="Members" people={[{ name: "André Júnio" }, { name: "Marina Costa", src }]} max={4} />`,
         props: [

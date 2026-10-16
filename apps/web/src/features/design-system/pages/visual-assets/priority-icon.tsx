@@ -1,4 +1,4 @@
-import { PriorityIcon, type IconSize, type Priority } from "@vyzer/design-system/icons";
+import { PriorityIcon, type IconSize, type Priority } from "@zynox/design-system/icons";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -100,7 +100,7 @@ export function Page() {
         content: ["Rótulos do Linear: No priority, Urgent, High, Medium, Low."],
         dos: ["Mostre o nome ao lado ou em tooltip"],
         donts: ["Não pinte low/medium/high com cores de status"],
-        usage: `import { PriorityIcon } from "@vyzer/design-system/icons";
+        usage: `import { PriorityIcon } from "@zynox/design-system/icons";
 
 <PriorityIcon priority="high" />
 <PriorityIcon priority="urgent" label="Urgent" />`,

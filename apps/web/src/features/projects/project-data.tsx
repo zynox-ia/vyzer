@@ -4,10 +4,10 @@
  * aparecer. Sem dados reais (fora do escopo): nomes e números vêm do Figma/Linear conferidos ao
  * vivo, não de uma API.
  */
-import type { Health } from "@vyzer/design-system/components";
-import type { Priority } from "@vyzer/design-system/icons";
-import type { ProjectIconValue } from "@vyzer/design-system/components";
-import type { ProjectStatusType } from "@vyzer/design-system/icons";
+import type { Health } from "@zynox/design-system/components";
+import type { Priority } from "@zynox/design-system/icons";
+import type { ProjectIconValue } from "@zynox/design-system/components";
+import type { ProjectStatusType } from "@zynox/design-system/icons";
 
 export type Team = { slug: string; name: string; icon: ProjectIconValue; key?: string };
 
@@ -20,7 +20,7 @@ export type Team = { slug: string; name: string; icon: ProjectIconValue; key?: s
  */
 export const TEAMS: Team[] = [
   { slug: "zynox", name: "Zynox", icon: { kind: "icon", name: "Navigation", color: "cyan" } },
-  { slug: "vyzer", name: "Vyzer", icon: { kind: "icon", name: "Layers", color: "purple" } },
+  { slug: "atlas", name: "Atlas", icon: { kind: "icon", name: "Layers", color: "purple" } },
 ];
 
 export type Project = {
@@ -105,7 +105,7 @@ export const PROJECTS: Project[] = [
     id: "teste",
     name: "Teste",
     icon: { kind: "icon", name: "Box", color: "purple" },
-    teamSlug: "vyzer",
+    teamSlug: "atlas",
     health: "none",
     issues: 0,
     status: "backlog",

@@ -1,4 +1,4 @@
-name: vyzer
+name: zynox
 
 services:
   traefik:
@@ -7,7 +7,7 @@ services:
     command:
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
-      - --providers.docker.network=vyzer
+      - --providers.docker.network=zynox
       - --providers.file.filename=/etc/traefik/dynamic.yml
       - --entrypoints.web.address=:80
       - --api.dashboard=true
@@ -20,7 +20,7 @@ services:
       - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
     extra_hosts:
       - host.docker.internal:host-gateway
-    networks: [vyzer]
+    networks: [zynox]
     labels:
       - traefik.enable=true
       - traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)
@@ -43,7 +43,7 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks: [vyzer]
+    networks: [zynox]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -58,7 +58,7 @@ services:
       - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
-    networks: [vyzer]
+    networks: [zynox]
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD:-x} ping | grep PONG"]
       interval: 5s
@@ -82,7 +82,7 @@ services:
       - "127.0.0.1:9001:9001"
     volumes:
       - rustfs_data:/data
-    networks: [vyzer]
+    networks: [zynox]
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:9000/health >/dev/null || exit 1"]
       interval: 10s
@@ -91,8 +91,8 @@ services:
       start_period: 20s
 
 networks:
-  vyzer:
-    name: vyzer
+  zynox:
+    name: zynox
 
 volumes:
   postgres_data:

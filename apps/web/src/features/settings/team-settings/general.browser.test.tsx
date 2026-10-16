@@ -10,8 +10,8 @@ import {
 } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
 import axe from "axe-core";
-import type { Team } from "@vyzer/contract";
-import { ToastProvider } from "@vyzer/design-system/components";
+import type { Team } from "@zynox/contract";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { TeamSettingsLayout } from "./layout";
 import { TeamGeneralPage } from "./general";
@@ -41,8 +41,8 @@ vi.mock("@/services/workspace", () => ({
 
 const makeTeam = (): Team => ({
   id: "11111111-1111-4111-8111-111111111111",
-  name: "Vyzer",
-  slug: "vyzer",
+  name: "Atlas",
+  slug: "atlas",
   key: "VYZ",
   icon: { kind: "icon", name: "Layers", color: "purple" },
   description: "Ships the product",
@@ -50,7 +50,7 @@ const makeTeam = (): Team => ({
   estimation: "none",
   detailedIssueHistory: false,
   issueEmailEnabled: false,
-  issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
+  issueEmailAddress: "atlas-4c7872ac31b0@intake.zynox.app.br",
   createdAt: "2026-08-15T12:00:00.000Z",
   updatedAt: "2026-08-15T12:00:00.000Z",
 });
@@ -62,7 +62,7 @@ function Harness() {
   return (
     <QueryClientProvider client={client}>
       <ToastProvider>
-        <MemoryRouter initialEntries={["/settings/teams/vyzer/general"]}>
+        <MemoryRouter initialEntries={["/settings/teams/atlas/general"]}>
           <main>
             <Routes>
               <Route path="/settings/teams/:team" element={<TeamSettingsLayout />}>
@@ -92,7 +92,7 @@ const descField = (s: Screen) => s.getByRole("textbox", { name: "Team descriptio
 async function renderAdmin() {
   fetchCurrent.mockResolvedValue(current("admin"));
   const screen = await render(<Harness />);
-  await expect.element(nameField(screen)).toHaveValue("Vyzer");
+  await expect.element(nameField(screen)).toHaveValue("Atlas");
   await expect.element(nameField(screen)).toBeEnabled();
   return screen;
 }
@@ -239,7 +239,7 @@ describe("TeamGeneralPage", () => {
     await screen.getByRole("button", { name: "Undo" }).click();
 
     await vi.waitFor(() => expect(updateTeam).toHaveBeenCalledTimes(2));
-    expect(updateTeam).toHaveBeenLastCalledWith({ id: team.id, name: "Vyzer" });
+    expect(updateTeam).toHaveBeenLastCalledWith({ id: team.id, name: "Atlas" });
   });
 
   it("erro genérico mostra o toast Could not save team", async () => {
@@ -256,7 +256,7 @@ describe("TeamGeneralPage", () => {
     fetchCurrent.mockResolvedValue(current("member"));
     const screen = await render(<Harness />);
 
-    await expect.element(nameField(screen)).toHaveValue("Vyzer");
+    await expect.element(nameField(screen)).toHaveValue("Atlas");
     await expect.element(nameField(screen)).toBeDisabled();
     await expect.element(keyField(screen)).toBeDisabled();
     await expect.element(descField(screen)).toBeDisabled();
@@ -302,7 +302,7 @@ describe("TeamGeneralPage", () => {
 
   describe("Create issues by email", () => {
     const toggle = (s: Screen) => s.getByRole("switch", { name: "Enable issue creation by email" });
-    const ADDRESS = "vyzer-4c7872ac31b0@intake.vyzer.app.br";
+    const ADDRESS = "atlas-4c7872ac31b0@intake.zynox.app.br";
 
     it("desligado não mostra o endereço; ligar salva { issueEmailEnabled: true }", async () => {
       const screen = await renderAdmin();

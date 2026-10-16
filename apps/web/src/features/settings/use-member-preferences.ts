@@ -4,7 +4,7 @@
  * Customize sidebar). Quem só precisa aplicar os efeitos (tema, cursor, links) usa o mesmo cache.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@vyzer/design-system/components";
+import { useToast } from "@zynox/design-system/components";
 import {
   memberPreferencesQueryOptions,
   updateMemberPreferencesMutationOptions,

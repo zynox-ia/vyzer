@@ -4,9 +4,9 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Copy, Link } from "lucide-react";
-import { Icon } from "@vyzer/design-system/icons";
+import { Icon } from "@zynox/design-system/icons";
 import { ComponentPage } from "../../kit/component-page";
 import { StatesGrid } from "../../kit/states";
 
@@ -14,7 +14,7 @@ function Url({ preview }: { preview?: string }) {
   return (
     <InputGroup size="lg" className="w-80" invalid={preview === "error"}>
       <InputGroupAddon>
-        <span className="text-body-md text-secondary">vyzer.app/</span>
+        <span className="text-body-md text-secondary">zynox.app.br/</span>
       </InputGroupAddon>
       <InputGroupInput
         aria-label="Workspace URL"
@@ -33,14 +33,14 @@ export function Page() {
         title: "Input Group",
         description:
           "Campo com complementos: prefixo ou sufixo de texto, ícone, botão. O grupo carrega a borda, o foco e o erro; o input interno não tem borda.",
-        whenToUse: ["Prefixo fixo (vyzer.app/), unidade, ação ligada ao valor (copiar)"],
+        whenToUse: ["Prefixo fixo (zynox.app.br/), unidade, ação ligada ao valor (copiar)"],
         whenNotToUse: ["Só um ícone ou um botão: use as props icon e trailing do Text Input"],
         playground: {
           preview: (
             <FormField label="Workspace URL" description="Letters, numbers and dashes.">
               <InputGroup size="lg" className="w-80">
                 <InputGroupAddon>
-                  <span className="text-body-md text-secondary">vyzer.app/</span>
+                  <span className="text-body-md text-secondary">zynox.app.br/</span>
                 </InputGroupAddon>
                 <InputGroupInput defaultValue="zynox" className="pl-0" />
                 <InputGroupAddon className="pr-2 pl-0">
@@ -91,11 +91,11 @@ export function Page() {
         content: ["Prefixo curto e reconhecível."],
         dos: ["Mantenha o foco visível no grupo inteiro"],
         donts: ["Não coloque mais de uma ação dentro do grupo"],
-        usage: `import { InputGroup, InputGroupAddon } from "@vyzer/design-system/components";
+        usage: `import { InputGroup, InputGroupAddon } from "@zynox/design-system/components";
 
 <Field label="Workspace URL">
   <InputGroup size="lg">
-    <InputGroupAddon>vyzer.app/</InputGroupAddon>
+    <InputGroupAddon>zynox.app.br/</InputGroupAddon>
     <InputGroupInput defaultValue="zynox" />
   </InputGroup>
 </Field>`,

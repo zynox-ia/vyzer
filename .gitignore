@@ -3,9 +3,12 @@ dist
 *.local
 .env*
 !.env.example
+apps/api/secrets/github-app.pem
 .DS_Store
 *.tsbuildinfo
 
 # Artefatos do Vitest (modo navegador)
 .vitest-attachments/
 __screenshots__/
+
+apps/api/secrets/

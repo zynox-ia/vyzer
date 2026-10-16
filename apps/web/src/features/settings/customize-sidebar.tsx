@@ -41,8 +41,8 @@ import {
   Select,
   Skeleton,
   useToast,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import {
   SIDEBAR_GROUPS,
   resolveSidebar,

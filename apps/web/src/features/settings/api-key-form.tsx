@@ -8,7 +8,7 @@
  * para não convidar a uma ação que falha.
  */
 import { useState, type FormEvent } from "react";
-import type { ApiKeyPermission } from "@vyzer/contract";
+import type { ApiKeyPermission } from "@zynox/contract";
 import {
   Button,
   Checkbox,
@@ -17,7 +17,7 @@ import {
   Radio,
   RadioGroup,
   TextInput,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { ADMIN_ONLY_PERMISSIONS, PERMISSION_OPTIONS, type ApiKey } from "./api-key-shared";
 
 type Mode = "full" | "select";

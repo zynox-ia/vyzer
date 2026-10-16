@@ -6,7 +6,7 @@ Direção visual: [ADR-0011](../adr/0011-warm-monochrome-visual-direction.md), a
 
 ## Origem
 
-- **Estrutura** (níveis de superfície, texto, borda, estados, tipografia, raios, espaçamento): do Figma [Vyzer](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Vyzer), página `0:1`. Sem variáveis no Figma; inventário com node-ids em `.figma/inventory/`.
+- **Estrutura** (níveis de superfície, texto, borda, estados, tipografia, raios, espaçamento): do Figma [Zynox](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Zynox), página `0:1`. Sem variáveis no Figma; inventário com node-ids em `.figma/inventory/`.
 - **Cores**: ADR-0011 e ADR-0012. As cores do Figma (visual do Linear) não são usadas; o inventário guarda os originais.
 
 | Área do Figma                                    | Nós                                              |

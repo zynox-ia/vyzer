@@ -10,7 +10,7 @@ import {
   MenuContent,
   MenuItem,
   MenuTrigger,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { ArrowDownUp, EyeOff, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -207,7 +207,7 @@ export function Page() {
           "Não ponha botões dentro do cartão: o cartão inteiro é a opção",
           "Não use sombra no cartão (só overlays têm sombra)",
         ],
-        usage: `import { BoardCard, BoardColumn, IssueList } from "@vyzer/design-system/components";
+        usage: `import { BoardCard, BoardColumn, IssueList } from "@zynox/design-system/components";
 
 <BoardColumn title="In Progress" icon={<StatusIcon type="started" />} count={3} onAdd={createIssue}>
   <IssueList label="In Progress issues" selected={selected} onSelectedChange={setSelected} onOpen={openIssue} className="gap-2">

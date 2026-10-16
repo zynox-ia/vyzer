@@ -1,72 +1,61 @@
-# Vyzer: regras do projeto
+## Engineering Principles
 
-Fonte única das regras para qualquer agente ou pessoa trabalhando aqui.
+### Think Before Coding
+- Understand the relevant code before modifying it.
+- Identify assumptions, dependencies and potential regressions.
+- Surface meaningful ambiguities and technical tradeoffs.
+- Challenge unnecessarily complex or unsafe approaches.
+- Ask for clarification only when a decision cannot be safely inferred.
 
-Monorepo pnpm (ADR-0003). Front (`apps/web`): Vite + React 19 + TypeScript (strict) + Tailwind v4 + React Router + TanStack Query + Radix (`radix-ui`) + cmdk. Back-end (`apps/api`): Node + Hono + oRPC, Drizzle, Better Auth (ADRs 0004 a 0006). Gerenciador: pnpm. No front, o alias `@/` aponta para `apps/web/src/`.
+### Simplicity First
+- Implement the smallest complete solution.
+- Prefer existing patterns and components.
+- Avoid speculative features, unnecessary abstractions and premature configurability.
+- Keep code maintainable without introducing additional complexity.
 
-## Regras inegociáveis
+### Surgical Changes
+- Change only what the requested outcome requires.
+- Preserve unrelated behavior, formatting and architecture.
+- Do not refactor adjacent code without a clear dependency.
+- Remove artifacts made obsolete by your own changes.
+- Keep diffs focused and reviewable.
 
-1. **O design system é a fonte da verdade; o Figma é referência visual.**
-   - Reutilize o que já existe em vez de criar peça ou prop só para bater o pixel de um frame.
-   - O que não tiver frame no Figma, crie seguindo os tokens e os padrões já implementados, sem parar para perguntar.
-   - Divergências relevantes vão para `.figma/`, uma linha cada.
-2. **Nada hardcoded.** Sem hex, rgb, px, sombras ou durações fixos em componentes. Se faltar token, pare e pergunte: token novo precisa de aprovação.
-3. **Só tokens semânticos em componentes.** Componentes usam tokens semânticos (ex.: `bg-surface`, `text-muted`), nunca primitivos (ex.: `gray-500`).
-4. **Escopo estrito.** Implemente só o que a tarefa pede. Nada de refatorar, renomear ou "melhorar" o que está fora dela; anote e pergunte.
-5. **Sem dependências novas sem consulta.** Qualquer `pnpm add` precisa de aprovação prévia.
-6. **Radix para primitivos interativos.** Dialog, popover, menu, tooltip, select, tabs etc. vêm de `radix-ui`; paleta de comandos usa `cmdk`. Não recrie comportamento de acessibilidade à mão.
-7. **Services assíncronos em `apps/web/src/services/` chamando a API real, consumidos via TanStack Query.** Componentes não conhecem a origem dos dados.
-8. **Estado de filtros na URL.** Filtros, ordenação, busca e aba ativa ficam em search params (React Router), não em estado local.
+### Goal-Driven Execution
+- Establish observable success criteria before implementation.
+- Implement, verify and correct until the criteria are satisfied.
+- Prefer automated tests for testable behavior.
+- Validate UI changes against approved visual references.
+- Never claim completion without evidence.
+- Report unresolved issues or verification limitations.
 
-## Design system
+### Execution Policy
+- Default to direct implementation.
+- Use subagents only when isolation, specialization or parallelism offers a measurable benefit.
+- Do not require specs, tickets or planning documents for routine development.
+- Apply verification proportional to the risk and scope.
+- Escalate destructive, irreversible or product-defining decisions for approval.
 
-- O Vyzer Design System (`packages/design-system`, documentado em `/design-system`) é a fonte da verdade visual. Telas do produto usam **somente** seus tokens e componentes.
-- A skill `vyzer-ui-design` (`.claude/skills/vyzer-ui-design/SKILL.md`) é usada **apenas** para criar, alterar ou revisar o próprio design system. Não é consultada para construir telas.
-- Se uma tela precisar de algo que o design system não tem, não improvise na tela: proponha a adição ao design system, aguarde aprovação e só então use.
-- As ADRs têm precedência sobre a skill.
+## Project Context
 
-## Organização
+Zynox is a management platform modelled on Linear's concepts (see `CONTEXT.md`, `docs/adr/`). pnpm monorepo: `apps/web` (Vite, React 19, TypeScript strict, Tailwind v4, React Router, TanStack Query, Radix, cmdk), `apps/api` (Hono, oRPC, Drizzle, Better Auth), `packages/design-system`, `packages/contract`, `packages/db`. In the web app `@/` maps to `apps/web/src/`.
 
-- `apps/web`: o front. Caminhos abaixo relativos a `apps/web/`:
-  - `src/components/ui`: primitivos reutilizáveis. Reaproveite antes de criar.
-  - `src/layouts`, `src/features`: só apresentação e composição.
-  - `src/services`: acesso a dados, chamando a API.
-  - `src/features/design-system`: documentação do design system (rota `/design-system`, só em desenvolvimento).
-- `packages/design-system`: tokens, estilos globais, ícones e componentes (`@vyzer/design-system`).
-- `apps/api`: servidor da API.
-- `packages/contract`: contrato da API, compartilhado entre `apps/api` e `apps/web`.
-- `packages/db`: schema do banco e migrations.
-- `docs/specs`: uma spec por feature, a partir de `docs/specs/TEMPLATE.md`.
-- `.figma/`: notas de implementação por parte validada (node-id, tokens, divergências).
+- The design system (`packages/design-system`) is the source of truth for UI; Figma is a visual reference. Screens use only its tokens and components. No hardcoded hex/px/shadows/durations; semantic tokens only. Missing token or component: propose it, do not improvise.
+- Radix for interactive primitives, `cmdk` for the command palette. No new dependencies without approval.
+- Data goes through `apps/web/src/services/` + TanStack Query. Filters, sorting, search and active tab live in URL search params.
+- Never run destructive database operations or touch `.env` secrets. No commits, merges or pushes without explicit approval.
+- Verify with `pnpm check` (format, lint, types), `pnpm test` and `pnpm build`, scoped to what changed.
 
-## Fluxo de trabalho
+## Agents and Models
 
-1. **Spec**: copie `docs/specs/TEMPLATE.md`, preencha com o link do nó do Figma e peça aprovação.
-2. **Implementar** conforme a spec aprovada.
-3. **Revisão em contexto limpo**: um revisor sem o histórico da implementação (subagente `figma-fidelity-reviewer`) compara o resultado com o Figma **e com a tela real do Linear**, aberta lado a lado no browser da Traycer, sem alterar nada no Linear. Ele classifica os achados como bloqueante ou menor. Divergência visível do Linear sem registro em `.figma/` é bloqueante e volta para reimplementação.
-4. **Corrigir os bloqueantes.**
-5. **Validação do responsável** (humano) no navegador.
-6. **Commit** só depois da validação.
+Primary works alone by default; delegate only when it measurably helps. Task size decides: QUICK = Primary only, check affected parts. STANDARD = Explorer if isolated investigation saves context; Reviewer if regression risk is significant. CRITICAL = investigate dependencies first, independent review, impact-sized checks, ask before destructive or product-defining steps.
 
-Mudança pequena (ajuste pontual, correção de bug, config) dispensa spec, mas segue os passos 4 a 6.
+| Role     | Does                                                              | Access    | Claude Code (`.claude/agents/`)                                            | Codex (`.codex/agents/`)   |
+| -------- | ----------------------------------------------------------------- | --------- | -------------------------------------------------------------------------- | -------------------------- |
+| Primary  | Implements, integrates, verifies                                  | Full      | Sonnet 5.5; Opus 5.5 only for critical architecture or persistent failures | `gpt-5.6-luna`             |
+| Explorer | Locates code, traces flows, finds impact and bug causes           | Read-only | Haiku 5.5 by default; pass `model: sonnet` or `opus` per call when harder  | `gpt-5.6-luna`, low effort |
+| Reviewer | Finds real regressions, logic and security defects, missing tests | Read-only | Sonnet 5.5; pass `model: opus` for critical reviews                        | `gpt-5.6-luna`, max effort |
 
-## Definição de pronto
-
-- Bate com o nó do Figma em todos os estados da spec (padrão, hover, foco, vazio, carregando, erro).
-- Nenhum valor visual fora dos tokens; nenhum primitivo em componente.
-- Acessível por teclado, com foco visível.
-- `pnpm check` e `pnpm build` passam sem avisos.
-- Revisão sem bloqueantes em aberto e validada pelo responsável.
-
-## Comandos
-
-Todos rodam na raiz e cobrem os pacotes do monorepo.
-
-- `pnpm dev`: Vite (porta 3000) e API (porta 3001) juntos; use http://vyzer.localhost via Traefik.
-- `pnpm db:generate`: gera a migration SQL a partir do schema (`packages/db`).
-- `pnpm db:migrate`: aplica as migrations pendentes.
-- `pnpm build`: checagem de tipos + build de produção de cada pacote.
-- `pnpm check`: formatação (oxfmt), lint (oxlint) e tipos (tsc) de todos os pacotes.
-- `pnpm fix`: corrige formatação e lint automaticamente.
-- `pnpm test`: Vitest (unitários em Node; design system e páginas de `/design-system` num Chromium real, com axe-core).
-- `docker compose up -d`: Traefik, Postgres e Redis. Veja `infra/README.md`.
+- Do not escalate a model just because many files are involved. Never swap a requested model silently.
+- Claude Code and Codex do not call each other; there is no cross-CLI integration. Use each runtime's own agents.
+- Primary fixes what Reviewer reports. `figma-fidelity-reviewer` is the separate visual-fidelity check for UI work.
+- Skills (installed globally, in `~/.agents/skills`): `diagnosing-bugs`, `codebase-design`, `tdd` (only for testable behavior), `code-review`, `prototype`.

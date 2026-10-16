@@ -8,7 +8,7 @@
  * Efeitos: tema, cursores de ponteiro e links sublinhados são aplicados no app inteiro por
  * `useApplyMemberPreferences` (na rota do produto). Sem efeito por enquanto, só persistidos:
  * "Font size" da interface (não há escala de fonte da interface no design system), "Disable animated
- * images & emoji" (o Vyzer ainda não renderiza emoji nem GIF animado) e "Open in desktop app" (não
+ * images & emoji" (o Zynox ainda não renderiza emoji nem GIF animado) e "Open in desktop app" (não
  * existe app desktop). O auto-assign é aplicado pelo back-end a partir do valor guardado.
  */
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -21,8 +21,8 @@ import {
   Skeleton,
   Switch,
   TextInput,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import type { MemberPreferenceValues } from "@/services/member-preferences";
 import { CodeSample } from "./code-sample";
 import { CODE_THEME_OPTIONS } from "./code-themes";
@@ -51,7 +51,7 @@ export const DEFAULT_PREFERENCE_VALUES: MemberPreferenceValues = {
   autoAssignOnMoveToStarted: false,
 };
 
-/** Telas iniciais do Linear ("Linear Agent (default)" aqui é o Agent do Vyzer). */
+/** Telas iniciais do Linear ("Linear Agent (default)" aqui é o Agent do Zynox). */
 const HOME_VIEWS = [
   { value: "agent", label: "Agent (default)" },
   { value: "inbox", label: "Inbox" },
@@ -116,7 +116,7 @@ export function PreferencesView({
       <SettingsGroup title="General">
         <SettingsRow
           label="Default home view"
-          description="Select which view to display when launching Vyzer"
+          description="Select which view to display when launching Zynox"
         >
           {(id) => (
             <Select
@@ -129,7 +129,7 @@ export function PreferencesView({
         </SettingsRow>
         <SettingsRow
           label="Display names"
-          description="Select how names are displayed in the Vyzer interface"
+          description="Select how names are displayed in the Zynox interface"
         >
           {(id) => (
             <Select

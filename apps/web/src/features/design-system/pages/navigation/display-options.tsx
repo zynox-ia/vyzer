@@ -3,7 +3,7 @@
  * painéis abertos da página são estáticos (DisplayOptionsPanel); o popover real está no
  * playground.
  */
-import { Button, DisplayOptions, DisplayOptionsPanel } from "@vyzer/design-system/components";
+import { Button, DisplayOptions, DisplayOptionsPanel } from "@zynox/design-system/components";
 import { SlidersHorizontal } from "lucide-react";
 import { ComponentPage } from "../../kit/component-page";
 import { VIEW_DEFAULTS, ViewOptions } from "../../kit/view-options";
@@ -111,7 +111,7 @@ export function Page() {
         usage: `import {
   DisplayOptions, DisplayOptionsRow, DisplayOptionsSection, DisplayProperties,
   Select, Switch, Tabs, TabsList, TabsTrigger, TabsContent,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 
 <DisplayOptions label="Display options" trigger={<Button icon={SlidersHorizontal}>Display</Button>}>
   <Tabs value={layout} onValueChange={setLayout}>

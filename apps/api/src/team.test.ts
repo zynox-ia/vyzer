@@ -10,11 +10,10 @@ import {
   resolveWorkspaceMember,
   team,
   teamMember,
-  VYZER_TEAM_ID,
   WORKSPACE_ID,
   workspace,
   ZYNOX_TEAM_ID,
-} from "@vyzer/db";
+} from "@zynox/db";
 import { createRouter, router } from "./router";
 
 function testDatabaseUrl(): string {
@@ -43,12 +42,12 @@ function uniqueTeamKey(): string {
 
 function issueEmailAddressFor(slug: string): string {
   const token = randomUUID().replaceAll("-", "").slice(0, 12);
-  return `${slug}-${token}@intake.vyzer.app.br`;
+  return `${slug}-${token}@intake.zynox.app.br`;
 }
 
 function expectIssueEmailAddress(address: string, slug: string): void {
   expect(address.startsWith(`${slug}-`)).toBe(true);
-  expect(address.slice(`${slug}-`.length)).toMatch(/^[a-f0-9]{12}@intake\.vyzer\.app\.br$/);
+  expect(address.slice(`${slug}-`.length)).toMatch(/^[a-f0-9]{12}@intake\.zynox\.app\.br$/);
 }
 
 function createWorkspaceApi(workspaceId: string, memberId: string) {
@@ -133,12 +132,11 @@ describe("Workspace-scoped Team procedures", () => {
     const teams = await api.team.list();
     const teamIds = teams.map(({ id }) => id);
 
-    expect(teamIds).toEqual(expect.arrayContaining([ZYNOX_TEAM_ID, VYZER_TEAM_ID]));
+    expect(teamIds).toEqual(expect.arrayContaining([ZYNOX_TEAM_ID]));
     expect(teamIds).not.toContain(foreignTeamId);
     expect(teams).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: ZYNOX_TEAM_ID, memberCount: 1, issueCount: 0 }),
-        expect.objectContaining({ id: VYZER_TEAM_ID, memberCount: 1, issueCount: 0 }),
       ]),
     );
     for (const currentTeam of teams) {
@@ -267,9 +265,22 @@ describe("Workspace-scoped Team procedures", () => {
 
   it("member.list includes teamCount for its Workspace and excludes foreign Members", async () => {
     const testMember = await createSeedWorkspaceMember("member");
+    // The seed has a single Team, so this test creates the second local Team it needs.
+    const secondTeamId = randomUUID();
+    const secondTeamSlug = `second-team-${randomUUID().replaceAll("-", "").slice(0, 8)}`;
+    await db.insert(team).values({
+      id: secondTeamId,
+      workspaceId: WORKSPACE_ID,
+      name: `Second Team ${secondTeamSlug}`,
+      slug: secondTeamSlug,
+      key: uniqueTeamKey(),
+      icon: { kind: "icon", name: "Layers", color: "purple" },
+      issueEmailAddress: issueEmailAddressFor(secondTeamSlug),
+    });
+    fixtureTeamIds.push(secondTeamId);
     await db.insert(teamMember).values([
       { teamId: ZYNOX_TEAM_ID, memberId: testMember.id },
-      { teamId: VYZER_TEAM_ID, memberId: testMember.id },
+      { teamId: secondTeamId, memberId: testMember.id },
     ]);
 
     const foreign = await createForeignWorkspaceAndMember();

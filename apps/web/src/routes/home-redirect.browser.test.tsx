@@ -1,4 +1,8 @@
-/** A rota "/" abre na "Default home view" das Preferences (spec preferences-persistence). */
+/**
+ * A rota "/" abre na "Default home view" das Preferences (spec preferences-persistence). Missão
+ * 02: my-issues/reviews caem em /inbox, e current-cycle/all-issues/active-issues em /projects —
+ * os destinos de antes não existem mais na sidebar.
+ */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render } from "vitest-browser-react";
@@ -8,7 +12,6 @@ import { HomeRedirect, homePath } from "./home-redirect";
 
 let view = "agent";
 let failPreferences = false;
-let teams: { slug: string }[] = [{ slug: "zynox" }, { slug: "vyzer" }];
 
 vi.mock("@/services/member-preferences", () => ({
   memberPreferencesQueryOptions: () =>
@@ -19,9 +22,6 @@ vi.mock("@/services/member-preferences", () => ({
         return { defaultHomeView: view };
       },
     }),
-}));
-vi.mock("@/services/teams", () => ({
-  teamsQueryOptions: () => queryOptions({ queryKey: ["teams"], queryFn: async () => teams }),
 }));
 
 function Where() {
@@ -45,30 +45,22 @@ function Harness() {
 beforeEach(() => {
   view = "agent";
   failPreferences = false;
-  teams = [{ slug: "zynox" }, { slug: "vyzer" }];
 });
 
 describe("HomeRedirect", () => {
   it.each([
     ["agent", "/agent"],
     ["inbox", "/inbox"],
-    ["my-issues", "/my-issues"],
-    ["reviews", "/reviews"],
-    ["current-cycle", "/cycles"],
+    ["my-issues", "/inbox"],
+    ["reviews", "/inbox"],
+    ["current-cycle", "/projects"],
+    ["all-issues", "/projects"],
+    ["active-issues", "/projects"],
     ["projects", "/projects"],
-    ["all-issues", "/teams/zynox/issues"],
-    ["active-issues", "/teams/zynox/issues"],
   ])("%s abre em %s", async (chosen, path) => {
     view = chosen;
     await render(<Harness />);
     await expect.element(page.getByLabelText("Current URL")).toHaveTextContent(path);
-  });
-
-  it("sem Teams, All issues cai em /projects", async () => {
-    view = "all-issues";
-    teams = [];
-    await render(<Harness />);
-    await expect.element(page.getByLabelText("Current URL")).toHaveTextContent("/projects");
   });
 
   it("se as preferências não carregam, abre em /projects", async () => {
@@ -79,6 +71,12 @@ describe("HomeRedirect", () => {
 
   it("homePath cobre todas as opções", () => {
     expect(homePath("agent")).toBe("/agent");
-    expect(homePath("all-issues", "vyzer")).toBe("/teams/vyzer/issues");
+    expect(homePath("inbox")).toBe("/inbox");
+    expect(homePath("my-issues")).toBe("/inbox");
+    expect(homePath("reviews")).toBe("/inbox");
+    expect(homePath("current-cycle")).toBe("/projects");
+    expect(homePath("all-issues")).toBe("/projects");
+    expect(homePath("active-issues")).toBe("/projects");
+    expect(homePath("projects")).toBe("/projects");
   });
 });

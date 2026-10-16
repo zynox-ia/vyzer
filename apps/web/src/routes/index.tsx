@@ -1,18 +1,22 @@
 import { createBrowserRouter, Navigate, type RouteObject } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@vyzer/design-system/components";
+import { useToast } from "@zynox/design-system/components";
 import { HomeRedirect } from "./home-redirect";
 import { AppShell } from "@/layouts/app-shell";
+import { SITEMAP, type NavLink } from "@/layouts/app-shell/navigation";
 import { AgentPage } from "@/features/agent";
-import { DraftsPage } from "@/features/drafts";
 import { AgentPersonalizationPage } from "@/features/agent/personalization";
 import { HealthPage } from "@/features/health";
 import { InboxPage } from "@/features/inbox";
 import { PlaceholderPage } from "@/features/placeholder";
-import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "@/features/projects";
+import { ProjectDetailPage, ProjectsListPage } from "@/features/projects";
 import {
   MembersPage,
   PreferencesPage,
+  CodeReviewsPage,
+  NotificationChannelPage,
+  NotificationsPage,
+  ProfilePage,
   SettingsRoute,
   TeamCreatePage,
   TeamGeneralPage,
@@ -50,23 +54,40 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
     ]
   : [];
 
-/** Rotas do shell sem conteúdo nesta fase: dados reais ficam para quando cada área for construída. */
-const placeholderRoutes: RouteObject[] = [
-  { path: "reviews", element: <PlaceholderPage title="Reviews" /> },
-  { path: "my-issues", element: <PlaceholderPage title="My issues" /> },
-  { path: "views", element: <PlaceholderPage title="Views" /> },
-  { path: "initiatives", element: <PlaceholderPage title="Initiatives" /> },
-  { path: "cycles", element: <PlaceholderPage title="Cycles" /> },
-  { path: "teams/:team", element: <PlaceholderPage title="Team" /> },
-  { path: "teams/:team/issues", element: <PlaceholderPage title="Team issues" /> },
-  { path: "teams/:team/views", element: <PlaceholderPage title="Team views" /> },
-];
+/**
+ * Rotas do sitemap sem tela própria ainda (Missão 02, navegação — PlaceholderPage "Coming soon"):
+ * geradas do mesmo `SITEMAP` que a sidebar usa, para as duas nunca saírem de sincronia. Só os
+ * destinos reaproveitados (Inbox, AI Chat, Projects › Projects; Settings é rota irmã, fora desta
+ * árvore) ficam de fora — o resto, rota nova mínima em kebab-case do rótulo.
+ */
+const REUSED_PATHS = new Set(["/inbox", "/agent", "/projects", "/settings"]);
+
+function sitemapPlaceholderRoutes(): RouteObject[] {
+  const routes: RouteObject[] = [];
+  for (const section of SITEMAP) {
+    for (const item of section.items) {
+      const links: NavLink[] = item.kind === "group" ? item.children : [item];
+      for (const link of links) {
+        if (REUSED_PATHS.has(link.to)) continue;
+        routes.push({
+          path: link.to.slice(1),
+          element: (
+            <PlaceholderPage
+              title={link.label}
+              section={item.kind === "group" ? item.label : undefined}
+            />
+          ),
+        });
+      }
+    }
+  }
+  return routes;
+}
+
+const placeholderRoutes: RouteObject[] = sitemapPlaceholderRoutes();
 
 /** Páginas de Settings fora de Preferences: fora do escopo desta fase (spec, "Fora do escopo"). */
 const settingsPlaceholderPages: { path: string; title: string }[] = [
-  { path: "profile", title: "Profile" },
-  { path: "notifications", title: "Notifications" },
-  { path: "code-reviews", title: "Code & reviews" },
   { path: "connected-accounts", title: "Connected accounts" },
   { path: "issues/labels", title: "Issue labels" },
   { path: "issues/templates", title: "Issue templates" },
@@ -101,7 +122,6 @@ function WorkspaceAppShell() {
     refetchOnWindowFocus: true,
   });
   const sidebarPreferences = useQuery(sidebarPreferencesQueryOptions());
-  const drafts = useQuery(issueDraftsQueryOptions());
   const queryClient = useQueryClient();
   const toast = useToast();
   const saveDraft = useMutation({
@@ -133,7 +153,6 @@ function WorkspaceAppShell() {
       workspaceLogoUrl={currentWorkspace.data?.workspace.logoUrl}
       teams={teams.data ?? []}
       inboxUnreadCount={unreadCount.data}
-      draftsCount={drafts.data?.length}
       onSaveIssueDraft={({ title, description }) =>
         saveDraft.mutate({ title, description: description === "" ? null : description })
       }
@@ -157,6 +176,10 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/settings/preferences" replace /> },
       { path: "preferences", Component: PreferencesPage },
+      { path: "profile", Component: ProfilePage },
+      { path: "code-reviews", Component: CodeReviewsPage },
+      { path: "notifications", Component: NotificationsPage },
+      { path: "notifications/:channel", Component: NotificationChannelPage },
       { path: "agent-personalization", Component: AgentPersonalizationPage },
       { path: "workspace", Component: WorkspaceSettingsPage },
       { path: "members", Component: MembersPage },
@@ -197,9 +220,7 @@ export const router = createBrowserRouter([
       { index: true, Component: HomeRedirect },
       { path: "projects", Component: ProjectsListPage },
       { path: "projects/:projectId", Component: ProjectDetailPage },
-      { path: "teams/:team/projects", Component: TeamProjectsListPage },
       { path: "agent", Component: AgentPage },
-      { path: "drafts", Component: DraftsPage },
       { path: "inbox/:notificationId?", Component: InboxPage },
       ...placeholderRoutes,
     ],

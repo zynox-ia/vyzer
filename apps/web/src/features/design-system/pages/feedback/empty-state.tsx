@@ -1,7 +1,7 @@
 /**
  * Empty state (Figma 1:6091, 1:6250 e 1:6294 como referência geral).
  */
-import { Button, EmptyState, KbdSequence } from "@vyzer/design-system/components";
+import { Button, EmptyState, KbdSequence } from "@zynox/design-system/components";
 import { Inbox, Layers, Plus, SearchX } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -111,7 +111,7 @@ export function Page() {
         ],
         dos: ["Ofereça a ação que resolve", "Mostre o atalho da ação principal"],
         donts: ["Não use ilustrações ou cores de status", "Não deixe a área só em branco"],
-        usage: `import { EmptyState } from "@vyzer/design-system/components";
+        usage: `import { EmptyState } from "@zynox/design-system/components";
 
 <EmptyState
   icon={Layers}

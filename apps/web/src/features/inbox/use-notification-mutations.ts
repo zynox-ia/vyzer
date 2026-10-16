@@ -3,8 +3,8 @@
  * voltam ao estado anterior, com um aviso, se a API recusar (spec, "Comportamento transversal").
  */
 import { useMutation, useQueryClient, type UseMutationOptions } from "@tanstack/react-query";
-import type { Notification, NotificationListInput } from "@vyzer/contract";
-import { useToast } from "@vyzer/design-system/components";
+import type { Notification, NotificationListInput } from "@zynox/contract";
+import { useToast } from "@zynox/design-system/components";
 import {
   archiveAllNotificationsMutationOptions,
   archiveNotificationsMutationOptions,

@@ -1,4 +1,4 @@
-import { Checkbox, Field as FormField } from "@vyzer/design-system/components";
+import { Checkbox, Field as FormField } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -122,7 +122,7 @@ export function Page() {
         content: ['Rótulo afirmativo: "Private team", não "Don\'t make public".'],
         dos: ['Use indeterminate no "selecionar todos" quando parte da lista está marcada'],
         donts: ["Não dispare ação imediata ao marcar (isso é Switch)"],
-        usage: `import { Checkbox, Field } from "@vyzer/design-system/components";
+        usage: `import { Checkbox, Field } from "@zynox/design-system/components";
 
 <Field label="Private team" orientation="horizontal">
   <Checkbox checked={value} onCheckedChange={setValue} />

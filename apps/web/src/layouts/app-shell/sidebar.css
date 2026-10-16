@@ -1,0 +1,21 @@
+/**
+ * Estilos escopados da sidebar (Unifie Refinement).
+ * Raiz .vz-sidebar com variáveis locais --vz-sb-*, mantendo a sidebar escura
+ * independente do tema global da aplicação.
+ */
+.vz-sidebar {
+  --vz-sb-bg: #080808;
+  --vz-sb-active-bg: #151516;
+  --vz-sb-active-border: rgba(44, 44, 48, 0.7);
+  --vz-sb-hover-bg: rgba(255, 255, 255, 0.04);
+  --vz-sb-text: #ffffff;
+  --vz-sb-secondary: #a4a4a8;
+  --vz-sb-muted: #8e8d91;
+  --vz-sb-divider: rgba(255, 255, 255, 0.08);
+  --vz-sb-connector: #2c2c30;
+  --vz-sb-amber: #f5d18d;
+  --vz-sb-amber-glow: #f5a623;
+  --vz-sb-card-bg: #14110c;
+  --vz-sb-card-border: rgba(245, 166, 35, 0.15);
+  color-scheme: dark;
+}

@@ -11,7 +11,7 @@ import {
   PopoverSurface,
   PopoverTrigger,
   TextInput,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Check, Pencil } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -153,7 +153,7 @@ export function Page() {
           "Não empilhe popover sobre popover",
           "Não use para listas de opções (use Select ou Combobox)",
         ],
-        usage: `import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@vyzer/design-system/components";
+        usage: `import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@zynox/design-system/components";
 
 <Popover>
   <PopoverTrigger asChild><Button icon={Pencil}>Active issues</Button></PopoverTrigger>

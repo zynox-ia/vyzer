@@ -9,7 +9,7 @@
  * General e Members têm página de verdade; as demais linhas levam a uma página de espera dentro
  * do Team (`/settings/teams/:team/<destino>`) até o domínio existir. O valor à direita só aparece
  * onde há dado ou o estado é conhecido (Members vem da lista; "None" e "Off" são o estado real de
- * quem ainda não tem nada). Nada é bloqueado por plano: o Vyzer é aberto, então Project labels, Project statuses e Parent
+ * quem ainda não tem nada). Nada é bloqueado por plano: o Zynox é aberto, então Project labels, Project statuses e Parent
  * team (que no Linear levam "Available on Business") são linhas normais. Danger zone: Delete team de
  * verdade (`Confirm` danger, exclusão imediata, ADR-0016); Leave team e Retire ainda não têm
  * backend e ficam desabilitados.
@@ -38,8 +38,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
-import { Button, Confirm, useToast } from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+import { Button, Confirm, useToast } from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { deleteTeamMutationOptions, teamsQueryOptions } from "@/services/teams";
 import { useTeam } from "./layout";
 
@@ -186,21 +186,9 @@ export function TeamOverviewPage() {
       </nav>
 
       <div className="flex flex-col gap-10">
-        <div className="flex items-start justify-between gap-4 px-4">
-          <div className="flex min-w-0 flex-col gap-1">
-            <h1 className="type-heading-1 truncate text-primary">{team.name}</h1>
-            <p className="text-body-md text-secondary">Accessible to all workspace members</p>
-          </div>
-          {/* No Linear "Team overview" é um botão pequeno, não um título: leva à home do time. */}
-          <Button
-            type="button"
-            variant="ghost"
-            icon={ChevronRight}
-            className="mt-7 h-control-sm gap-1 text-label-sm"
-            onClick={() => navigate(`/teams/${team.slug}`)}
-          >
-            Team overview
-          </Button>
+        <div className="flex flex-col gap-1 px-4">
+          <h1 className="type-heading-1 truncate text-primary">{team.name}</h1>
+          <p className="text-body-md text-secondary">Accessible to all workspace members</p>
         </div>
 
         <Card>

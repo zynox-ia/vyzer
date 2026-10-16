@@ -11,8 +11,8 @@ import {
   NotificationRow,
   NotificationRowSkeleton,
   type NotificationRowProps,
-} from "@vyzer/design-system/components";
-import { PriorityIcon, StatusIcon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { PriorityIcon, StatusIcon } from "@zynox/design-system/icons";
 import { Bot, Check, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -225,7 +225,7 @@ export function Page() {
           "Não ponha botões ou links dentro da linha: a linha inteira é a opção",
           "Não use cor como único sinal de não lida",
         ],
-        usage: `import { IssueList, NotificationRow } from "@vyzer/design-system/components";
+        usage: `import { IssueList, NotificationRow } from "@zynox/design-system/components";
 
 <IssueList label="Notifications" selected={[selectedId]} onSelectedChange={() => {}} onOpen={open}>
   <NotificationRow

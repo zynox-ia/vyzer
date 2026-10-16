@@ -36,7 +36,7 @@ Os cinco resolvem hoje (28/09), inclusive 1:6376 — que a tabela "não existem 
 | Progresso de milestone (diálogo de Update)         | 25:4227–25:4246 ("Progress since Sep 18", lista com diamante e "0% → 75%") — fora do escopo desta fase, ver "Fora do escopo"                                           |
 | Saúde do projeto                                   | 1:5142, 1:5177, 25:4124 (pill "On track" no cabeçalho do diálogo de update), 25:4964 (coluna Health da lista de projetos)                                              |
 | Sparkline + indicador de status                    | 25:5421, 25:5430, 25:5437–25:5438 (coluna Status da lista de projetos: ícone + "33%" + traço)                                                                          |
-| Insights (barras empilhadas, linhas, legenda)      | Sem frame no arquivo; desenhado a partir do Linear atual (regra "Vyzer replica o Linear como ele é hoje")                                                              |
+| Insights (barras empilhadas, linhas, legenda)      | Sem frame no arquivo; desenhado a partir do Linear atual (regra "Zynox replica o Linear como ele é hoje")                                                              |
 
 ## Escopo
 

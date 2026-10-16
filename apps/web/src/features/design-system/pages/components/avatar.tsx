@@ -1,4 +1,4 @@
-import { Avatar } from "@vyzer/design-system/components";
+import { Avatar } from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 
 const PEOPLE = ["André Júnio", "Marina Costa", "Rafael B"];
@@ -66,7 +66,7 @@ export function Page() {
         content: ["Nome completo da pessoa: é o nome acessível."],
         dos: ["Passe sempre o nome, mesmo com foto"],
         donts: ["Não use o avatar para comunicar estado"],
-        usage: `import { Avatar } from "@vyzer/design-system/components";
+        usage: `import { Avatar } from "@zynox/design-system/components";
 
 <Avatar name="André Júnio" src={user.photoUrl} size="sm" />`,
         props: [

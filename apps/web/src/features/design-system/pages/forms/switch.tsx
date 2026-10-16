@@ -1,4 +1,4 @@
-import { Field as FormField, Switch } from "@vyzer/design-system/components";
+import { Field as FormField, Switch } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { StatesGrid } from "../../kit/states";
@@ -74,7 +74,7 @@ export function Page() {
         content: ['Rótulo descreve o que fica ligado: "Email notifications".'],
         dos: ["Aplique a mudança na hora e confirme de forma discreta"],
         donts: ['Não peça "Salvar" depois de um switch'],
-        usage: `import { Field, Switch } from "@vyzer/design-system/components";
+        usage: `import { Field, Switch } from "@zynox/design-system/components";
 
 <Field label="Email notifications" orientation="horizontal">
   <Switch checked={on} onCheckedChange={setOn} />

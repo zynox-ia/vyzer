@@ -12,8 +12,8 @@ import {
   type DisplayProperty,
   type FilterCategory,
   type ListOption,
-} from "@vyzer/design-system/components";
-import { Icon, PriorityIcon, ProjectStatusIcon, StatusIcon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon, PriorityIcon, ProjectStatusIcon, StatusIcon } from "@zynox/design-system/icons";
 import {
   Archive,
   ArrowLeftRight,

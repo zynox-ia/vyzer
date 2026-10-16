@@ -11,8 +11,8 @@ import {
   MenuSub,
   MenuSubContent,
   MenuSubTrigger,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import {
   Archive,
   ChevronRight,
@@ -196,7 +196,7 @@ export function Page() {
         usage: `import {
   ContextMenu, ContextMenuContent, ContextMenuTrigger,
   MenuItem, MenuSeparator, MenuSub, MenuSubContent, MenuSubTrigger,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 
 <ContextMenu>
   <ContextMenuTrigger asChild><IssueRow tabIndex={0} … /></ContextMenuTrigger>

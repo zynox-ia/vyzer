@@ -5,7 +5,7 @@ import {
   ProjectIcon,
   PropertyButton,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { FREQUENT_EMOJIS } from "../../kit/project-data";
@@ -84,7 +84,7 @@ export function Page() {
         content: ['Busca: "Search icons…", "Search emoji…".'],
         dos: ["Mostre o ícone escolhido no gatilho, na cor escolhida"],
         donts: ["Não use a cor do ícone para comunicar estado"],
-        usage: `import { IconPicker, ProjectIcon } from "@vyzer/design-system/components";
+        usage: `import { IconPicker, ProjectIcon } from "@zynox/design-system/components";
 
 <IconPicker value={icon} onValueChange={setIcon}>
   <PropertyButton leading={<ProjectIcon value={icon} />}>Icon</PropertyButton>

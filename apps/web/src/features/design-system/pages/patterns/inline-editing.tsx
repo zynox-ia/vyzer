@@ -13,11 +13,11 @@ import {
   TextArea,
   TextInput,
   type LabelColor,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { Tag, UserRound } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@vyzer/design-system/cn";
+import { cn } from "@zynox/design-system/cn";
 import { useInlineEdit } from "../../kit/use-inline-edit";
 import {
   INITIAL_LABELS,

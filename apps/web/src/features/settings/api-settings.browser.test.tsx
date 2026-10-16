@@ -16,7 +16,7 @@ import {
 } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router";
 import axe from "axe-core";
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import type { ApiKey } from "./api-key-shared";
 import { ApiSettingsPage } from "./api-settings";
@@ -191,7 +191,7 @@ describe("ApiSettingsPage", () => {
         .element(screen.getByRole("heading", { name: "API", exact: true, level: 1 }))
         .toBeVisible();
       await expect
-        .element(screen.getByText("Use API keys to connect integrations and tools to Vyzer"))
+        .element(screen.getByText("Use API keys to connect integrations and tools to Zynox"))
         .toBeVisible();
       await expect
         .element(screen.getByRole("heading", { name: "API keys", exact: true, level: 2 }))

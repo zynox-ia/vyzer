@@ -3,8 +3,8 @@
  * painel de New Project). Fase 7 — spec, item 1.
  */
 import { useState } from "react";
-import { Chip, SuggestionCard, TextInput } from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+import { Chip, SuggestionCard, TextInput } from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { Decisions, DocPage, DocSection, Prose } from "../../kit/doc";
 import { ThemePair } from "../../kit/theme-frame";
 import { COMPACT_SUGGESTIONS, FULL_SUGGESTIONS } from "@/features/agent/data";
@@ -15,7 +15,7 @@ function FullDemo() {
     <div className="flex flex-col gap-3">
       <TextInput
         aria-label="Composer (preenchido pela sugestão)"
-        placeholder="Ask Vyzer…"
+        placeholder="Ask Zynox…"
         value={filled}
         readOnly
       />
@@ -40,7 +40,7 @@ function CompactDemo() {
     <div className="flex flex-col gap-3">
       <TextInput
         aria-label="Composer (preenchido pela sugestão)"
-        placeholder="Ask Vyzer…"
+        placeholder="Ask Zynox…"
         value={filled}
         readOnly
       />

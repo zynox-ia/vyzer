@@ -23,6 +23,9 @@ import {
   deleteWorkspaceProject,
   deleteWorkspaceTeam,
   findWorkspaceApiKey,
+  getAssignmentPriorityPreference,
+  getOrCreateWorkspaceCodeReviewSettings,
+  listWorkspaceIssuePullRequests,
   getWorkspaceProject,
   getWorkspaceTeamBySlug,
   listWorkspaceApiKeys,
@@ -69,7 +72,7 @@ import {
   type WorkflowStatusCategory,
   type WorkflowStatusColor,
   WORKSPACE_REGION,
-} from "@vyzer/db";
+} from "@zynox/db";
 import {
   adminOnly,
   base,
@@ -83,7 +86,10 @@ import {
 } from "./orpc";
 import { createCustomerSettingsRouter } from "./customer-settings";
 import { createIssueDraftRouter } from "./issue-drafts";
+import { createGithubPreferencesRouter } from "./github-preferences";
 import { createMemberPreferencesRouter } from "./member-preferences";
+import { createNotificationPreferencesRouter } from "./notification-preferences";
+import { createProfileRouter } from "./profile";
 import { createSidebarPreferencesRouter } from "./sidebar-preferences";
 
 export function createRouter(resolveContext?: WorkspaceContextResolver) {
@@ -95,6 +101,9 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
     ...createCustomerSettingsRouter(middleware),
     ...createSidebarPreferencesRouter(middleware),
     ...createMemberPreferencesRouter(middleware),
+    ...createNotificationPreferencesRouter(middleware),
+    ...createGithubPreferencesRouter(middleware),
+    ...createProfileRouter(middleware),
     ...createIssueDraftRouter(middleware),
     health: middleware.workspaceScoped.health.handler(async ({ context }) => {
       await checkConnection(context.db);
@@ -117,6 +126,9 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           name: context.member.name,
           email: context.member.email,
           role: context.member.role,
+          title: context.member.title,
+          username: context.member.username,
+          avatarUrl: context.member.avatarUrl,
         },
       })),
       update: middleware.adminOnly.workspace.update.handler(async ({ context, input }) => {
@@ -154,6 +166,9 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           name: currentMember.name,
           email: currentMember.email,
           role: currentMember.role,
+          title: currentMember.title,
+          username: currentMember.username,
+          avatarUrl: currentMember.avatarUrl,
           createdAt: currentMember.createdAt.toISOString(),
           teamCount: currentMember.teamCount,
         })),
@@ -175,6 +190,9 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           name: updatedMember.name,
           email: updatedMember.email,
           role: updatedMember.role,
+          title: updatedMember.title,
+          username: updatedMember.username,
+          avatarUrl: updatedMember.avatarUrl,
           createdAt: updatedMember.createdAt.toISOString(),
         };
       }),
@@ -327,6 +345,9 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           name: currentMember.name,
           email: currentMember.email,
           role: currentMember.role,
+          title: currentMember.title,
+          username: currentMember.username,
+          avatarUrl: currentMember.avatarUrl,
           createdAt: currentMember.createdAt.toISOString(),
         }));
       }),
@@ -823,6 +844,15 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
         );
         if (!issue) throw new ORPCError("NOT_FOUND");
 
+        const codeReviewSettings = await getOrCreateWorkspaceCodeReviewSettings(
+          context.db,
+          context.workspace.id,
+        );
+        const pullRequests =
+          codeReviewSettings?.enabled === true
+            ? await listWorkspaceIssuePullRequests(context.db, context.workspace.id, issue.id)
+            : [];
+
         return {
           ...serializeIssue(issue),
           relations: issue.relations,
@@ -830,6 +860,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
             ...link,
             createdAt: link.createdAt.toISOString(),
           })),
+          pullRequests,
         };
       }),
       create: middleware.workspaceScoped.issue.create.handler(async ({ context, input }) => {
@@ -970,12 +1001,20 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
     },
     notification: {
       list: middleware.workspaceScoped.notification.list.handler(async ({ context, input }) => {
+        const priorityAssignmentsEnabled = await getAssignmentPriorityPreference(
+          context.db,
+          context.workspace.id,
+          context.member.id,
+        );
         const page = await listWorkspaceNotifications(
           context.db,
           context.workspace.id,
           context.member.id,
           {
             unreadOnly: input.unreadOnly,
+            priorityOnly: input.priorityOnly,
+            otherOnly: input.otherOnly,
+            priorityAssignmentsEnabled,
             order: input.order,
             cursor: input.cursor
               ? { id: input.cursor.id, createdAt: new Date(input.cursor.createdAt) }
@@ -988,6 +1027,7 @@ export function createRouter(resolveContext?: WorkspaceContextResolver) {
           items: page.items.map((notification) => ({
             id: notification.id,
             type: notification.type,
+            isPriority: notification.isPriority,
             actor: notification.actor,
             issue: notification.issue,
             projectId: notification.projectId,
@@ -1211,9 +1251,9 @@ function serializeIssue<
     };
     priority: IssuePriority;
     assigneeId: string | null;
-    assignee: { id: string; name: string } | null;
-    creatorId: string;
-    creator: { id: string; name: string };
+    assignee: { id: string; name: string; avatarUrl: string | null } | null;
+    creatorId: string | null;
+    creator: { id: string; name: string; avatarUrl: string | null } | null;
     parentId: string | null;
     labels: Array<{
       id: string;
@@ -1249,8 +1289,8 @@ function serializeIssueEvent<
   T extends {
     id: string;
     issueId: string;
-    actorId: string;
-    actor: { id: string; name: string };
+    actorId: string | null;
+    actor: { id: string; name: string; avatarUrl: string | null } | null;
     type: IssueEventType;
     payload: Record<string, unknown>;
     createdAt: Date;

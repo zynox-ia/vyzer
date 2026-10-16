@@ -14,7 +14,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import axe from "axe-core";
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { WorkspaceSettingsPage } from "./workspace-settings";
 
@@ -282,7 +282,7 @@ describe("WorkspaceSettingsPage", () => {
     const screen = await render(<Harness />);
     const url = screen.getByLabelText("URL");
     await expect.element(url).toHaveValue("zynox-dev");
-    await expect.element(screen.getByText("vyzer.app/")).toBeVisible();
+    await expect.element(screen.getByText("zynox.app.br/")).toBeVisible();
 
     await url.fill("My Space");
     await expect.element(screen.getByText(/Use lowercase letters/)).toBeVisible();

@@ -1,4 +1,4 @@
-import { SearchInput, type InputSize } from "@vyzer/design-system/components";
+import { SearchInput, type InputSize } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -95,7 +95,7 @@ export function Page() {
         content: ['Placeholder diz o que se busca: "Search issues…".'],
         dos: ["Filtre enquanto digita quando a lista é local"],
         donts: ["Não esconda o botão de limpar quando há texto"],
-        usage: `import { SearchInput } from "@vyzer/design-system/components";
+        usage: `import { SearchInput } from "@zynox/design-system/components";
 
 <SearchInput aria-label="Search issues" placeholder="Search issues…" onChange={…} onClear={…} />`,
         props: [

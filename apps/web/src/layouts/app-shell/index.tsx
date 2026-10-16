@@ -1,9 +1,8 @@
 /**
- * Shell da aplicação (Figma 27:6905 → 1:6569): sidebar + área de conteúdo, num painel recuado (8
- * px em cima/direita, 36 px embaixo — a faixa reservada para o rodapé flutuante do agente),
- * raio 12, borda e `shadow-contact` (Fase 8, refino a pedido do André). Compõe o estado do shell
- * (AppShellProvider), a sidebar, o Command Menu (⌘K) e o Composer de criação ("C") — os gatilhos
- * globais funcionam de qualquer tela, como pede a spec.
+ * Shell da aplicação (Figma 27:6905 → 1:6569; Missão 03): sidebar em dois níveis + área de conteúdo,
+ * num painel recuado (8 px em cima/direita, 36 px embaixo — a faixa reservada para o rodapé flutuante do agente),
+ * raio 12, borda e `shadow-contact`. Compõe o estado do shell (AppShellProvider), a sidebar,
+ * o Command Menu (⌘K) e o Composer de criação ("C") — os gatilhos globais funcionam de qualquer tela.
  */
 import { useEffect, useState } from "react";
 import { matchPath, Outlet, useLocation, useNavigate } from "react-router";
@@ -12,8 +11,7 @@ import { AgentChatProvider } from "@/features/agent/agent-chat-store";
 import { AgentFloatingActions } from "@/features/agent/agent-floating-actions";
 import { useAgentChatStore } from "@/features/agent/agent-chat-store";
 import { FLOATING_SUGGESTIONS } from "@/features/agent/data";
-import { cn } from "@vyzer/design-system/cn";
-import type { ProjectIconValue } from "@vyzer/design-system/components";
+import type { ProjectIconValue } from "@zynox/design-system/components";
 import type { Team } from "@/features/projects/project-data";
 import { AppShellProvider } from "./context";
 import { CreateIssueDialog } from "./create-issue-dialog";
@@ -33,14 +31,8 @@ function TrackShellPath() {
 }
 
 function ShellFrame() {
-  const { sidebarCollapsed } = useAppShell();
   return (
-    <div
-      className={cn(
-        "flex min-w-0 flex-1 overflow-hidden pt-2 pr-2 pb-9 pl-2",
-        !sidebarCollapsed && "tablet:pl-0",
-      )}
-    >
+    <div className="flex min-w-0 flex-1 overflow-hidden pt-2 pr-2 pb-9 pl-2 tablet:pl-0">
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-surface border border-subtle bg-sidebar shadow-contact">
         <Outlet />
       </div>
@@ -114,23 +106,21 @@ export function AppShell({
   workspaceStatus,
   onWorkspaceRetry,
   inboxUnreadCount,
-  draftsCount,
   sidebarPreferences,
   onSaveIssueDraft,
 }: {
   workspaceName?: string;
   workspaceIcon?: ProjectIconValue;
   workspaceLogoUrl?: string | null;
+  /** Times do Create new issue (seletor de Team); a sidebar não mostra mais "Your teams" (Missão 02). */
   teams?: Team[];
   workspaceStatus?: string;
   onWorkspaceRetry?: () => void;
   /** Não lidas da Inbox (contador da sidebar); a rota do produto passa o valor da API. */
   inboxUnreadCount?: number;
-  /** Rascunhos de issue do Member (contador do item Drafts). */
-  draftsCount?: number;
-  /** Customize sidebar: visibilidade, ordem e badge; a rota do produto passa o valor da API. */
+  /** Customize sidebar: visibilidade e badge dos 3 itens mapeáveis; a rota do produto passa o valor da API. */
   sidebarPreferences?: SidebarPreferencesData;
-  /** Fechar o "Create new issue" sem criar, com texto, salva um rascunho (API de drafts). */
+  /** Fechar o "Create new issue" sem criar, com texto, salva um rascunho (sem tela própria, Missão 02). */
   onSaveIssueDraft?: (draft: { title: string; description: string }) => void;
 } = {}) {
   return (
@@ -144,11 +134,9 @@ export function AppShell({
             workspaceName={workspaceName}
             workspaceIcon={workspaceIcon}
             workspaceLogoUrl={workspaceLogoUrl}
-            teams={teams}
             workspaceStatus={workspaceStatus}
             onWorkspaceRetry={onWorkspaceRetry}
             inboxUnreadCount={inboxUnreadCount}
-            draftsCount={draftsCount}
             sidebarPreferences={sidebarPreferences}
           />
           <ShellFrame />

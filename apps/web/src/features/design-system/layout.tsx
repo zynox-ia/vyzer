@@ -6,7 +6,7 @@ import {
   setThemePreference,
   useThemePreference,
   type ThemePreference,
-} from "@vyzer/design-system/theme";
+} from "@zynox/design-system/theme";
 import { NavLink, Outlet, useLocation } from "react-router";
 import { Segmented } from "./kit/controls";
 import { sections } from "./registry";
@@ -24,7 +24,7 @@ export function DesignSystemLayout() {
     <div className="flex min-h-dvh flex-col bg-app text-primary">
       <header className="sticky top-0 z-sticky flex flex-col border-b border-default bg-sidebar">
         <div className="flex flex-wrap items-center gap-4 px-4 py-2">
-          <p className="text-label-md text-primary">Vyzer Design System</p>
+          <p className="text-label-md text-primary">Zynox Design System</p>
           <div className="ml-auto flex flex-wrap items-center gap-4">
             <Segmented<ThemePreference>
               label="Tema"

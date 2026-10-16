@@ -10,9 +10,9 @@ import {
 } from "@tanstack/react-query";
 import { ORPCError } from "@orpc/client";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { ToastProvider } from "@vyzer/design-system/components";
-import { StatusIcon } from "@vyzer/design-system/icons";
-import type { WorkflowStatus } from "@vyzer/contract";
+import { ToastProvider } from "@zynox/design-system/components";
+import { StatusIcon } from "@zynox/design-system/icons";
+import type { WorkflowStatus } from "@zynox/contract";
 import "@/index.css";
 import { TeamStatusesPage } from "./team-statuses";
 
@@ -87,7 +87,7 @@ const STAMP = "2026-01-01T00:00:00.000Z";
 function makeTeam(slug: string): TeamItem {
   return {
     id: TEAM_ID,
-    name: "Vyzer",
+    name: "Atlas",
     slug,
     key: "VYZ",
     icon: { kind: "icon", name: "Zap", color: "red" },
@@ -157,7 +157,7 @@ function Harness() {
   return (
     <QueryClientProvider client={client}>
       <ToastProvider>
-        <MemoryRouter initialEntries={["/settings/teams/vyzer/statuses"]}>
+        <MemoryRouter initialEntries={["/settings/teams/atlas/statuses"]}>
           <main>
             <Routes>
               <Route path="/settings/teams/:team/statuses" element={<TeamStatusesPage />} />
@@ -298,7 +298,7 @@ describe("TeamStatusesPage", () => {
 
     await vi.waitFor(() =>
       expect(createStatus).toHaveBeenCalledWith({
-        team: "vyzer",
+        team: "atlas",
         category: "started",
         name: "Blocked",
         description: "Waiting on others",

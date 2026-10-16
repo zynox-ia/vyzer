@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { getOrCreateSidebarPreferences, updateSidebarPreferences } from "@vyzer/db";
+import { getOrCreateSidebarPreferences, updateSidebarPreferences } from "@zynox/db";
 import type { createWorkspaceMiddleware } from "./orpc";
 
 type Middleware = ReturnType<typeof createWorkspaceMiddleware>;

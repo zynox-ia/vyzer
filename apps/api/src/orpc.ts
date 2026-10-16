@@ -1,16 +1,18 @@
 import { createHash } from "node:crypto";
 import { ORPCError, implement } from "@orpc/server";
-import { contract } from "@vyzer/contract";
+import { contract } from "@zynox/contract";
 import {
   MEMBER_ID,
   findActiveApiKeyByTokenHash,
+  listAuthUserWorkspaceMemberships,
   resolveWorkspaceMember,
   touchWorkspaceApiKey,
   WORKSPACE_ID,
   type ApiKeyPermissions,
   type Db,
   type WorkspaceMemberContext,
-} from "@vyzer/db";
+} from "@zynox/db";
+import type { ZynoxAuth } from "./auth";
 
 /** Contexto de cada chamada: banco e headers da requisição. */
 export type Context = { db: Db; headers: Headers };
@@ -23,6 +25,14 @@ export type WorkspaceContextResolver = (
   db: Db,
   headers: Headers,
 ) => Promise<ResolvedWorkspaceContext | null>;
+
+type AuthenticatedSession = {
+  session: { id: string; activeWorkspaceId?: string | null };
+  user: { id: string };
+};
+
+type SessionReader = (headers: Headers) => Promise<AuthenticatedSession | null>;
+type WorkspaceMembership = { id: string; workspaceId: string };
 
 /** Implementador compartilhado; os middlewares de domínio partem daqui. */
 export const base = implement(contract).$context<Context>();
@@ -48,6 +58,90 @@ export const resolveSeededWorkspaceContext: WorkspaceContextResolver = async (db
   }
   return { ...resolved, apiKey: { id: key.id, permissions: key.permissions } };
 };
+
+/**
+ * Resolves the domain Member and Workspace from an authenticated session. A
+ * user with exactly one membership may omit an active Workspace; otherwise an
+ * explicit session selection is required so a request can never guess scope.
+ */
+export function createSessionWorkspaceContextResolver(
+  readSession: SessionReader,
+): WorkspaceContextResolver {
+  return async (db, headers) => {
+    const authenticated = await readSession(headers);
+    if (!authenticated) return null;
+
+    const memberships = await listAuthUserWorkspaceMemberships(db, authenticated.user.id);
+
+    const activeWorkspaceId = authenticated.session.activeWorkspaceId;
+    const membership = selectSessionMembership(memberships, activeWorkspaceId);
+    if (!membership) return null;
+
+    const resolved = await resolveWorkspaceMember(db, membership.workspaceId, membership.id);
+    return resolved ? { ...resolved, apiKey: null } : null;
+  };
+}
+
+/** Pure scope selection rule, kept independent from session/database adapters for testing. */
+export function selectSessionMembership(
+  memberships: WorkspaceMembership[],
+  activeWorkspaceId: string | null | undefined,
+): WorkspaceMembership | undefined {
+  if (activeWorkspaceId) {
+    return memberships.find((candidate) => candidate.workspaceId === activeWorkspaceId);
+  }
+  if (memberships.length !== 1) return undefined;
+  return memberships[0]!;
+}
+
+/**
+ * Runtime resolver: bearer API keys retain their scoped capability model,
+ * while browser and Desktop requests derive identity exclusively from Better
+ * Auth's server-side session.
+ */
+export function createAuthenticatedWorkspaceContextResolver(
+  auth: ZynoxAuth,
+): WorkspaceContextResolver {
+  const sessionResolver = createSessionWorkspaceContextResolver(async (headers) => {
+    const current = await auth.api.getSession({ headers });
+    if (!current) return null;
+    return {
+      session: {
+        id: current.session.id,
+        activeWorkspaceId: current.session.activeWorkspaceId,
+      },
+      user: { id: current.user.id },
+    };
+  });
+
+  return async (db, headers) => {
+    if (headers.has("authorization")) {
+      return resolveApiKeyWorkspaceContext(db, headers);
+    }
+    return sessionResolver(db, headers);
+  };
+}
+
+async function resolveApiKeyWorkspaceContext(
+  db: Db,
+  headers: Headers,
+): Promise<ResolvedWorkspaceContext | null> {
+  const authorization = headers.get("authorization");
+  if (authorization === null) return null;
+
+  const token = parseApiKeyBearer(authorization);
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const key = await findActiveApiKeyByTokenHash(db, tokenHash);
+  if (!key) throw new ORPCError("UNAUTHORIZED");
+
+  const resolved = await resolveWorkspaceMember(db, key.workspaceId, key.memberId);
+  if (!resolved) throw new ORPCError("UNAUTHORIZED");
+
+  if (!key.lastUsedAt || key.lastUsedAt.getTime() <= Date.now() - 60_000) {
+    await touchWorkspaceApiKey(db, key.id);
+  }
+  return { ...resolved, apiKey: { id: key.id, permissions: key.permissions } };
+}
 
 /** Require the requested capability when the call authenticates with an API key. */
 export function requireApiKeyPermission(

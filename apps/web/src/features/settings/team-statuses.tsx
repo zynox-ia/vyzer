@@ -23,9 +23,9 @@ import {
   TextInput,
   useToast,
   type LabelColor,
-} from "@vyzer/design-system/components";
-import { StatusIcon } from "@vyzer/design-system/icons";
-import type { WorkflowStatus } from "@vyzer/contract";
+} from "@zynox/design-system/components";
+import { StatusIcon } from "@zynox/design-system/icons";
+import type { WorkflowStatus } from "@zynox/contract";
 import {
   createStatusMutationOptions,
   deleteStatusMutationOptions,

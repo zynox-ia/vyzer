@@ -12,17 +12,12 @@ import {
   workspace,
 } from "./schema";
 import { createTeamIssueEmailAddress } from "./team-issue-email";
-import {
-  seedTeamWorkflowStatuses,
-  VYZER_WORKFLOW_STATUSES,
-  ZYNOX_WORKFLOW_STATUSES,
-} from "./workflow-status";
+import { seedTeamWorkflowStatuses, ZYNOX_WORKFLOW_STATUSES } from "./workflow-status";
 
 /** Stable identifiers used while authentication is deferred (ADR-0015). */
 export const WORKSPACE_ID = "00000000-0000-4000-8000-000000000001";
 export const MEMBER_ID = "00000000-0000-4000-8000-000000000002";
 export const ZYNOX_TEAM_ID = "00000000-0000-4000-8000-000000000003";
-export const VYZER_TEAM_ID = "00000000-0000-4000-8000-000000000004";
 export const ANAME_CRM_PROJECT_ID = "00000000-0000-4000-8000-000000000011";
 export const PLUGGA_OS_PROJECT_ID = "00000000-0000-4000-8000-000000000012";
 export const MV_SCHOOL_PROJECT_ID = "00000000-0000-4000-8000-000000000013";
@@ -118,32 +113,15 @@ export async function seedWorkspace(db: Db): Promise<void> {
           issueEmailEnabled: false,
           issueEmailAddress: createTeamIssueEmailAddress("zynox"),
         },
-        {
-          id: VYZER_TEAM_ID,
-          workspaceId: WORKSPACE_ID,
-          name: "Vyzer",
-          slug: "vyzer",
-          key: "VYZ",
-          icon: { kind: "icon", name: "Layers", color: "purple" },
-          timezone: "America/Sao_Paulo",
-          estimation: "none",
-          detailedIssueHistory: false,
-          issueEmailEnabled: false,
-          issueEmailAddress: createTeamIssueEmailAddress("vyzer"),
-        },
       ])
       .onConflictDoNothing({ target: team.id });
 
     await tx
       .insert(teamMember)
-      .values([
-        { teamId: ZYNOX_TEAM_ID, memberId: MEMBER_ID },
-        { teamId: VYZER_TEAM_ID, memberId: MEMBER_ID },
-      ])
+      .values([{ teamId: ZYNOX_TEAM_ID, memberId: MEMBER_ID }])
       .onConflictDoNothing();
 
     await seedTeamWorkflowStatuses(tx, ZYNOX_TEAM_ID, ZYNOX_WORKFLOW_STATUSES);
-    await seedTeamWorkflowStatuses(tx, VYZER_TEAM_ID, VYZER_WORKFLOW_STATUSES);
 
     await tx
       .insert(label)
@@ -224,7 +202,7 @@ export async function seedWorkspace(db: Db): Promise<void> {
         { projectId: MV_SCHOOL_PROJECT_ID, teamId: ZYNOX_TEAM_ID, workspaceId: WORKSPACE_ID },
         { projectId: ZYNCLOUD_PROJECT_ID, teamId: ZYNOX_TEAM_ID, workspaceId: WORKSPACE_ID },
         { projectId: ZYNOX_OS_PROJECT_ID, teamId: ZYNOX_TEAM_ID, workspaceId: WORKSPACE_ID },
-        { projectId: TESTE_PROJECT_ID, teamId: VYZER_TEAM_ID, workspaceId: WORKSPACE_ID },
+        { projectId: TESTE_PROJECT_ID, teamId: ZYNOX_TEAM_ID, workspaceId: WORKSPACE_ID },
       ])
       .onConflictDoNothing();
   });

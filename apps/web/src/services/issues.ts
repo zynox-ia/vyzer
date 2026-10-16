@@ -1,4 +1,4 @@
-import type { IssueFacetsInput, IssueListInput } from "@vyzer/contract";
+import type { IssueFacetsInput, IssueListInput } from "@zynox/contract";
 import { api } from "./api";
 
 /** Lista filtrada, ordenada e agrupada de Issues de um Team. */

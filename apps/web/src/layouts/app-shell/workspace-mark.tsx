@@ -4,8 +4,8 @@
  * lugares mostrarem sempre a mesma coisa. O logo é quadrado com o raio de controle (medido no
  * Linear: avatar quadrado de 20 px, raio 8), sem nome próprio — o texto ao lado já nomeia.
  */
-import { ProjectIcon, type ProjectIconValue } from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
+import { ProjectIcon, type ProjectIconValue } from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
 
 export function WorkspaceMark({
   icon,

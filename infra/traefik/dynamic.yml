@@ -1,14 +1,14 @@
-# Roteia vyzer.localhost para os processos nativos no host (pnpm dev):
+# Roteia zynox.localhost para os processos nativos no host (pnpm dev):
 # /api e /api/* vão para a API (porta 3001); o resto vai para o Vite (porta 3000).
 http:
   routers:
     api:
-      rule: Host(`vyzer.localhost`) && (Path(`/api`) || PathPrefix(`/api/`))
+      rule: Host(`zynox.localhost`) && (Path(`/api`) || PathPrefix(`/api/`))
       priority: 100
       entryPoints: [web]
       service: api
     web:
-      rule: Host(`vyzer.localhost`)
+      rule: Host(`zynox.localhost`)
       entryPoints: [web]
       service: web
   services:

@@ -16,8 +16,8 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import {
   ArrowDownWideNarrow,
   ArrowUpDown,

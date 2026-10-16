@@ -42,6 +42,6 @@ Tela `/settings/customer-requests`, comparada com o Linear ao vivo (`/zynox-dev/
 - **Reordenar statuses e tiers:** menu da linha com "Move up"/"Move down" no lugar do arrastar do Linear (sem dependência nova).
 - **Menus das listas de domínios:** "Open menu" abre um item "Add domain or email…" que abre um `Dialog`; o conteúdo do menu do Linear não abriu por automação. Cartões com itens mostram "N excluded domains and emails" (texto do cabeçalho com itens não observado).
 - **Formulários de status e tier:** `Dialog` com Name e Color (Select com as 9 cores da paleta); o formulário do Linear não foi aberto (controles desabilitados com o recurso desligado).
-- **"List of generic domains":** botão que abre um `Dialog` só leitura com uma lista curta embutida no web (`generic-domains.ts`, provedores citados no texto da tela); o Linear leva à documentação, que o Vyzer não tem. A lista completa do Linear não foi copiada.
-- **Docs:** o link "Docs" do texto de abertura foi omitido (o Vyzer não tem documentação pública).
-- **"Attributes can be edited in the Linear UI"** virou "…in the Vyzer UI".
+- **"List of generic domains":** botão que abre um `Dialog` só leitura com uma lista curta embutida no web (`generic-domains.ts`, provedores citados no texto da tela); o Linear leva à documentação, que o Zynox não tem. A lista completa do Linear não foi copiada.
+- **Docs:** o link "Docs" do texto de abertura foi omitido (o Zynox não tem documentação pública).
+- **"Attributes can be edited in the Linear UI"** virou "…in the Zynox UI".

@@ -1,5 +1,5 @@
 {
-  "name": "@vyzer/web",
+  "name": "@zynox/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,8 +13,8 @@
     "@orpc/client": "^1.15.4",
     "@orpc/tanstack-query": "^1.15.4",
     "@tanstack/react-query": "^5.103.2",
-    "@vyzer/contract": "workspace:*",
-    "@vyzer/design-system": "workspace:*",
+    "@zynox/contract": "workspace:*",
+    "@zynox/design-system": "workspace:*",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "lucide-react": "^1.48.0",

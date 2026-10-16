@@ -1,11 +1,11 @@
-import { cn } from "@vyzer/design-system/cn";
-import { apcaContrast, over, toRgba, wcagContrast, withAlpha } from "@vyzer/design-system/contrast";
+import { cn } from "@zynox/design-system/cn";
+import { apcaContrast, over, toRgba, wcagContrast, withAlpha } from "@zynox/design-system/contrast";
 import {
   PriorityIcon,
   StatusIcon,
   type Priority,
   type StatusType,
-} from "@vyzer/design-system/icons";
+} from "@zynox/design-system/icons";
 import { useRef } from "react";
 import { readVar, resolveSurface, useMeasure } from "../../kit/color";
 import { Code, Decisions, DocPage, DocSection, Prose } from "../../kit/doc";

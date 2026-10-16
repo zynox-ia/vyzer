@@ -4,7 +4,7 @@ status: accepted
 
 # Deleting a Team is immediate, not a 30-day window
 
-Linear schedules a deleted Team for permanent removal after a 30-day restoration window. Vyzer
+Linear schedules a deleted Team for permanent removal after a 30-day restoration window. Zynox
 deletes it immediately (a hard delete), approved by the owner on 2026-09-28 as part of
 `docs/specs/settings-administration.md`.
 

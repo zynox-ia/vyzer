@@ -8,7 +8,7 @@ import {
   listWorkspaceIssueDrafts,
   publishWorkspaceIssueDraft,
   updateWorkspaceIssueDraft,
-} from "@vyzer/db";
+} from "@zynox/db";
 import type { createWorkspaceMiddleware } from "./orpc";
 import { requireApiKeyPermission } from "./orpc";
 

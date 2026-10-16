@@ -5,7 +5,7 @@
  */
 export const DESIGN_WEIGHTS = [300, 400, 500] as const;
 
-const SAMPLE = "Vyzer 0123456789";
+const SAMPLE = "Zynox 0123456789";
 
 /** Soma da cobertura (alpha) do texto desenhado num canvas. */
 function ink(family: string, weight: number): number {

@@ -1,4 +1,4 @@
-import { Button, IconButton, SegmentedControl, TextArea } from "@vyzer/design-system/components";
+import { Button, IconButton, SegmentedControl, TextArea } from "@zynox/design-system/components";
 import { Activity, Bot, Paperclip } from "lucide-react";
 import { useState } from "react";
 import { Code, Decisions, DocPage, DocSection, Prose } from "../../kit/doc";

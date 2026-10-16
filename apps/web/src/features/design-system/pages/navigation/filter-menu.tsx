@@ -12,9 +12,9 @@ import {
   type FilterCategory,
   type FilterValue,
   type ListOption,
-} from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
+import { Icon } from "@zynox/design-system/icons";
 import { ChevronRight, ListFilter } from "lucide-react";
 import { Fragment, useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -292,7 +292,7 @@ export function Page() {
           "Não esconda filtros frequentes sem busca",
           "Não use o ícone de status de issue para status de projeto",
         ],
-        usage: `import { FilterMenu, type FilterValue } from "@vyzer/design-system/components";
+        usage: `import { FilterMenu, type FilterValue } from "@zynox/design-system/components";
 
 const [filters, setFilters] = useState<FilterValue>({});
 

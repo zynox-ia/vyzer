@@ -6,6 +6,8 @@ import * as schema from "./schema";
 import { createTeamIssueEmailAddress } from "./team-issue-email";
 import { seedTeamWorkflowStatuses } from "./workflow-status";
 
+export * as schema from "./schema";
+
 /** Segundos para desistir de abrir uma conexão (o padrão do postgres.js é 30). */
 const CONNECT_TIMEOUT_SECONDS = 5;
 
@@ -52,6 +54,14 @@ export async function resolveWorkspaceMember(
   }
 
   return { workspace: resolvedWorkspace, member: resolvedMember };
+}
+
+/** Lists only the Workspace memberships belonging to one authenticated identity. */
+export async function listAuthUserWorkspaceMemberships(db: Db, authUserId: string) {
+  return db
+    .select({ id: schema.member.id, workspaceId: schema.member.workspaceId })
+    .from(schema.member)
+    .where(eq(schema.member.authUserId, authUserId));
 }
 
 /** Update the editable fields of one Workspace and return the persisted row. */
@@ -224,6 +234,9 @@ export async function listWorkspaceMembers(db: Db, workspaceId: string) {
       name: schema.member.name,
       email: schema.member.email,
       role: schema.member.role,
+      title: schema.member.title,
+      username: schema.member.username,
+      avatarUrl: schema.member.avatarUrl,
       createdAt: schema.member.createdAt,
       teamCount: sql<number>`count(${schema.team.id})::int`,
     })
@@ -252,6 +265,123 @@ export async function updateWorkspaceMemberName(
     .returning();
 
   return updatedMember ?? null;
+}
+
+/** Read the current Member's profile and whether removing it would leave a usable Workspace. */
+export async function getWorkspaceMemberProfile(db: Db, workspaceId: string, memberId: string) {
+  const [currentMember] = await db
+    .select()
+    .from(schema.member)
+    .where(and(eq(schema.member.id, memberId), eq(schema.member.workspaceId, workspaceId)))
+    .limit(1);
+  if (!currentMember) return null;
+
+  const [counts] = await db
+    .select({
+      memberCount: sql<number>`count(*)::int`,
+      adminCount: sql<number>`count(*) filter (where ${schema.member.role} = 'admin')::int`,
+    })
+    .from(schema.member)
+    .where(eq(schema.member.workspaceId, workspaceId));
+
+  return {
+    ...currentMember,
+    canLeaveWorkspace:
+      (counts?.memberCount ?? 0) > 1 &&
+      (currentMember.role !== "admin" || (counts?.adminCount ?? 0) > 1),
+  };
+}
+
+/** Update the current Member's own editable profile fields within the resolved Workspace. */
+export async function updateWorkspaceMemberProfile(
+  db: Db,
+  workspaceId: string,
+  memberId: string,
+  values: Partial<Pick<typeof schema.member.$inferInsert, "name" | "title" | "username">>,
+) {
+  if (Object.keys(values).length === 0) {
+    const [currentMember] = await db
+      .select()
+      .from(schema.member)
+      .where(and(eq(schema.member.id, memberId), eq(schema.member.workspaceId, workspaceId)))
+      .limit(1);
+    return currentMember ?? null;
+  }
+
+  const [updatedMember] = await db
+    .update(schema.member)
+    .set(values)
+    .where(and(eq(schema.member.id, memberId), eq(schema.member.workspaceId, workspaceId)))
+    .returning();
+
+  return updatedMember ?? null;
+}
+
+/** Find the Workspace-owned Member avatar whose same-origin URL matches the requested file. */
+export async function findWorkspaceMemberByAvatarUrl(
+  db: Db,
+  workspaceId: string,
+  avatarUrl: string,
+) {
+  const [currentMember] = await db
+    .select({ id: schema.member.id })
+    .from(schema.member)
+    .where(and(eq(schema.member.workspaceId, workspaceId), eq(schema.member.avatarUrl, avatarUrl)))
+    .limit(1);
+
+  return currentMember ?? null;
+}
+
+/** Persist the new same-origin avatar URL on one Member within the resolved Workspace. */
+export async function updateWorkspaceMemberAvatar(
+  db: Db,
+  workspaceId: string,
+  memberId: string,
+  avatarUrl: string,
+) {
+  const [updatedMember] = await db
+    .update(schema.member)
+    .set({ avatarUrl })
+    .where(and(eq(schema.member.id, memberId), eq(schema.member.workspaceId, workspaceId)))
+    .returning();
+
+  return updatedMember ?? null;
+}
+
+/** Remove the current Member while preserving issues, events, and links with null authors. */
+export async function leaveWorkspaceAsMember(db: Db, workspaceId: string, memberId: string) {
+  return db.transaction(async (tx) => {
+    await tx
+      .select({ id: schema.workspace.id })
+      .from(schema.workspace)
+      .where(eq(schema.workspace.id, workspaceId))
+      .for("update");
+
+    const [currentMember] = await tx
+      .select({ id: schema.member.id, role: schema.member.role })
+      .from(schema.member)
+      .where(and(eq(schema.member.id, memberId), eq(schema.member.workspaceId, workspaceId)))
+      .limit(1);
+    if (!currentMember) return "notFound" as const;
+
+    const [counts] = await tx
+      .select({
+        memberCount: sql<number>`count(*)::int`,
+        adminCount: sql<number>`count(*) filter (where ${schema.member.role} = 'admin')::int`,
+      })
+      .from(schema.member)
+      .where(eq(schema.member.workspaceId, workspaceId));
+
+    if ((counts?.memberCount ?? 0) <= 1) return "lastMember" as const;
+    if (currentMember.role === "admin" && (counts?.adminCount ?? 0) <= 1) {
+      return "lastAdmin" as const;
+    }
+
+    await tx
+      .delete(schema.member)
+      .where(and(eq(schema.member.id, memberId), eq(schema.member.workspaceId, workspaceId)));
+    return "left" as const;
+  });
 }
 
 /** Create a URL-safe slug from a Team name. Slug collisions are reported by the database index. */
@@ -409,6 +539,9 @@ export async function listWorkspaceTeamMembers(db: Db, workspaceId: string, team
       name: schema.member.name,
       email: schema.member.email,
       role: schema.member.role,
+      title: schema.member.title,
+      username: schema.member.username,
+      avatarUrl: schema.member.avatarUrl,
       createdAt: schema.member.createdAt,
     })
     .from(schema.teamMember)
@@ -717,7 +850,7 @@ export async function checkConnection(db: Db): Promise<void> {
   await db.execute(sql`select 1`);
 }
 
-export { MEMBER_ID, VYZER_TEAM_ID, WORKSPACE_ID, WORKSPACE_REGION, ZYNOX_TEAM_ID } from "./seed";
+export { MEMBER_ID, WORKSPACE_ID, WORKSPACE_REGION, ZYNOX_TEAM_ID } from "./seed";
 export {
   addCustomerDomainRule,
   createCustomerStatus,
@@ -744,7 +877,6 @@ export {
 } from "./customer-settings";
 export {
   DEFAULT_WORKFLOW_STATUSES,
-  VYZER_WORKFLOW_STATUSES,
   WorkflowStatusRuleError,
   ZYNOX_WORKFLOW_STATUSES,
   createWorkspaceTeamWorkflowStatus,
@@ -779,6 +911,39 @@ export { getOrCreateSidebarPreferences, updateSidebarPreferences } from "./sideb
 export { getOrCreateMemberPreferences, updateMemberPreferences } from "./member-preferences";
 export type { MemberPreferencesPatch } from "./member-preferences";
 export {
+  getDefaultNotificationTypePreference,
+  getAssignmentPriorityPreference,
+  getOrCreateNotificationPreferences,
+  getOrCreateNotificationTypePreferences,
+  notificationPreferenceChannels,
+  notificationPreferenceTypes,
+  updateNotificationPreferences,
+  updateNotificationTypePreferences,
+} from "./notification-preferences";
+export type {
+  NotificationPreferencesPatch,
+  NotificationTypePreferenceValue,
+} from "./notification-preferences";
+export {
+  deleteWorkspaceGithubConnection,
+  findGithubInstallation,
+  findWorkspaceGithubConnection,
+  findWorkspaceIssueIdForGithubBranch,
+  getOrCreateWorkspaceCodeReviewSettings,
+  githubIssueIdentifiersFromBranch,
+  listWorkspaceIssuePullRequests,
+  setWorkspaceGithubInstallationStatus,
+  updateWorkspaceCodeReviewSettings,
+  upsertWorkspaceGithubConnection,
+  upsertWorkspaceGithubInstallation,
+  upsertWorkspaceGithubPullRequest,
+} from "./github";
+export type {
+  CodeReviewSettingsPatch,
+  GithubInstallationValues,
+  GithubPullRequestValues,
+} from "./github";
+export {
   LabelRuleError,
   archiveWorkspaceLabel,
   convertWorkspaceLabelToGroup,
@@ -810,24 +975,36 @@ export {
   notifyIssueEvent,
 } from "./notifications";
 export {
+  auditEvent,
+  authAccount,
+  authSession,
+  authUser,
+  authVerification,
   apiKey,
+  codeReviewSettings,
   customerDomainRule,
   customerSettings,
   customerStatus,
   customerTier,
+  desktopIntent,
   issue,
   issueDraft,
   issueEvent,
   issueLink,
   issueLabel,
   issueRelation,
+  githubConnection,
+  githubInstallation,
   label,
   member,
   memberSidebarPreference,
   memberPreference,
+  notificationPreference,
+  notificationTypePreference,
   notification,
   project,
   projectTeam,
+  pullRequest,
   team,
   teamMember,
   sidebarItemPreference,
@@ -859,8 +1036,16 @@ export type {
   MemberInterfaceFontSize,
   MemberInterfaceTheme,
   MemberSendCommentsOn,
+  NotificationEmailFormat,
+  NotificationPreferenceChannel,
+  NotificationPreferenceType,
   IssueEventType,
   IssueRelationType,
+  GithubChecksStatus,
+  GithubInstallationStatus,
+  GithubMergeStrategy,
+  GithubPullRequestState,
+  GithubReviewDecision,
   IssuePriority,
   LabelColor,
   NotificationType,

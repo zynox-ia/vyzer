@@ -25,7 +25,7 @@ import {
   TableRow,
   TextInput,
   useToast,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { formatShortDate } from "./format";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 import { membersQueryOptions, updateMemberMutationOptions } from "@/services/members";

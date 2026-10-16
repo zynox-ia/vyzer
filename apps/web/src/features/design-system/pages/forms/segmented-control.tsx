@@ -1,4 +1,4 @@
-import { SegmentedControl, type SegmentedSize } from "@vyzer/design-system/components";
+import { SegmentedControl, type SegmentedSize } from "@zynox/design-system/components";
 import { LayoutGrid, List } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -133,7 +133,7 @@ export function Page() {
         content: ["Rótulos de uma palavra, paralelos: Comment / Update, List / Board."],
         dos: ["Use para alternar visões da mesma informação"],
         donts: ["Não misture opções com e sem ícone no mesmo grupo"],
-        usage: `import { SegmentedControl } from "@vyzer/design-system/components";
+        usage: `import { SegmentedControl } from "@zynox/design-system/components";
 
 <SegmentedControl
   label="Post type"

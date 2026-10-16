@@ -46,7 +46,7 @@ Confirmado nas opções de cada dropdown:
 ## Escopo
 
 Nada fica de fora. Esta entrega cobre a fatia completa — banco, API e tela — e os itens que a
-sidebar do Vyzer ainda não tem:
+sidebar do Zynox ainda não tem:
 
 1. Dar função ao botão "Customize" (hoje sem `onClick`, em
    `apps/web/src/features/settings/preferences.tsx`, linha ~113): abre um `Dialog` reproduzindo a
@@ -54,9 +54,9 @@ sidebar do Vyzer ainda não tem:
    visibilidade por item e reordenação por drag-and-drop.
 2. Persistir de verdade a escolha (badge style, visibilidade por item, ordem) e fazer a sidebar
    real (`apps/web/src/layouts/app-shell/sidebar.tsx`) obedecer isso — nada de painel decorativo.
-3. Criar os itens que a sidebar do Vyzer ainda não tem, para que o painel listre exatamente os
+3. Criar os itens que a sidebar do Zynox ainda não tem, para que o painel listre exatamente os
    nove itens do Linear:
-   - **Drafts** (Personal): Vyzer não tem nenhuma noção de "issue não publicada" hoje — não há
+   - **Drafts** (Personal): Zynox não tem nenhuma noção de "issue não publicada" hoje — não há
      coluna nem tabela para isso em `packages/db/src/schema.ts`. Precisa de infra nova (ver
      "Fatia vertical").
    - **Members** (Workspace): link de sidebar apontando para uma listagem de membros do workspace.
@@ -91,7 +91,7 @@ sidebar do Vyzer ainda não tem:
 - Padrão: todos os itens existentes em "Always show", na ordem atual do código
   (`sidebar.tsx`); "Drafts"/"Members"/"Teams" entram com o padrão mais razoável dentro da lógica
   acima (ex.: "Members"/"Teams" como "Don't show" por padrão, espelhando o Linear).
-- Vazio: lista de Drafts vazia mostra o padrão de empty state já usado em outras listas do Vyzer
+- Vazio: lista de Drafts vazia mostra o padrão de empty state já usado em outras listas do Zynox
   (reaproveitar, não criar um novo).
 - Carregando: skeleton/spinner padrão do DS enquanto a preferência ainda não carregou da API.
 - Erro: toast padrão do DS se a gravação falhar (reaproveitar o padrão de erro já usado em outras

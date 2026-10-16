@@ -5,7 +5,7 @@
  * rótulo/controle das outras páginas de Settings. Depois vêm os grupos do Linear que o
  * responsável aprovou construir (29/09, D10): Estimates (o Select do Team; o campo `estimate`
  * fica na Issue e os extras — Extended, Allow zero, Default estimate — não foram confirmados ao
- * vivo, ficam para depois), Create issues by email (só configuração: o Vyzer ainda não recebe
+ * vivo, ficam para depois), Create issues by email (só configuração: o Zynox ainda não recebe
  * e-mail de verdade), Timezone e Other ("Enable detailed issue history").
  *
  * Salva sozinho, como o Workspace (pedido do responsável, 29/09): texto ao sair do campo ou com
@@ -16,7 +16,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type KeyboardEvent } from "react";
 import { Check, ChevronDown, Copy } from "lucide-react";
-import type { ApiClient, Team } from "@vyzer/contract";
+import type { ApiClient, Team } from "@zynox/contract";
 import {
   Button,
   Combobox,
@@ -30,7 +30,7 @@ import {
   useToast,
   type ListOption,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import {
   resetTeamIssueEmailMutationOptions,
   teamQueryOptions,
@@ -361,7 +361,7 @@ export function TeamGeneralPage() {
 
 /**
  * Endereço do Team para criar issues por e-mail: mostrar, copiar e regerar (o antigo deixa de
- * valer, por isso o `Confirm`). Só configuração: o Vyzer ainda não recebe e-mail de verdade
+ * valer, por isso o `Confirm`). Só configuração: o Zynox ainda não recebe e-mail de verdade
  * (falta a infraestrutura de recebimento, MX e leitura da mensagem), e a ajuda diz isso.
  */
 function IssueEmailAddressRow({

@@ -1,4 +1,4 @@
-import type { ApiClient } from "@vyzer/contract";
+import type { ApiClient } from "@zynox/contract";
 import { api } from "./api";
 
 /** Todas as preferências guardadas do Member atual (Preferences, spec preferences-persistence). */

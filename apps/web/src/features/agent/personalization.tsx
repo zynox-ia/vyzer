@@ -11,7 +11,7 @@ import {
   IconButton,
   SettingsEmptyRow,
   TextArea,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { SettingsGroup, SettingsRow } from "@/features/settings/settings-row";
 import { MCP_CONNECTORS, SKILLS } from "./data";
 

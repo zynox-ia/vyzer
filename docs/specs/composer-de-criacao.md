@@ -4,7 +4,7 @@ Issue: [VYZ-33](https://linear.app/zynox-dev/issue/VYZ-33/composer-de-criacao-ne
 
 ## Link do Figma
 
-[26:6859](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Vyzer?node-id=26-6859) "Issues -> New Issue". Aparece em uso no frame 1:7477, logo abaixo das abas de view.
+[26:6859](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Zynox?node-id=26-6859) "Issues -> New Issue". Aparece em uso no frame 1:7477, logo abaixo das abas de view.
 
 Medidas do nó:
 
@@ -55,7 +55,7 @@ Medidas do nó:
 
 ## Divergências esperadas (registrar em `.figma/`)
 
-- **Botão primário:** o accent do Linear (#5e6ad2) vira o Button primário do Vyzer (ADR-0013).
+- **Botão primário:** o accent do Linear (#5e6ad2) vira o Button primário do Zynox (ADR-0013).
 - **Botões:** os de 24 px com padding 8 passam para o Button de tamanho único (28 px, padding 12), como no rodapé do Display Options.
 - **Título:** 15 px vira o degrau da escala tipográfica mais próximo (decisão pela ADR-0013, registrada com a regra).
 - **Raio do cartão:** 10 vira `rounded-container`. A borda e a hairline passam para os tokens semânticos.

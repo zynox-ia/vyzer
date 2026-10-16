@@ -12,7 +12,7 @@ import {
   WORKSPACE_ID,
   workspace,
   type ApiKeyPermissions,
-} from "@vyzer/db";
+} from "@zynox/db";
 import { createRouter, router } from "./router";
 
 function testDatabaseUrl(): string {
@@ -166,7 +166,7 @@ describe("API key procedures", () => {
     await expect(createBearerApi(unknownToken).workspace.current()).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
-    await expect(createBearerApi("not-a-vyzer-key").workspace.current()).rejects.toMatchObject({
+    await expect(createBearerApi("not-a-zynox-key").workspace.current()).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
 

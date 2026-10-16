@@ -1,4 +1,4 @@
-import { Field as FormField, TextInput, type InputSize } from "@vyzer/design-system/components";
+import { Field as FormField, TextInput, type InputSize } from "@zynox/design-system/components";
 import { AtSign } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -176,7 +176,7 @@ export function Page() {
         ],
         dos: ["Largura proporcional ao conteúdo esperado", "Valide ao sair do campo ou ao enviar"],
         donts: ["Não valide a cada tecla", "Não use placeholder como rótulo"],
-        usage: `import { Field, TextInput } from "@vyzer/design-system/components";
+        usage: `import { Field, TextInput } from "@zynox/design-system/components";
 
 <Field label="Team name" description="Shown in the sidebar." required>
   <TextInput placeholder="Engineering" />

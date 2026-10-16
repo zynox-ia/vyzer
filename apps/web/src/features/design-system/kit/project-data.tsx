@@ -9,8 +9,8 @@ import {
   type LabelItem,
   type ListOption,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
-import { PriorityIcon, StatusIcon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { PriorityIcon, StatusIcon } from "@zynox/design-system/icons";
 import { UserRound } from "lucide-react";
 
 export type ProjectStatus =
@@ -131,10 +131,10 @@ export const TEAMS: ListOption[] = [
     hint: "ZYN",
     icon: <ProjectIcon value={{ kind: "icon", name: "Navigation", color: "cyan" }} />,
   },
-  // Fase 10 (Patterns): time do Vyzer no submenu "Team" do detalhe de issue (Figma 27:18970).
+  // Fase 10 (Patterns): time do Zynox no submenu "Team" do detalhe de issue (Figma 27:18970).
   {
-    value: "vyzer",
-    label: "Vyzer",
+    value: "atlas",
+    label: "Atlas",
     hint: "VYZ",
     icon: <ProjectIcon value={{ kind: "icon", name: "Boxes", color: "amber" }} />,
   },

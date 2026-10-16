@@ -41,9 +41,9 @@ import {
   ToolCallCollapsible,
   UserMessage,
   type ChatHistoryEntry,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
-import { cn } from "@vyzer/design-system/cn";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
+import { cn } from "@zynox/design-system/cn";
 import { useAgentChatStore } from "./agent-chat-store";
 import { CHAT_HISTORY, SKILLS, type SuggestionData } from "./data";
 import { useAgentConversation } from "./use-agent-conversation";
@@ -126,8 +126,8 @@ function FloatingWelcome({
       <div className="relative flex flex-col items-center gap-2 text-center">
         <Icon icon={MousePointer2} size="sm" className="text-secondary" />
         <div className="flex flex-col items-center gap-1">
-          <p className="text-label-md text-primary">Welcome to Vyzer</p>
-          <p className="text-body-sm text-secondary">Ask anything or tell Vyzer what you need</p>
+          <p className="text-label-md text-primary">Welcome to Zynox</p>
+          <p className="text-body-sm text-secondary">Ask anything or tell Zynox what you need</p>
         </div>
         <div className="mt-1 flex max-w-full flex-wrap justify-center gap-2">
           {suggestions.map((suggestion) => (
@@ -203,7 +203,7 @@ export function AgentConversationView({
     density === "floating"
       ? "@ to mention any issue, project, or document"
       : empty
-        ? "Ask Vyzer…"
+        ? "Ask Zynox…"
         : "Reply…";
 
   const selectHistory = (id: string) => {

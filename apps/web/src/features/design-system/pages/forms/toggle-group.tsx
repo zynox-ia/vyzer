@@ -1,8 +1,8 @@
 /**
  * Toggle Group (Figma 18:870, chips de "Display properties" em 18:722 e 18:930).
  */
-import { ToggleGroup, chipStyles } from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
+import { ToggleGroup, chipStyles } from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
 import { useId, useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { DEFAULT_PROPERTIES, LIST_PROPERTIES } from "../../kit/filter-data";
@@ -121,7 +121,7 @@ export function Page() {
           "Nomeie o grupo com um rótulo visível",
         ],
         donts: ["Não use para escolha exclusiva", "Não misture chips com e sem ícone"],
-        usage: `import { ToggleGroup } from "@vyzer/design-system/components";
+        usage: `import { ToggleGroup } from "@zynox/design-system/components";
 
 <span id={labelId}>Display properties</span>
 <ToggleGroup

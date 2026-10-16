@@ -12,9 +12,9 @@ import {
   PropertyButton,
   TextArea,
   TextInput,
-} from "@vyzer/design-system/components";
-import { formatDateValue, MONTHS_SHORT, type DateValue } from "@vyzer/design-system/date";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { formatDateValue, MONTHS_SHORT, type DateValue } from "@zynox/design-system/date";
+import { Icon } from "@zynox/design-system/icons";
 import { CalendarDays, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { issueById, rowProps } from "../../kit/issue-data";

@@ -2,7 +2,7 @@
  * Tree: sub-issues aninhadas com linhas-guia (Figma 40:687, a lista do Linear com sub-issues
  * aninhadas; a linha é a da lista de issues de 1:7477).
  */
-import { IssueRowContent, Tree } from "@vyzer/design-system/components";
+import { IssueRowContent, Tree } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { NESTED_ISSUES, parentValues, rowProps, type SubIssue } from "../../kit/issue-data";
@@ -130,7 +130,7 @@ export function Page() {
           "Não passe de três níveis",
           "Não desenhe as linhas com imagem: elas saem da estrutura",
         ],
-        usage: `import { IssueRowContent, Tree } from "@vyzer/design-system/components";
+        usage: `import { IssueRowContent, Tree } from "@zynox/design-system/components";
 
 <Tree
   label="Sub-issues"

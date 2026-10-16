@@ -8,13 +8,15 @@ import {
   notifyIssueEvent,
   resolveWorkspaceMember,
   workspace,
-} from "@vyzer/db";
+} from "@zynox/db";
 import { createRouter } from "./router";
 
 function testDatabaseUrl(): string {
   const url = process.env.TEST_DATABASE_URL;
   if (!url) {
-    throw new Error("Set TEST_DATABASE_URL (pointing at vyzer_teamd) to run Notification tests.");
+    throw new Error(
+      "Set TEST_DATABASE_URL (pointing at a migrated test database) to run Notification tests.",
+    );
   }
   return url;
 }
@@ -357,9 +359,48 @@ describe("notification.list and notification.unreadCount", () => {
     const list = await recipientApi.notification.list({ limit: 50 });
 
     expect(list.items.map((item) => item.issue?.id)).toEqual([issueTwo.id, issueOne.id]);
-    expect(list.items[0]).toMatchObject({ type: "assigned", actor: { id: owner.memberId } });
+    expect(list.items[0]).toMatchObject({
+      type: "assigned",
+      isPriority: true,
+      actor: { id: owner.memberId },
+    });
     void older;
     void newer;
+  });
+
+  it("marks assignment notifications as priority and filters them using the member's preference", async () => {
+    const owner = await createWorkspaceAndMember();
+    const ownerApi = createWorkspaceApi(owner.workspaceId, owner.memberId);
+    const created = await createFixtureTeam(ownerApi, "Priority Inbox Team");
+    const recipient = await createMemberInWorkspace(owner.workspaceId);
+    const recipientApi = createWorkspaceApi(owner.workspaceId, recipient.id);
+    const issue = await ownerApi.issue.create({ team: created.slug, title: "Priority assignment" });
+
+    await fixtureAssigneeEvent({
+      workspaceId: owner.workspaceId,
+      issueId: issue.id,
+      actorId: owner.memberId,
+      to: recipient.id,
+    });
+
+    const priorityList = await recipientApi.notification.list({ priorityOnly: true, limit: 50 });
+    expect(priorityList.items).toHaveLength(1);
+    expect(priorityList.items[0]).toMatchObject({ type: "assigned", isPriority: true });
+    expect(await recipientApi.notification.list({ otherOnly: true, limit: 50 })).toMatchObject({
+      items: [],
+    });
+
+    await recipientApi.notificationTypePreferences.update({
+      channel: "priority",
+      items: [{ type: "assignments", enabled: false }],
+    });
+
+    const regularList = await recipientApi.notification.list({ limit: 50 });
+    expect(regularList.items).toMatchObject([{ type: "assigned", isPriority: false }]);
+    const filteredList = await recipientApi.notification.list({ priorityOnly: true, limit: 50 });
+    expect(filteredList.items).toEqual([]);
+    const otherList = await recipientApi.notification.list({ otherOnly: true, limit: 50 });
+    expect(otherList.items).toMatchObject([{ type: "assigned", isPriority: false }]);
   });
 
   it("order=oldest reverses the default newest-first order", async () => {

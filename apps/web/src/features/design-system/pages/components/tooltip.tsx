@@ -7,7 +7,7 @@ import {
   Tooltip,
   TooltipProvider,
   TooltipSurface,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Filter, Link2, SlidersHorizontal, SquarePen } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -132,7 +132,7 @@ export function Page() {
           "Não use tooltip em controle desabilitado sem foco (ninguém chega a ele pelo teclado)",
           "Não repita um rótulo que já está visível",
         ],
-        usage: `import { Tooltip, TooltipProvider } from "@vyzer/design-system/components";
+        usage: `import { Tooltip, TooltipProvider } from "@zynox/design-system/components";
 
 // Raiz da aplicação
 <TooltipProvider>

@@ -10,7 +10,7 @@ import {
   wcagContrast,
   withAlpha,
   type Rgba,
-} from "@vyzer/design-system/contrast";
+} from "@zynox/design-system/contrast";
 import { useEffectEvent, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { THEMES, ThemeFrame, type ThemeName } from "./theme-frame";
 

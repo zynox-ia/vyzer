@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { NotificationListInput } from "@vyzer/contract";
+import type { NotificationListInput } from "@zynox/contract";
 import { api } from "./api";
 
 export const notificationsQueryOptions = (input: NotificationListInput) =>

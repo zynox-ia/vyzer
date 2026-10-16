@@ -2,7 +2,7 @@
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { ApiClient } from "@vyzer/contract";
+import type { ApiClient } from "@zynox/contract";
 
 const link = new RPCLink({ url: `${window.location.origin}/api/rpc` });
 

@@ -1,7 +1,7 @@
 /**
  * Catálogo do Command Menu (⌘K), copiado do Linear como ele funciona hoje: lido no app (Ctrl+K em
  * My issues e com uma issue aberta, lista inteira), conferido com o Figma 38:2 no trecho que ele
- * cobre e com a documentação pública (ciclo, estimativa, sub-issue). "Linear" vira "Vyzer" onde é
+ * cobre e com a documentação pública (ciclo, estimativa, sub-issue). "Linear" vira "Zynox" onde é
  * o nome do produto. Ícones lucide equivalentes (o Linear usa ícones genéricos por família, como a
  * seta dos "Go to…"); status, prioridade, pessoas, projetos e labels vêm dos kits. Só para a
  * documentação.
@@ -11,8 +11,8 @@ import {
   ColorDot,
   ProjectIcon,
   type CommandItemContentProps,
-} from "@vyzer/design-system/components";
-import { Icon, StatusIcon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon, StatusIcon } from "@zynox/design-system/icons";
 import {
   AlarmClock,
   AppWindow,
@@ -172,12 +172,12 @@ export const FOCUS_ISSUE = FOCUS;
 /** Chip de contexto acima da busca (o "VYZ-31 ⋅ título" do Linear). */
 export const FOCUS_CHIP = `${FOCUS.id} · ${FOCUS.title}`;
 
-/** Times do workspace: o Zynox dos kits e o Vyzer (raio, como o ícone do time no Linear). */
+/** Times do workspace: o Zynox dos kits e o Zynox (raio, como o ícone do time no Linear). */
 const WORKSPACE_TEAMS = [
   ...TEAMS,
   {
-    value: "vyzer",
-    label: "Vyzer",
+    value: "atlas",
+    label: "Atlas",
     hint: "VYZ",
     icon: <ProjectIcon value={{ kind: "icon", name: "Zap", color: "amber" }} />,
   },
@@ -206,7 +206,7 @@ const peopleEntries = (checked: string[] = []): CommandEntry[] =>
     checked: checked.includes(p.name),
   }));
 
-const AGENTS: CommandEntry[] = ["Codex", "Cursor", "Vyzer"].map((name) => ({
+const AGENTS: CommandEntry[] = ["Codex", "Cursor", "Zynox"].map((name) => ({
   label: name,
   detail: "Agent",
   icon: <Avatar name={name} size="sm" />,
@@ -482,7 +482,7 @@ export const ROOT: CommandSection[] = [
   {
     heading: "AI panel",
     items: [
-      { label: "Ask Vyzer", icon: Sparkles, ...plus("Ctrl", "J"), keywords: ["ai", "assistant"] },
+      { label: "Ask Zynox", icon: Sparkles, ...plus("Ctrl", "J"), keywords: ["ai", "assistant"] },
       { label: "Open agent chat…", icon: History, page: "agent-chat" },
     ],
   },
@@ -525,9 +525,9 @@ export const ROOT: CommandSection[] = [
     items: [
       { label: "Contact support", icon: CircleHelp, keywords: ["help"] },
       { label: "Send feedback", icon: MessageSquare },
-      { label: "Open Vyzer Documentation", icon: BookOpen, keywords: ["help", "docs"] },
+      { label: "Open Zynox Documentation", icon: BookOpen, keywords: ["help", "docs"] },
       { label: "Open API Documentation", icon: BookOpen, keywords: ["docs"] },
-      { label: "Vyzer status", icon: CircleAlert, keywords: ["uptime", "incident"] },
+      { label: "Zynox status", icon: CircleAlert, keywords: ["uptime", "incident"] },
       { label: "Report performance problem", icon: Gauge },
       {
         label: "Open Keyboard Shortcuts Cheat Sheet",
@@ -857,7 +857,7 @@ export const PAGES: Record<string, CommandPage> = {
     title: "Change interface theme",
     placeholder: "Change interface theme to…",
     searchable: true,
-    // O Vyzer tem dois temas (ADR-0013); os demais temas do Linear ficam de fora.
+    // O Zynox tem dois temas (ADR-0013); os demais temas do Linear ficam de fora.
     sections: [
       {
         items: [

@@ -9,7 +9,7 @@ import { iconSizeClass, type IconSize } from "./Icon";
 export type ProjectStatusType = "backlog" | "planned" | "started" | "completed" | "canceled";
 
 /**
- * Cor por tipo, na paleta do Vyzer (ADR-0013), seguindo as matizes do Figma: laranja, claro,
+ * Cor por tipo, na paleta do Zynox (ADR-0013), seguindo as matizes do Figma: laranja, claro,
  * amarelo, índigo e cinza.
  */
 const typeClass: Record<ProjectStatusType, string> = {

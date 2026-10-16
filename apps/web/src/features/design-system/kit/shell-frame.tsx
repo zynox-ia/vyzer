@@ -7,7 +7,7 @@
  */
 import type { MouseEvent, ReactNode } from "react";
 import { AppShellProvider } from "@/layouts/app-shell/context";
-import { cn } from "@vyzer/design-system/cn";
+import { cn } from "@zynox/design-system/cn";
 import type { ThemeName } from "./theme-frame";
 
 /** Evita que um link dentro de uma moldura de documentação navegue a página de verdade. */

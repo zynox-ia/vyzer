@@ -4,8 +4,8 @@
  * um componente novo — reaproveita FormLabel e HelperText do Field.
  */
 import { useId, type ReactNode } from "react";
-import { FormLabel, FormMessage, HelperText } from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
+import { FormLabel, FormMessage, HelperText } from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
 
 export function SettingsRow({
   label,
@@ -14,7 +14,8 @@ export function SettingsRow({
   children,
 }: {
   label: string;
-  description?: string;
+  /** Texto de ajuda; pode levar um link (ex.: "priority notification settings→"). */
+  description?: ReactNode;
   /** Erro de validação do controle: substitui a ajuda, como no Field (FormMessage). */
   error?: string;
   children: (id: string) => ReactNode;

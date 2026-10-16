@@ -4,7 +4,7 @@ import {
   HealthBadge,
   type BadgeTone,
   type Health,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -139,7 +139,7 @@ export function Page() {
         content: ["Rótulos de uma ou duas palavras, sentence case."],
         dos: ["Use o terracota do Counter só para não lidos"],
         donts: ["Não use Badge colorido para decoração"],
-        usage: `import { Badge, Counter, HealthBadge } from "@vyzer/design-system/components";
+        usage: `import { Badge, Counter, HealthBadge } from "@zynox/design-system/components";
 
 <Badge tone="success">Done</Badge>
 <HealthBadge health="at-risk" />

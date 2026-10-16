@@ -7,7 +7,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { setThemePreference } from "@vyzer/design-system/theme";
+import { setThemePreference } from "@zynox/design-system/theme";
 import { memberPreferencesQueryOptions } from "@/services/member-preferences";
 
 export function useApplyMemberPreferences() {

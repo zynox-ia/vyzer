@@ -1,5 +1,5 @@
 /**
- * Junta classes e resolve conflitos do Tailwind conhecendo os tokens do Vyzer.
+ * Junta classes e resolve conflitos do Tailwind conhecendo os tokens do Zynox.
  * Sem esta configuração, o tailwind-merge confundiria `text-body-sm` (tamanho) com
  * `text-primary` (cor) e descartaria um dos dois.
  */

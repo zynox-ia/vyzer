@@ -3,8 +3,8 @@ import { Buffer } from "node:buffer";
 import { readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
-import { createDb, member, resolveWorkspaceMember, WORKSPACE_ID, workspace } from "@vyzer/db";
-import { workspaceLogoUploadOutputSchema } from "@vyzer/contract";
+import { createDb, member, resolveWorkspaceMember, WORKSPACE_ID, workspace } from "@zynox/db";
+import { workspaceLogoUploadOutputSchema } from "@zynox/contract";
 import { createApp } from "./app";
 import {
   MAX_WORKSPACE_LOGO_SIZE,

@@ -65,6 +65,86 @@ export const workspace = pgTable(
   ],
 );
 
+/**
+ * Better Auth owns authentication identity. Workspace membership stays in Zynox's
+ * domain model below, so one authenticated user may belong to more than one
+ * Workspace without duplicating credentials.
+ */
+export const authUser = pgTable(
+  "auth_user",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("auth_user_email_unique").on(table.email)],
+);
+
+export const authSession = pgTable(
+  "auth_session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    token: text("token").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUser.id, { onDelete: "cascade" }),
+    activeWorkspaceId: uuid("active_workspace_id").references(() => workspace.id, {
+      onDelete: "set null",
+    }),
+  },
+  (table) => [
+    uniqueIndex("auth_session_token_unique").on(table.token),
+    index("auth_session_user_active_workspace_index").on(table.userId, table.activeWorkspaceId),
+  ],
+);
+
+export const authAccount = pgTable(
+  "auth_account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUser.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("auth_account_provider_account_unique").on(table.providerId, table.accountId),
+    index("auth_account_user_index").on(table.userId),
+  ],
+);
+
+export const authVerification = pgTable(
+  "auth_verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("auth_verification_identifier_index").on(table.identifier)],
+);
+
 export const member = pgTable(
   "member",
   {
@@ -72,14 +152,73 @@ export const member = pgTable(
     workspaceId: uuid("workspace_id")
       .notNull()
       .references(() => workspace.id, { onDelete: "cascade" }),
+    authUserId: text("auth_user_id").references(() => authUser.id, { onDelete: "set null" }),
     name: text("name").notNull(),
     email: text("email").notNull(),
     role: text("role").notNull(),
+    title: text("title"),
+    username: text("username"),
+    avatarUrl: text("avatar_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     uniqueIndex("member_id_workspace_unique").on(table.id, table.workspaceId),
     uniqueIndex("member_workspace_email_unique").on(table.workspaceId, table.email),
+    uniqueIndex("member_workspace_username_unique").on(table.workspaceId, table.username),
+    index("member_auth_user_workspace_index").on(table.authUserId, table.workspaceId),
+  ],
+);
+
+/** Immutable audit trail for cross-cutting security-sensitive operations. */
+export const auditEvent = pgTable(
+  "audit_event",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id").references(() => workspace.id, { onDelete: "set null" }),
+    actorMemberId: uuid("actor_member_id").references(() => member.id, { onDelete: "set null" }),
+    operationId: uuid("operation_id"),
+    type: text("type").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id"),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("audit_event_workspace_created_index").on(table.workspaceId, table.createdAt),
+    index("audit_event_actor_created_index").on(table.actorMemberId, table.createdAt),
+  ],
+);
+
+/**
+ * Capability record consumed by Desktop exactly once. Device registration and
+ * the launcher itself are intentionally delivered by the Desktop tickets.
+ */
+export const desktopIntent = pgTable(
+  "desktop_intent",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    deviceId: text("device_id").notNull(),
+    toolId: text("tool_id").notNull(),
+    issueId: uuid("issue_id").references(() => issue.id, { onDelete: "set null" }),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("desktop_intent_token_hash_unique").on(table.tokenHash),
+    index("desktop_intent_member_device_expiry_index").on(
+      table.workspaceId,
+      table.memberId,
+      table.deviceId,
+      table.expiresAt,
+    ),
   ],
 );
 
@@ -192,6 +331,65 @@ export const memberCodeLineHeight = pgEnum("member_code_line_height", [
 ]);
 export type MemberCodeLineHeight = (typeof memberCodeLineHeight.enumValues)[number];
 
+export const notificationEmailFormat = pgEnum("notification_email_format", ["digest", "immediate"]);
+export type NotificationEmailFormat = (typeof notificationEmailFormat.enumValues)[number];
+
+export const githubMergeStrategy = pgEnum("github_merge_strategy", ["merge", "squash", "rebase"]);
+export type GithubMergeStrategy = (typeof githubMergeStrategy.enumValues)[number];
+
+export const githubPullRequestState = pgEnum("github_pull_request_state", [
+  "draft",
+  "open",
+  "merged",
+  "closed",
+]);
+export type GithubPullRequestState = (typeof githubPullRequestState.enumValues)[number];
+
+export const githubChecksStatus = pgEnum("github_checks_status", ["pending", "success", "failure"]);
+export type GithubChecksStatus = (typeof githubChecksStatus.enumValues)[number];
+
+export const githubReviewDecision = pgEnum("github_review_decision", [
+  "approved",
+  "changes_requested",
+  "review_required",
+]);
+export type GithubReviewDecision = (typeof githubReviewDecision.enumValues)[number];
+
+export const githubInstallationStatus = pgEnum("github_installation_status", [
+  "active",
+  "suspended",
+  "deleted",
+]);
+export type GithubInstallationStatus = (typeof githubInstallationStatus.enumValues)[number];
+
+export const notificationPreferenceChannel = pgEnum("notification_preference_channel", [
+  "priority",
+  "desktop",
+  "mobile",
+  "email",
+  "slack",
+]);
+export type NotificationPreferenceChannel =
+  (typeof notificationPreferenceChannel.enumValues)[number];
+
+export const notificationPreferenceType = pgEnum("notification_preference_type", [
+  "assignments",
+  "status-changes",
+  "comments-and-replies",
+  "mentions",
+  "reactions",
+  "subscriptions",
+  "document-changes",
+  "updates",
+  "reminders-and-deadlines",
+  "loops",
+  "apps-and-integrations",
+  "billing",
+  "reviews",
+  "triage",
+]);
+export type NotificationPreferenceType = (typeof notificationPreferenceType.enumValues)[number];
+
 export const memberSidebarPreference = pgTable(
   "member_sidebar_preference",
   {
@@ -280,6 +478,107 @@ export const memberPreference = pgTable(
   ],
 );
 
+export const notificationPreference = pgTable(
+  "notification_preference",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id").notNull(),
+    priorityInboxEnabled: boolean("priority_inbox_enabled").notNull().default(false),
+    emailEnabled: boolean("email_enabled").notNull().default(true),
+    emailFormat: notificationEmailFormat("email_format").notNull().default("digest"),
+    emailDigestDelayLowPriority: boolean("email_digest_delay_low_priority").notNull().default(true),
+    emailDigestUrgentImmediate: boolean("email_digest_urgent_immediate").notNull().default(true),
+    showChangelogInSidebar: boolean("show_changelog_in_sidebar").notNull().default(true),
+    changelogNewsletter: boolean("changelog_newsletter").notNull().default(false),
+    marketingAndOnboarding: boolean("marketing_and_onboarding").notNull().default(true),
+    inviteAccepted: boolean("invite_accepted").notNull().default(true),
+    privacyAndLegalUpdates: boolean("privacy_and_legal_updates").notNull().default(true),
+    dataProcessingAgreement: boolean("data_processing_agreement").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("notification_preference_member_unique").on(table.memberId),
+    foreignKey({
+      name: "notification_preference_member_workspace_fk",
+      columns: [table.memberId, table.workspaceId],
+      foreignColumns: [member.id, member.workspaceId],
+    }).onDelete("cascade"),
+  ],
+);
+
+export const notificationTypePreference = pgTable(
+  "notification_type_preference",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id").notNull(),
+    channel: notificationPreferenceChannel("channel").notNull(),
+    type: notificationPreferenceType("type").notNull(),
+    enabled: boolean("enabled").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("notification_type_preference_member_channel_type_unique").on(
+      table.memberId,
+      table.channel,
+      table.type,
+    ),
+    foreignKey({
+      name: "notification_type_preference_member_workspace_fk",
+      columns: [table.memberId, table.workspaceId],
+      foreignColumns: [member.id, member.workspaceId],
+    }).onDelete("cascade"),
+  ],
+);
+
+export const codeReviewSettings = pgTable(
+  "code_review_settings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    enabled: boolean("enabled").notNull().default(false),
+    autoConvertDraftPullRequests: boolean("auto_convert_draft_pull_requests")
+      .notNull()
+      .default(false),
+    mergeStrategy: githubMergeStrategy("merge_strategy").notNull().default("merge"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("code_review_settings_workspace_unique").on(table.workspaceId)],
+);
+
+export const githubConnection = pgTable(
+  "github_connection",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id").notNull(),
+    githubUserId: text("github_user_id").notNull(),
+    githubLogin: text("github_login").notNull(),
+    githubAvatarUrl: text("github_avatar_url"),
+    connectedAt: timestamp("connected_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("github_connection_member_unique").on(table.memberId),
+    foreignKey({
+      name: "github_connection_member_workspace_fk",
+      columns: [table.memberId, table.workspaceId],
+      foreignColumns: [member.id, member.workspaceId],
+    }).onDelete("cascade"),
+  ],
+);
+
 export const apiKey = pgTable(
   "api_key",
   {
@@ -299,6 +598,27 @@ export const apiKey = pgTable(
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
   },
   (table) => [uniqueIndex("api_key_token_hash_unique").on(table.tokenHash)],
+);
+
+export const githubInstallation = pgTable(
+  "github_installation",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    installationId: text("installation_id").notNull(),
+    accountId: text("account_id").notNull(),
+    accountLogin: text("account_login").notNull(),
+    accountType: text("account_type").notNull(),
+    installedByMemberId: uuid("installed_by_member_id").references(() => member.id, {
+      onDelete: "set null",
+    }),
+    status: githubInstallationStatus("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("github_installation_id_unique").on(table.installationId)],
 );
 
 type TeamIconValue = WorkspaceIconValue;
@@ -330,7 +650,7 @@ export const team = pgTable(
     issueEmailAddress: text("issue_email_address")
       .notNull()
       .default(
-        sql`('team-' || substr(md5(random()::text || clock_timestamp()::text), 1, 12) || '@intake.vyzer.app.br')`,
+        sql`('team-' || substr(md5(random()::text || clock_timestamp()::text), 1, 12) || '@intake.zynox.app.br')`,
       ),
     defaultStatusId: uuid("default_status_id").references((): AnyPgColumn => workflowStatus.id, {
       onDelete: "set null",
@@ -667,9 +987,7 @@ export const issue = pgTable(
       .references(() => workflowStatus.id, { onDelete: "restrict" }),
     priority: integer("priority").$type<IssuePriority>().notNull().default(0),
     assigneeId: uuid("assignee_id").references(() => member.id, { onDelete: "set null" }),
-    creatorId: uuid("creator_id")
-      .notNull()
-      .references(() => member.id),
+    creatorId: uuid("creator_id").references(() => member.id, { onDelete: "set null" }),
     parentId: uuid("parent_id").references((): AnyPgColumn => issue.id, { onDelete: "set null" }),
     dueDate: date("due_date", { mode: "string" }),
     sortOrder: integer("sort_order").notNull().default(0),
@@ -690,6 +1008,41 @@ export const issue = pgTable(
   ],
 );
 
+export const pullRequest = pgTable(
+  "pull_request",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    installationId: uuid("installation_id")
+      .notNull()
+      .references(() => githubInstallation.id, { onDelete: "cascade" }),
+    issueId: uuid("issue_id").references(() => issue.id, { onDelete: "set null" }),
+    repoFullName: text("repo_full_name").notNull(),
+    number: integer("number").notNull(),
+    title: text("title").notNull(),
+    authorGithubLogin: text("author_github_login").notNull(),
+    url: text("url").notNull(),
+    state: githubPullRequestState("state").notNull(),
+    headBranch: text("head_branch").notNull(),
+    checksStatus: githubChecksStatus("checks_status"),
+    reviewDecision: githubReviewDecision("review_decision"),
+    githubUpdatedAt: timestamp("github_updated_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check("pull_request_number_check", sql`${table.number} > 0`),
+    uniqueIndex("pull_request_installation_repo_number_unique").on(
+      table.installationId,
+      table.repoFullName,
+      table.number,
+    ),
+    index("pull_request_workspace_issue_index").on(table.workspaceId, table.issueId),
+  ],
+);
+
 export const issueEvent = pgTable(
   "issue_event",
   {
@@ -700,9 +1053,7 @@ export const issueEvent = pgTable(
     issueId: uuid("issue_id")
       .notNull()
       .references(() => issue.id, { onDelete: "cascade" }),
-    actorId: uuid("actor_id")
-      .notNull()
-      .references(() => member.id),
+    actorId: uuid("actor_id").references(() => member.id, { onDelete: "set null" }),
     type: text("type").$type<IssueEventType>().notNull(),
     payload: jsonb("payload").$type<IssueEventPayload>().notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -779,9 +1130,7 @@ export const issueLink = pgTable(
       .references(() => issue.id, { onDelete: "cascade" }),
     url: text("url").notNull(),
     title: text("title"),
-    creatorId: uuid("creator_id")
-      .notNull()
-      .references(() => member.id, { onDelete: "cascade" }),
+    creatorId: uuid("creator_id").references(() => member.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
@@ -856,11 +1205,21 @@ export const notification = pgTable(
   ],
 );
 
-export const workspaceRelations = relations(workspace, ({ many }) => ({
+export const workspaceRelations = relations(workspace, ({ many, one }) => ({
+  authSessions: many(authSession),
   members: many(member),
   memberSidebarPreferences: many(memberSidebarPreference),
   sidebarItemPreferences: many(sidebarItemPreference),
   memberPreferences: many(memberPreference),
+  notificationPreferences: many(notificationPreference),
+  notificationTypePreferences: many(notificationTypePreference),
+  codeReviewSettings: one(codeReviewSettings, {
+    fields: [workspace.id],
+    references: [codeReviewSettings.workspaceId],
+  }),
+  githubConnections: many(githubConnection),
+  githubInstallations: many(githubInstallation),
+  pullRequests: many(pullRequest),
   teams: many(team),
   apiKeys: many(apiKey),
   issues: many(issue),
@@ -869,9 +1228,30 @@ export const workspaceRelations = relations(workspace, ({ many }) => ({
   labels: many(label),
   notifications: many(notification),
   projects: many(project),
+  auditEvents: many(auditEvent),
+  desktopIntents: many(desktopIntent),
+}));
+
+export const authUserRelations = relations(authUser, ({ many }) => ({
+  sessions: many(authSession),
+  accounts: many(authAccount),
+  members: many(member),
+}));
+
+export const authSessionRelations = relations(authSession, ({ one }) => ({
+  user: one(authUser, { fields: [authSession.userId], references: [authUser.id] }),
+  activeWorkspace: one(workspace, {
+    fields: [authSession.activeWorkspaceId],
+    references: [workspace.id],
+  }),
+}));
+
+export const authAccountRelations = relations(authAccount, ({ one }) => ({
+  user: one(authUser, { fields: [authAccount.userId], references: [authUser.id] }),
 }));
 
 export const memberRelations = relations(member, ({ many, one }) => ({
+  authUser: one(authUser, { fields: [member.authUserId], references: [authUser.id] }),
   workspace: one(workspace, {
     fields: [member.workspaceId],
     references: [workspace.id],
@@ -883,6 +1263,16 @@ export const memberRelations = relations(member, ({ many, one }) => ({
     fields: [member.id],
     references: [memberPreference.memberId],
   }),
+  notificationPreferences: one(notificationPreference, {
+    fields: [member.id],
+    references: [notificationPreference.memberId],
+  }),
+  notificationTypePreferences: many(notificationTypePreference),
+  githubConnection: one(githubConnection, {
+    fields: [member.id],
+    references: [githubConnection.memberId],
+  }),
+  githubInstallations: many(githubInstallation),
   createdIssueDrafts: many(issueDraft),
   apiKeys: many(apiKey),
   assignedIssues: many(issue, { relationName: "issueAssignee" }),
@@ -892,6 +1282,19 @@ export const memberRelations = relations(member, ({ many, one }) => ({
   receivedNotifications: many(notification, { relationName: "notificationRecipient" }),
   notificationsAsActor: many(notification, { relationName: "notificationActor" }),
   projects: many(project),
+  auditEvents: many(auditEvent),
+  desktopIntents: many(desktopIntent),
+}));
+
+export const auditEventRelations = relations(auditEvent, ({ one }) => ({
+  workspace: one(workspace, { fields: [auditEvent.workspaceId], references: [workspace.id] }),
+  actorMember: one(member, { fields: [auditEvent.actorMemberId], references: [member.id] }),
+}));
+
+export const desktopIntentRelations = relations(desktopIntent, ({ one }) => ({
+  workspace: one(workspace, { fields: [desktopIntent.workspaceId], references: [workspace.id] }),
+  member: one(member, { fields: [desktopIntent.memberId], references: [member.id] }),
+  issue: one(issue, { fields: [desktopIntent.issueId], references: [issue.id] }),
 }));
 
 export const apiKeyRelations = relations(apiKey, ({ one }) => ({
@@ -903,6 +1306,36 @@ export const apiKeyRelations = relations(apiKey, ({ one }) => ({
     fields: [apiKey.memberId],
     references: [member.id],
   }),
+}));
+
+export const codeReviewSettingsRelations = relations(codeReviewSettings, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [codeReviewSettings.workspaceId],
+    references: [workspace.id],
+  }),
+}));
+
+export const githubConnectionRelations = relations(githubConnection, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [githubConnection.workspaceId],
+    references: [workspace.id],
+  }),
+  member: one(member, {
+    fields: [githubConnection.memberId, githubConnection.workspaceId],
+    references: [member.id, member.workspaceId],
+  }),
+}));
+
+export const githubInstallationRelations = relations(githubInstallation, ({ many, one }) => ({
+  workspace: one(workspace, {
+    fields: [githubInstallation.workspaceId],
+    references: [workspace.id],
+  }),
+  installedByMember: one(member, {
+    fields: [githubInstallation.installedByMemberId],
+    references: [member.id],
+  }),
+  pullRequests: many(pullRequest),
 }));
 
 export const teamRelations = relations(team, ({ many, one }) => ({
@@ -955,6 +1388,31 @@ export const memberPreferenceRelations = relations(memberPreference, ({ one }) =
   }),
 }));
 
+export const notificationPreferenceRelations = relations(notificationPreference, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [notificationPreference.workspaceId],
+    references: [workspace.id],
+  }),
+  member: one(member, {
+    fields: [notificationPreference.memberId, notificationPreference.workspaceId],
+    references: [member.id, member.workspaceId],
+  }),
+}));
+
+export const notificationTypePreferenceRelations = relations(
+  notificationTypePreference,
+  ({ one }) => ({
+    workspace: one(workspace, {
+      fields: [notificationTypePreference.workspaceId],
+      references: [workspace.id],
+    }),
+    member: one(member, {
+      fields: [notificationTypePreference.memberId, notificationTypePreference.workspaceId],
+      references: [member.id, member.workspaceId],
+    }),
+  }),
+);
+
 export const workflowStatusRelations = relations(workflowStatus, ({ many, one }) => ({
   team: one(team, {
     fields: [workflowStatus.teamId],
@@ -998,6 +1456,22 @@ export const issueRelations = relations(issue, ({ many, one }) => ({
   incomingRelations: many(issueRelation, { relationName: "issueRelationTarget" }),
   links: many(issueLink),
   notifications: many(notification),
+  pullRequests: many(pullRequest),
+}));
+
+export const pullRequestRelations = relations(pullRequest, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [pullRequest.workspaceId],
+    references: [workspace.id],
+  }),
+  installation: one(githubInstallation, {
+    fields: [pullRequest.installationId],
+    references: [githubInstallation.id],
+  }),
+  issue: one(issue, {
+    fields: [pullRequest.issueId],
+    references: [issue.id],
+  }),
 }));
 
 export const labelRelations = relations(label, ({ many, one }) => ({

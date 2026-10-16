@@ -20,7 +20,7 @@ const read = (locale, file) => readFileSync(join(root, locale, file));
 
 export function emojibaseData() {
   return {
-    name: "vyzer:emojibase-data",
+    name: "zynox:emojibase-data",
     configureServer(server) {
       server.middlewares.use(EMOJIBASE_PATH, (req, res, next) => {
         const [locale, file] = (req.url ?? "").split("?")[0].replace(/^\//, "").split("/");

@@ -2,7 +2,7 @@
  * Todas as páginas de /design-system, nos dois temas, num Chromium real: a página abre e o
  * axe-core não encontra violações de acessibilidade (inclui contraste de texto).
  */
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import axe from "axe-core";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";

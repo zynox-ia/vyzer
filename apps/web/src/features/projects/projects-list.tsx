@@ -1,26 +1,18 @@
 /**
- * Lista de projetos (Figma 25:4964; Linear ao vivo, `/zynox-dev/projects/all` e
- * `/zynox-dev/team/:team/projects/all`, medido lado a lado 1293 px, tema escuro, 28/09): mesma
- * tela para "Projects" do workspace (sem `teamSlug`, todos os projetos, título só "Projects",
- * sem breadcrumb nem estrela) e "Projects" de um time (com `teamSlug`, só os daquele time,
- * breadcrumb "[ícone do time] Time › Projects" + estrela de favorito, medido ao vivo) — o Linear
- * usa o mesmo componente para as duas, só o escopo (e o cabeçalho da linha 1) muda.
+ * Lista de projetos do workspace (Figma 25:4964; Linear ao vivo, `/zynox-dev/projects/all`,
+ * medido 1293 px, tema escuro, 28/09): "Projects", sem breadcrumb nem estrela — a versão
+ * escopada por Team (`/teams/:team/projects`) saiu da sidebar na Missão 02 (fora do sitemap) e
+ * foi removida (`TeamProjectsListPage`, `use-workspace-team.ts`).
  *
  * Cabeçalho em duas linhas, como medido ao vivo (não a TopBar genérica inteira — o arranjo da
  * linha 1 é outro, "New project" fica nela, não nas ações da segunda linha):
- * - Linha 1 (44 px, hairline embaixo): título (workspace) ou breadcrumb do time + estrela
- *   (`Breadcrumbs` do `top-bar.tsx`, a mesma peça do projeto aberto) à esquerda; "New project"
- *   (Button ghost, sem fundo, texto secundário) à direita.
+ * - Linha 1 (44 px, hairline embaixo): título "Projects" à esquerda; "New project" (Button
+ *   ghost, sem fundo, texto secundário) à direita.
  * - Linha 2 (44 px, sem hairline): "All projects" (pill selecionada) + "+" (Add new view) à
  *   esquerda; Add filter, Display options e o toggle do painel de detalhes à direita, em
  *   IconButton secondary (fundo sutil preenchido), 6 px entre eles.
  * Sem uma terceira linha: o cabeçalho da tabela começa logo depois (o Linear não tem "Board
  * layout" na lista de projetos).
- *
- * Ícone do time no breadcrumb: `ProjectIcon` colorido (o mesmo modelo do ícone de projeto),
- * como a sidebar usa em "Your teams" — o Linear tem cor própria por time (ciano no Zynox,
- * medido ao vivo); dado de exemplo em `project-data.tsx`, `TEAMS`, o modelo real fica para
- * quando houver a feature de times de verdade.
  *
  * Filtros (Health, Lead) e agrupamento (Status, Health, Lead, Priority) na URL (regra 8) e
  * aplicados de verdade à lista — corrigido na revisão de código r3 (bloqueantes 2 e 3), que
@@ -39,13 +31,12 @@ import {
   ListFilter,
   Plus,
   SlidersHorizontal,
-  Star,
   TriangleAlert,
   UserRoundPen,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { Link, useParams, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import {
   Alert,
   Avatar,
@@ -71,21 +62,19 @@ import {
   type Health,
   type ListOption,
   type SortDirection,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import {
   Icon,
   PriorityIcon,
   ProjectStatusIcon,
   type Priority,
   type ProjectStatusType,
-} from "@vyzer/design-system/icons";
-import { cn } from "@vyzer/design-system/cn";
-import { Breadcrumbs } from "@/layouts/app-shell/top-bar";
+} from "@zynox/design-system/icons";
+import { cn } from "@zynox/design-system/cn";
 import { useAppShell } from "@/layouts/app-shell/use-app-shell";
 import { projectsQueryOptions } from "@/services/projects";
 import { formatTargetDate, toProjectRow } from "./project-adapter";
 import { type Project } from "./project-data";
-import { useWorkspaceTeam } from "./use-workspace-team";
 
 /** Rótulo e ícone de cada saúde (o mesmo texto e os mesmos ícones do `HealthBadge`, que não
  * exporta o mapa — os quatro valores lucide são os dela, badge.tsx). */
@@ -256,18 +245,10 @@ function ProjectsSkeleton() {
   );
 }
 
-export function ProjectsListPage({
-  teamSlug,
-  teamName,
-}: {
-  /** Só os projetos deste time; sem ele, todos os projetos do workspace. */
-  teamSlug?: string;
-  teamName?: string;
-}) {
+export function ProjectsListPage() {
   const [params, setParams] = useSearchParams();
   const { toggleRightPanel } = useAppShell();
-  // Os projetos vêm da API (a lista de um time já vem filtrada pelo servidor).
-  const projectsQuery = useQuery(projectsQueryOptions(teamSlug));
+  const projectsQuery = useQuery(projectsQueryOptions());
   const scoped = useMemo(() => (projectsQuery.data ?? []).map(toProjectRow), [projectsQuery.data]);
 
   const filters = readFilters(params);
@@ -317,10 +298,6 @@ export function ProjectsListPage({
   };
   const sortState = (column: SortableColumn): SortDirection | false =>
     orderColumn === column ? orderDir : false;
-  // Mesmo mecanismo da estrela do projeto aberto (project-detail.tsx): estado na URL.
-  const favorite = params.get("favorite") === "1";
-  const setFavorite = (value: boolean) => updateParams({ favorite: value ? "1" : null });
-  const team = useWorkspaceTeam(teamSlug);
 
   const leadOptions: ListOption[] = Array.from(
     new Set(scoped.map((p) => p.lead).filter((l): l is string => Boolean(l))),
@@ -337,8 +314,6 @@ export function ProjectsListPage({
     ],
   ];
   const hasActiveFilters = Object.values(filters).some((v) => v.length > 0);
-
-  const title = teamSlug ? `${teamName ?? "Team"} › Projects` : "Projects";
 
   const columnHeaderRow = (
     <TableRow>
@@ -425,29 +400,7 @@ export function ProjectsListPage({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex h-11 shrink-0 items-center gap-1 border-b border-subtle px-2 pl-5">
-        {teamSlug ? (
-          <>
-            <Breadcrumbs
-              items={[
-                {
-                  label: teamName ?? "Team",
-                  to: `/teams/${teamSlug}`,
-                  icon: team && <ProjectIcon value={team.icon} className="size-icon-sm" />,
-                },
-                { label: "Projects" },
-              ]}
-            />
-            <IconButton
-              icon={Star}
-              label={favorite ? "Remove from favorites" : "Add to favorites"}
-              variant="ghost"
-              className={cn(favorite && "text-warning")}
-              onClick={() => setFavorite(!favorite)}
-            />
-          </>
-        ) : (
-          <h2 className="text-label-md text-primary">Projects</h2>
-        )}
+        <h2 className="text-label-md text-primary">Projects</h2>
         <Button variant="ghost" icon={Plus} className="ml-auto text-secondary hovered:text-primary">
           New project
         </Button>
@@ -507,7 +460,7 @@ export function ProjectsListPage({
           no Linear (painel + 45 px até o ícone da primeira coluna, contra 21 px daqui sem o
           extra); token mais próximo, sem tocar no px-cell-x do Table (usado em outras fases). */}
       <main className="min-w-0 flex-1 overflow-y-auto p-2 pl-8">
-        <h1 className="sr-only">{title}</h1>
+        <h1 className="sr-only">Projects</h1>
         {projectsQuery.isPending ? (
           <ProjectsSkeleton />
         ) : projectsQuery.isError ? (
@@ -548,11 +501,4 @@ export function ProjectsListPage({
       </main>
     </div>
   );
-}
-
-/** `/teams/:team/projects`: a mesma lista, com o escopo do time da URL. */
-export function TeamProjectsListPage() {
-  const { team } = useParams<{ team: string }>();
-  const found = useWorkspaceTeam(team);
-  return <ProjectsListPage teamSlug={team} teamName={found?.name ?? team} />;
 }

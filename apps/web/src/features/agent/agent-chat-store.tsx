@@ -22,7 +22,7 @@ import { readStored, writeStored } from "@/layouts/app-shell/lib/storage";
 import { CANNED_REPLIES, CHAT_SEEDS, ERROR_TRIGGER, type AgentMessageState } from "./data";
 import { makeId } from "./use-agent-conversation";
 
-const STORAGE_KEY = "vyzer:agent:chats";
+const STORAGE_KEY = "zynox:agent:chats";
 
 type ChatRecord = {
   id: string;

@@ -9,9 +9,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { KeyRound } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import { Alert, Button, Skeleton } from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
-import { Icon } from "@vyzer/design-system/icons";
+import { Alert, Button, Skeleton } from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
+import { Icon } from "@zynox/design-system/icons";
 import { apiKeysQueryOptions } from "@/services/api-keys";
 import {
   ApiKeyMenu,
@@ -85,7 +85,7 @@ function PersonalApiKeys() {
     <section className="flex flex-col gap-1">
       <h2 className="type-heading-3 text-primary">Personal API keys</h2>
       <p className="pb-3 text-body-md text-secondary">
-        Use API keys to connect your own integrations and tools to Vyzer
+        Use API keys to connect your own integrations and tools to Zynox
       </p>
       <div className="flex flex-col rounded-container border border-subtle">
         <header

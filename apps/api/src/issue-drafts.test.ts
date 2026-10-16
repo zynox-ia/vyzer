@@ -9,7 +9,7 @@ import {
   resolveWorkspaceMember,
   workspace,
   type ApiKeyPermissions,
-} from "@vyzer/db";
+} from "@zynox/db";
 import { createRouter } from "./router";
 
 function testDatabaseUrl(): string {

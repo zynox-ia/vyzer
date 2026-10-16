@@ -8,9 +8,9 @@
 import { ChevronRight, X } from "lucide-react";
 import { Collapsible } from "radix-ui";
 import { useState, type ReactNode } from "react";
-import { IconButton } from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
-import { cn } from "@vyzer/design-system/cn";
+import { IconButton } from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
+import { cn } from "@zynox/design-system/cn";
 import { useAppShell } from "./use-app-shell";
 
 /** Seção recolhível do painel: o mesmo cabeçalho do ListGroup (Fase 5), sem contador nem "+". */

@@ -12,7 +12,7 @@ import {
   WORKSPACE_ID,
   workspace,
   ZYNOX_TEAM_ID,
-} from "@vyzer/db";
+} from "@zynox/db";
 import { createRouter, router } from "./router";
 
 function testDatabaseUrl(): string {
@@ -40,12 +40,12 @@ function uniqueTeamKey(): string {
 
 function issueEmailAddressFor(slug: string): string {
   const token = randomUUID().replaceAll("-", "").slice(0, 12);
-  return `${slug}-${token}@intake.vyzer.app.br`;
+  return `${slug}-${token}@intake.zynox.app.br`;
 }
 
 function expectIssueEmailAddress(address: string, slug: string): void {
   expect(address.startsWith(`${slug}-`)).toBe(true);
-  expect(address.slice(`${slug}-`.length)).toMatch(/^[a-f0-9]{12}@intake\.vyzer\.app\.br$/);
+  expect(address.slice(`${slug}-`.length)).toMatch(/^[a-f0-9]{12}@intake\.zynox\.app\.br$/);
 }
 
 function createWorkspaceApi(workspaceId: string, memberId: string) {

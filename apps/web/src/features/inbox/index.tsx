@@ -2,6 +2,10 @@
  * Inbox (spec inbox-notifications, etapa 4.1): lista de notificações do Member e, ao lado, a issue
  * da notificação selecionada. Selecionar grava `/inbox/:notificationId` (D10); "Show unreads only"
  * vive em `?unread=1` (regra 8). Abrir uma notificação a marca como lida.
+ *
+ * Com a "Priority inbox" ligada (Settings → Notifications) a Inbox ganha as abas Priority e Other,
+ * em `?tab=other` (Priority é o padrão); a lista continua vindo inteira e a separação usa o
+ * `isPriority` de cada item, para a atualização otimista e o painel da direita seguirem iguais.
  */
 import { useQuery } from "@tanstack/react-query";
 import { Ellipsis, Inbox as InboxIcon, ListFilter, Trash2 } from "lucide-react";
@@ -21,8 +25,9 @@ import {
   NotificationRow,
   NotificationRowSkeleton,
   Tooltip,
-} from "@vyzer/design-system/components";
-import { TopBar } from "@/layouts/app-shell/top-bar";
+} from "@zynox/design-system/components";
+import { PageTabs, TopBar } from "@/layouts/app-shell/top-bar";
+import { notificationPreferencesQueryOptions } from "@/services/notification-preferences";
 import {
   notificationsQueryOptions,
   unreadNotificationsCountQueryOptions,
@@ -50,6 +55,8 @@ export function InboxPage() {
   const { search } = useLocation();
   const navigate = useNavigate();
   const unreadOnly = searchParams.get("unread") === "1";
+  const priorityInbox = useQuery(notificationPreferencesQueryOptions()).data?.priorityInboxEnabled;
+  const tab = searchParams.get("tab") === "other" ? "other" : "priority";
 
   const list = useQuery(notificationsQueryOptions(INBOX_LIST_INPUT));
   const unreadCount = useQuery(unreadNotificationsCountQueryOptions());
@@ -57,10 +64,14 @@ export function InboxPage() {
   const listRef = useRef<HTMLDivElement>(null);
 
   const items = list.data?.items ?? [];
+  // Com a Priority inbox, cada aba mostra a sua metade; a notificação aberta nunca some do painel.
+  const inTab = priorityInbox
+    ? items.filter((item) => (item.isPriority === true) === (tab === "priority"))
+    : items;
   // A notificação aberta continua na lista mesmo depois de lida, para o painel não sumir.
   const visible = unreadOnly
-    ? items.filter((item) => item.readAt === null || item.id === notificationId)
-    : items;
+    ? inTab.filter((item) => item.readAt === null || item.id === notificationId)
+    : inTab;
   const selected = items.find((item) => item.id === notificationId);
 
   // Abrir marca como lida uma vez por notificação; "U" depois disso não é desfeito.
@@ -128,6 +139,13 @@ export function InboxPage() {
     const params = new URLSearchParams(searchParams);
     if (next) params.set("unread", "1");
     else params.delete("unread");
+    setSearchParams(params, { replace: true });
+  };
+
+  const setTab = (next: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (next === "other") params.set("tab", "other");
+    else params.delete("tab");
     setSearchParams(params, { replace: true });
   };
 
@@ -250,7 +268,22 @@ export function InboxPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <TopBar breadcrumbs={[{ label: "Inbox" }]} breadcrumbActions={actions} />
+      <TopBar
+        breadcrumbs={[{ label: "Inbox" }]}
+        breadcrumbActions={actions}
+        tabs={
+          priorityInbox ? (
+            <PageTabs
+              value={tab}
+              onValueChange={setTab}
+              tabs={[
+                { value: "priority", label: "Priority" },
+                { value: "other", label: "Other" },
+              ]}
+            />
+          ) : undefined
+        }
+      />
       <main aria-label="Inbox" className="flex min-h-0 flex-1 border-t border-default">
         <h1 className="sr-only">Inbox</h1>
         <div className="flex w-96 shrink-0 flex-col overflow-y-auto border-r border-default">

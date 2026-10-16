@@ -1,4 +1,4 @@
-import { cn } from "@vyzer/design-system/cn";
+import { cn } from "@zynox/design-system/cn";
 import type { ReactNode } from "react";
 
 export type ThemeName = "dark" | "light";

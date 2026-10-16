@@ -1,9 +1,9 @@
-import { cn } from "@vyzer/design-system/cn";
+import { cn } from "@zynox/design-system/cn";
 import {
   DESIGN_WEIGHTS,
   measureWeightCoverage,
   type WeightCoverage,
-} from "@vyzer/design-system/font-coverage";
+} from "@zynox/design-system/font-coverage";
 import { useEffect, useState } from "react";
 import { ContrastReport, type ContrastCheck } from "../../kit/color";
 import { Code, Decisions, DocPage, DocSection, DocTable, Prose } from "../../kit/doc";
@@ -43,7 +43,7 @@ const levels: Level[] = [
     tracking: "−0,02 em",
     weight: 300,
     family: "Figtree",
-    sample: "Welcome to Vyzer",
+    sample: "Welcome to Zynox",
     use: "Telas vazias, onboarding",
     rule: "13 × 1,2⁵ = 32,3; LH 1,1× → 35,2 → 36",
   },
@@ -377,7 +377,7 @@ export function Page() {
         items={[
           {
             decision: "Base 13 px, metadados 12 px, mínimo 11 px",
-            rule: "§2 Escala (base de UI do Vyzer)",
+            rule: "§2 Escala (base de UI do Zynox)",
           },
           {
             decision: "Razão 1,2 (terça menor): 11 · 13 · 16 · 19 · 22 · 27 · 32 · 47",

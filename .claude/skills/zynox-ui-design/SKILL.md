@@ -1,11 +1,11 @@
 ---
-name: vyzer-ui-design
-description: Fundamentos teóricos e regras matemáticas de design de interfaces para CONSTRUIR ou ALTERAR o Vyzer Design System (packages/design-system) — tokens, cores, contraste, tipografia, pesos, espaçamento, raios, sombras, ícones, estados, foco, animação, densidade e componentes. Use somente quando o trabalho for criar, alterar ou revisar o próprio design system. NÃO use para construir telas do produto: telas seguem exclusivamente o design system.
+name: zynox-ui-design
+description: Fundamentos teóricos e regras matemáticas de design de interfaces para CONSTRUIR ou ALTERAR o Zynox Design System (packages/design-system) — tokens, cores, contraste, tipografia, pesos, espaçamento, raios, sombras, ícones, estados, foco, animação, densidade e componentes. Use somente quando o trabalho for criar, alterar ou revisar o próprio design system. NÃO use para construir telas do produto: telas seguem exclusivamente o design system.
 ---
 
-# Vyzer UI Design — fundamentos para construir o design system
+# Zynox UI Design — fundamentos para construir o design system
 
-Esta skill é a ferramenta de **construção** do Vyzer Design System. Depois que um token ou componente existe no design system, **ele** é a fonte da verdade, não esta skill.
+Esta skill é a ferramenta de **construção** do Zynox Design System. Depois que um token ou componente existe no design system, **ele** é a fonte da verdade, não esta skill.
 
 - **Construindo ou alterando o design system** (`packages/design-system`, páginas de `/design-system`): use esta skill para calcular e justificar cada decisão.
 - **Construindo telas do produto:** não use esta skill. Use somente os tokens e componentes do design system, como documentados em `/design-system`. Se a tela precisar de algo que o design system não tem, **não improvise na tela**: proponha a adição ao design system (aí sim usando esta skill), aguarde aprovação e só então use na tela.
@@ -33,7 +33,7 @@ As ADRs têm precedência sobre esta skill: quando uma ADR define um valor, a AD
 
 ### Escala
 - Use **escala modular**: tamanho(n) = base × razão^n. Para UI densa, razões pequenas: **1,125 (segunda maior)** a **1,2 (terça menor)**. Razões maiores (1,25–1,333) só para páginas de conteúdo/marketing.
-- Base de UI do Vyzer: **13 px** (corpo e listas), com 12 px para metadados e 11 px como mínimo absoluto (só caption/kbd/contadores).
+- Base de UI do Zynox: **13 px** (corpo e listas), com 12 px para metadados e 11 px como mínimo absoluto (só caption/kbd/contadores).
 - Arredonde o resultado ao inteiro mais próximo e remova tamanhos que difiram menos de ~10% do vizinho (indistinguíveis).
 
 ### Altura de linha
@@ -103,7 +103,7 @@ As ADRs têm precedência sobre esta skill: quando uma ADR define um valor, a AD
 - **Lei de Hick:** T = b · log₂(n + 1). Mais opções = decisão mais lenta. Menus longos precisam de agrupamento, busca ou divulgação progressiva.
 - **Divulgação progressiva:** mostre o essencial; o avançado atrás de "mais opções", menus ou painéis.
 - **Carga cognitiva / lei de Miller:** agrupe informação em blocos pequenos (≈ 4–7 itens) para facilitar leitura; não é um limite rígido de itens em menus.
-- **Lei de Jakob:** usuários esperam que o produto funcione como os que já usam. No Vyzer, a referência de comportamento é o Linear (atalhos, padrões de lista, menus).
+- **Lei de Jakob:** usuários esperam que o produto funcione como os que já usam. No Zynox, a referência de comportamento é o Linear (atalhos, padrões de lista, menus).
 
 ## §8. Movimento
 

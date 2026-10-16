@@ -1,6 +1,6 @@
 # Figma visual inventory, part A
 
-File `CNJik9Re3oAtqNma67yjou` ("Vyzer"). There are no Figma variables, so every value below is raw.
+File `CNJik9Re3oAtqNma67yjou` ("Zynox"). There are no Figma variables, so every value below is raw.
 
 ## Coverage
 
@@ -126,7 +126,7 @@ These are covered in §6: `rgba(0,0,0,0.3)`, `rgba(255,255,255,0.09)`, `#222224`
 Fonts:
 
 - `Inter Variable`: `'Inter_Variable:Medium'` (P67) and `'Inter_Variable:Regular'` (P62). It is used almost everywhere.
-- Plain `Inter`: `'Inter:Medium' font-medium` (P3, the health "Off track" wrapper `<p>`, where the inner spans switch back to Inter Variable) and `'Inter:Regular'` (L1, "Log in to Vyzer" 1:12619).
+- Plain `Inter`: `'Inter:Medium' font-medium` (P3, the health "Off track" wrapper `<p>`, where the inner spans switch back to Inter Variable) and `'Inter:Regular'` (L1, "Log in to Zynox" 1:12619).
 
 Weights in use: only Regular (400) and Medium (500). There is no semibold or bold anywhere.
 
@@ -161,7 +161,7 @@ Line height is `normal` in 125+ places. Explicit values appear only where noted 
 | 12 / Medium / normal                        | `#fffeff`              | P1       | "Create view"                                                                              | 1:5693                 |
 | 11 / Regular / 0                            | white                  | P1, N1   | Avatar initials "ZY"                                                                       | 1:6767, 1:5015         |
 | 15 / Medium / normal                        | `#5c5d5f`              | P1       | New view title input placeholder ("All projects")                                          | 1:5688                 |
-| 18 / Regular / normal (Inter, not Variable) | `#e2e3e5`              | L1       | "Log in to Vyzer"                                                                          | 1:12619                |
+| 18 / Regular / normal (Inter, not Variable) | `#e2e3e5`              | L1       | "Log in to Zynox"                                                                          | 1:12619                |
 | 18 / Medium / normal                        | `#e2e3e5`              | L1       | "What's your email address?"                                                               | 1:12655                |
 
 Size scale: 11, 12, 13, 15 and 18. 12 and 13 cover about 99% of usage.
@@ -401,7 +401,7 @@ No hover, focus or disabled states are drawn in these nodes. The transparent 1 p
 6. **Dim text.** `#565658` / `#565759` / `#5c5d5f`, plus `#525254` for the chevron.
 7. **Reds.** `#ff6364` (status), `#eb5757` (project icon) and `#dd5264` (avatar) are three different reds.
 8. **Pill radius.** It is expressed three ways: `9999px`, `100px` and `48px`. `10px` and `12px` both appear for cards and containers.
-9. **Font family.** Plain `Inter` and `Inter Variable` are mixed ("Log in to Vyzer"; the "Off track" wrapper). Only weights 400 and 500 are used.
+9. **Font family.** Plain `Inter` and `Inter Variable` are mixed ("Log in to Zynox"; the "Off track" wrapper). Only weights 400 and 500 are used.
 10. **Off-scale values.** `pt-[1.05px]`, fractional heights (126.047, 98.05, 192.047), `pt-[226.5px]`, a 91.5 px logo, `pb-15`, `leading-19.5`, `pr-9` / `pl-9`, `pl-5`, `pl-35`, `px-18`, and the 0.5 px shadow y-offset. Most of these are browser-capture artifacts, because the file looks captured from a live web app (auto names such as "Container:margin" and "Text").
 11. **Selected-row tints.** `#9b9bad`, `#e4e4f8` and `#606071` exist only in the selected state. They behave like a "text on accent-tinted surface" palette.
 12. **Branding.** The copy still says "Ask Linear" (1:5626) and the node is named "Container (Linear)" (1:12652). The source is a Linear capture.

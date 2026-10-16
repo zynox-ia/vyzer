@@ -9,8 +9,8 @@ import {
   ToastSurface,
   useToast,
   type ToastOptions,
-} from "@vyzer/design-system/components";
-import { StatusIcon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { StatusIcon } from "@zynox/design-system/icons";
 import { Bell, Link2, Mail } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -194,7 +194,7 @@ export function Page() {
           "Não empilhe avisos em sequência para a mesma ação",
           "Não use botão em pílula como ação: as ações são em texto",
         ],
-        usage: `import { ToastProvider, useToast } from "@vyzer/design-system/components";
+        usage: `import { ToastProvider, useToast } from "@zynox/design-system/components";
 
 // Raiz da aplicação
 <ToastProvider>

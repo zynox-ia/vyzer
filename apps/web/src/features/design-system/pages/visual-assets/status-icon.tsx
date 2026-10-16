@@ -3,7 +3,7 @@ import {
   type IconSize,
   type StatusTone,
   type StatusType,
-} from "@vyzer/design-system/icons";
+} from "@zynox/design-system/icons";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -156,7 +156,7 @@ export function Page() {
           "Não troque a forma para indicar outro significado",
           "Não use cor diferente da escala de status",
         ],
-        usage: `import { StatusIcon } from "@vyzer/design-system/icons";
+        usage: `import { StatusIcon } from "@zynox/design-system/icons";
 
 <StatusIcon type="started" progress={1 / 3} />
 <StatusIcon type="completed" label="Done" />`,

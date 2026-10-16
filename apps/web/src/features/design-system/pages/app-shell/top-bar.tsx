@@ -5,8 +5,8 @@
  */
 import { Box, Copy } from "lucide-react";
 import { useState } from "react";
-import { IconButton } from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+import { IconButton } from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { PageTabs, TopBar } from "@/layouts/app-shell/top-bar";
 import { Decisions, DocPage, DocSection } from "../../kit/doc";
 import { suppressLinkNavigation } from "../../kit/shell-frame";

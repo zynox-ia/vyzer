@@ -28,8 +28,8 @@ import {
   TextArea,
   type LabelColor,
   type ListOption,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import {
   Bookmark,
   CalendarDays,

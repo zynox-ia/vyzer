@@ -1,4 +1,4 @@
-// Deriva e mede a paleta do Vyzer nos dois temas (docs/specs/design-tokens.md).
+// Deriva e mede a paleta do Zynox nos dois temas (docs/specs/design-tokens.md).
 // Uso: node docs/design/palette-contrast.mjs            → tabela Markdown de contraste
 //      node docs/design/palette-contrast.mjs --json     → valores derivados em JSON
 //

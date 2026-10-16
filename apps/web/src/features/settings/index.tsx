@@ -2,8 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Outlet, useLocation } from "react-router";
-import { ProjectIcon } from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+import { ProjectIcon } from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { teamsQueryOptions } from "@/services/teams";
 import { SettingsLayout } from "@/layouts/app-shell/settings-layout";
 import { readLastShellPath } from "@/layouts/app-shell/lib/last-path";
@@ -54,7 +54,10 @@ export function SettingsRoute() {
         WIDE_PATHS.includes(pathname) || /^\/settings\/teams\/[^/]+\/members$/.test(pathname)
           ? "wide"
           : (/^\/settings\/teams\/[^/]+$/.test(pathname) && pathname !== "/settings/teams/new") ||
-              pathname === "/settings/preferences"
+              pathname === "/settings/preferences" ||
+              pathname === "/settings/profile" ||
+              pathname === "/settings/code-reviews" ||
+              pathname.startsWith("/settings/notifications")
             ? "medium"
             : "narrow"
       }
@@ -65,6 +68,9 @@ export function SettingsRoute() {
 }
 
 export { PreferencesPage } from "./preferences";
+export { ProfilePage } from "./profile-page";
+export { CodeReviewsPage } from "./code-reviews-page";
+export { NotificationChannelPage, NotificationsPage } from "./notifications-page";
 export { MembersPage } from "./members";
 export { TeamsPage } from "./teams";
 export { TeamCreatePage } from "./team-create";

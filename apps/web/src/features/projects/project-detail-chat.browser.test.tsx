@@ -15,8 +15,8 @@ import { render } from "vitest-browser-react";
 import { useState } from "react";
 import { queryOptions, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
-import type { Project as ApiProject } from "@vyzer/contract";
-import { ToastProvider } from "@vyzer/design-system/components";
+import type { Project as ApiProject } from "@zynox/contract";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { AppShell } from "@/layouts/app-shell";
 import { AgentPage } from "@/features/agent";
@@ -148,7 +148,7 @@ describe("ProjectDetailPage: chat do agente no painel direito", () => {
     const chatPanel = screen.getByRole("complementary", { name: "Agent chat" });
     await expect.element(chatPanel).toBeVisible();
 
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill("What's blocking Fase 7?");
     await userEvent.keyboard("{Enter}");
 
@@ -196,7 +196,7 @@ describe("ProjectDetailPage: chat do agente no painel direito", () => {
     const screen = await render(<ProjectsHarness />);
 
     await screen.getByRole("button", { name: "Agent", exact: true }).click();
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill("Status update please");
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByText("Status update please", { exact: true })).toBeVisible();
@@ -270,7 +270,7 @@ describe("ProjectDetailPage: chat do agente no painel direito", () => {
     // verdade — aqui, montar o provider do zero com esse storage tem o mesmo efeito.
     document.documentElement.dataset.theme = "dark";
     localStorage.setItem(
-      "vyzer:agent:chats",
+      "zynox:agent:chats",
       JSON.stringify({
         activeChatId: "stuck",
         chats: {
@@ -331,7 +331,7 @@ describe("ProjectDetailPage: chat do agente no painel direito", () => {
     await expect.element(newChat).not.toBeInTheDocument();
 
     // "New chat" reseta a conversa ativa (mesma acao do "..." do painel compacto).
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill("Status update please");
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByText("Status update please", { exact: true })).toBeVisible();

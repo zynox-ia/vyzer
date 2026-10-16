@@ -1,8 +1,7 @@
 /**
  * Estado do shell (sidebar, painel direito, Command Menu, criação de issue) e os atalhos globais
- * ("[", "]", Ctrl/⌘+I, "C"): um contexto só, para o header do app e o conteúdo de cada tela
- * lerem e agirem sobre o mesmo shell. Sidebar: recolhimento e largura (200–360 px, padrão 244),
- * guardados em localStorage (decisão do responsável, 28/09).
+ * ("[" , "]", Ctrl/⌘+I, "C"): um contexto só, para o header do app e o conteúdo de cada tela
+ * lerem e agirem sobre o mesmo shell. Sidebar: guardado em localStorage sob a chave `zynox:sidebar:collapsed`.
  */
 import {
   createContext,
@@ -18,11 +17,11 @@ import { readStored, writeStored } from "./lib/storage";
 import { isTypingTarget } from "./lib/shortcuts";
 
 export const SIDEBAR_MIN_WIDTH = 200;
-export const SIDEBAR_MAX_WIDTH = 360;
-export const SIDEBAR_DEFAULT_WIDTH = 244;
+export const SIDEBAR_MAX_WIDTH = 400;
+export const SIDEBAR_DEFAULT_WIDTH = 276;
 
-const WIDTH_KEY = "vyzer:sidebar:width";
-const COLLAPSED_KEY = "vyzer:sidebar:collapsed";
+const WIDTH_KEY = "zynox:sidebar:width";
+const COLLAPSED_KEY = "zynox:sidebar:collapsed";
 
 function clampWidth(value: number) {
   return Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, value));
@@ -73,30 +72,27 @@ export const AppShellContext = createContext<AppShellContextValue | null>(null);
 
 export function AppShellProvider({
   children,
-  shortcuts = true,
   defaultCollapsed,
-  defaultRightPanelOpen = false,
   defaultDrawerOpen = false,
+  defaultRightPanelOpen = false,
+  shortcuts = true,
 }: {
   children: ReactNode;
-  /**
-   * Liga os atalhos globais ("[", "]", Ctrl/⌘+I, "C") no document. Desligado nas páginas de
-   * /design-system que montam mais de um AppShellProvider ao mesmo tempo (ex.: temas lado a
-   * lado): cada Provider ouviria o document inteiro e um atalho digitado afetaria todos.
-   */
-  shortcuts?: boolean;
-  /** Estado inicial explícito (documentação): ignora o localStorage compartilhado. */
   defaultCollapsed?: boolean;
-  defaultRightPanelOpen?: boolean;
   defaultDrawerOpen?: boolean;
+  defaultRightPanelOpen?: boolean;
+  shortcuts?: boolean;
 }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(defaultCollapsed ?? initialCollapsed);
-  const [sidebarWidth, setWidthState] = useState(initialWidth);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    defaultCollapsed !== undefined ? defaultCollapsed : initialCollapsed(),
+  );
+  const [sidebarWidth, setSidebarWidthState] = useState(initialWidth);
   const [sidebarDrawerOpen, setSidebarDrawerOpen] = useState(defaultDrawerOpen);
   const [rightPanelOpen, setRightPanelOpen] = useState(defaultRightPanelOpen);
   const [rightPanelContent, setRightPanelContent] = useState<"details" | "chat">("details");
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [createIssueOpen, setCreateIssueOpen] = useState(false);
+  const overlayReturnFocus = useRef<HTMLElement | null>(null);
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => {
@@ -108,51 +104,70 @@ export function AppShellProvider({
 
   const setSidebarWidth = useCallback((width: number) => {
     const clamped = clampWidth(width);
-    setWidthState(clamped);
+    setSidebarWidthState(clamped);
     writeStored(WIDTH_KEY, String(clamped));
   }, []);
 
-  const toggleRightPanel = useCallback(() => setRightPanelOpen((prev) => !prev), []);
-
-  // Acompanha o foco enquanto nenhum overlay do shell está aberto; para de ouvir assim que um
-  // abre (Command Menu ou criar issue), então o valor guardado é sempre "onde estava antes do
-  // primeiro overlay da sequência" — mesmo que um abra o outro (⌘K → Create issue).
-  const overlayReturnFocus = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    if (commandMenuOpen || createIssueOpen) return;
-    function onFocusIn(event: FocusEvent) {
-      if (event.target instanceof HTMLElement) overlayReturnFocus.current = event.target;
-    }
-    document.addEventListener("focusin", onFocusIn);
-    return () => document.removeEventListener("focusin", onFocusIn);
-  }, [commandMenuOpen, createIssueOpen]);
+  const toggleRightPanel = useCallback(() => {
+    setRightPanelOpen((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     if (!shortcuts) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.defaultPrevented || isTypingTarget(event.target)) return;
-      if (event.altKey) return;
-      // Ctrl/⌘+I: sinônimo de "]" (aprovado em 28/09).
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "i") {
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      // Ignora atalhos de uma tecla ("c", "[", "]") se o foco estiver num campo de digitação,
+      // para não abrir o diálogo nem recolher a sidebar quando a pessoa só estiver escrevendo.
+      const typing = isTypingTarget(event.target);
+
+      // Atalho "c": abre o diálogo de criação de issue (Linear: "c" cria em qualquer tela).
+      // Sem modificadores (Ctrl/Alt/Meta), para não colidir com Ctrl+C de copiar.
+      if (
+        !typing &&
+        event.key.toLowerCase() === "c" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
         event.preventDefault();
-        setRightPanelOpen((prev) => !prev);
+        overlayReturnFocus.current = (document.activeElement as HTMLElement) ?? null;
+        setCreateIssueOpen(true);
         return;
       }
-      if (event.ctrlKey || event.metaKey || event.shiftKey) return;
-      if (event.key === "[") {
+
+      // Atalho "[": alterna a sidebar (Linear: "[" recolhe/expande).
+      if (!typing && event.key === "[" && !event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault();
         toggleSidebar();
-      } else if (event.key === "]") {
-        event.preventDefault();
-        setRightPanelOpen((prev) => !prev);
-      } else if (event.key.toLowerCase() === "c") {
-        event.preventDefault();
-        setCreateIssueOpen(true);
+        return;
       }
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [toggleSidebar, shortcuts]);
+
+      // Atalhos "]": alterna o painel direito (Linear: "]" abre/fecha).
+      if (!typing && event.key === "]" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        toggleRightPanel();
+        return;
+      }
+
+      // Atalho Ctrl/⌘+I: sinônimo de "]" para o painel direito (Figma 1:6569).
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "i" && !event.altKey) {
+        event.preventDefault();
+        toggleRightPanel();
+        return;
+      }
+
+      // Atalho Ctrl/⌘+K: abre o Command Menu.
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k" && !event.altKey) {
+        event.preventDefault();
+        overlayReturnFocus.current = (document.activeElement as HTMLElement) ?? null;
+        setCommandMenuOpen(true);
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [shortcuts, toggleRightPanel, toggleSidebar]);
 
   const value = useMemo<AppShellContextValue>(
     () => ({
@@ -174,18 +189,18 @@ export function AppShellProvider({
       overlayReturnFocus,
     }),
     [
-      sidebarCollapsed,
-      toggleSidebar,
-      sidebarWidth,
-      setSidebarWidth,
-      sidebarDrawerOpen,
-      rightPanelOpen,
-      toggleRightPanel,
-      rightPanelContent,
       commandMenuOpen,
       createIssueOpen,
+      rightPanelContent,
+      rightPanelOpen,
+      sidebarCollapsed,
+      sidebarDrawerOpen,
+      sidebarWidth,
+      setSidebarWidth,
+      toggleRightPanel,
+      toggleSidebar,
     ],
   );
 
-  return <AppShellContext value={value}>{children}</AppShellContext>;
+  return <AppShellContext.Provider value={value}>{children}</AppShellContext.Provider>;
 }

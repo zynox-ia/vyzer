@@ -1,6 +1,6 @@
 /**
  * Cores de label e de ícone de projeto (Figma 1:1132 e 1:1412: Grey, Dark Grey, Purple, Teal,
- * Green, Yellow, Orange, Pink, Red), mapeadas para a paleta OKLCH do Vyzer (ADR-0013).
+ * Green, Yellow, Orange, Pink, Red), mapeadas para a paleta OKLCH do Zynox (ADR-0013).
  * ColorDot: bolinha de 9 px (label) ou amostra de 22 px (seletor de cor).
  */
 import { Check } from "lucide-react";
@@ -20,7 +20,7 @@ export type LabelColor =
   | "pink"
   | "red";
 
-/** Ordem e nomes do Figma; o valor é o token do Vyzer. */
+/** Ordem e nomes do Figma; o valor é o token do Zynox. */
 export const LABEL_COLORS: { value: LabelColor; label: string }[] = [
   { value: "grey", label: "Grey" },
   { value: "slate", label: "Dark Grey" },

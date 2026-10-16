@@ -10,7 +10,7 @@ import {
   MenuItem,
   MenuSeparator,
   SelectionBar,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Archive, CircleDashed, SignalHigh, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { PatternPage } from "../../kit/pattern-page";

@@ -1,4 +1,4 @@
-# Vyzer
+# Zynox
 
 ```bash
 pnpm install

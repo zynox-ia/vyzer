@@ -3,7 +3,7 @@ import type {
   IssueRelationGroups,
   IssueRelationSummary,
   IssueRelationType,
-} from "@vyzer/contract";
+} from "@zynox/contract";
 import { api } from "./api";
 
 /** Cria relações entre Issues, incluindo `blocks`, `related` e `duplicate`. */

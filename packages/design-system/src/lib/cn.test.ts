@@ -20,7 +20,7 @@ describe("cn", () => {
     expect(cn("border", "border-strong")).toBe("border border-strong");
   });
 
-  it("resolve spacing, radius e shadow com os tokens do Vyzer", () => {
+  it("resolve spacing, radius e shadow com os tokens do Zynox", () => {
     expect(cn("h-control-md", "h-control-sm")).toBe("h-control-sm");
     expect(cn("h-row", "h-control-lg")).toBe("h-control-lg");
     expect(cn("px-3", "px-2")).toBe("px-2");

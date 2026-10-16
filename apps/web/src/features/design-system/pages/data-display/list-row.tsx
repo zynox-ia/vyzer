@@ -9,7 +9,7 @@ import {
   IssueRow,
   MenuItem,
   MenuSeparator,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { CircleDashed, Link2, SignalHigh, UserRound } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -222,7 +222,7 @@ export function Page() {
           "Não ponha botões ou links dentro da linha: a linha inteira é a opção",
           "Não use cor como único sinal de estado",
         ],
-        usage: `import { IssueList, IssueRow } from "@vyzer/design-system/components";
+        usage: `import { IssueList, IssueRow } from "@zynox/design-system/components";
 
 <IssueList label="In Progress issues" selected={selected} onSelectedChange={setSelected} onOpen={openIssue}>
   <IssueRow

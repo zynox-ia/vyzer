@@ -13,9 +13,9 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
-import { cn } from "@vyzer/design-system/cn";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
+import { cn } from "@zynox/design-system/cn";
 
 export type Crumb = { label: string; to?: string; icon?: ReactNode };
 

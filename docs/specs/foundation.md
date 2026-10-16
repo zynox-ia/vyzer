@@ -4,7 +4,7 @@ Issue: [VYZ-1](https://linear.app/zynox-dev/issue/VYZ-1/foundation). Decisões d
 
 ## Link do Figma
 
-Arquivo: [Vyzer](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Vyzer), página `0:1` (o arquivo "Linear Design System (Community)" foi descartado). Login: nós `1:12610` e `1:12645`; sidebar: `1:6569`. Estrutura e medidas vêm do Figma; as cores seguem a ADR-0011 e `docs/specs/design-tokens.md`. Criação de Workspace e settings não têm nó.
+Arquivo: [Zynox](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Zynox), página `0:1` (o arquivo "Linear Design System (Community)" foi descartado). Login: nós `1:12610` e `1:12645`; sidebar: `1:6569`. Estrutura e medidas vêm do Figma; as cores seguem a ADR-0011 e `docs/specs/design-tokens.md`. Criação de Workspace e settings não têm nó.
 
 Tela sem nó no Figma não trava a entrega: é montada seguindo o layout do Linear com os tokens existentes e registrada em `.figma/` como "sem design", para calibração depois.
 
@@ -33,7 +33,7 @@ Tudo segue o Linear atual. Os pontos abaixo fixam o que a Foundation precisa ent
 
 **API (2)**
 
-- Front e API ficam na mesma origem: o Traefik manda `vyzer.localhost/api/*` para a API no host e o resto para o Vite. Assim os cookies de sessão funcionam sem CORS.
+- Front e API ficam na mesma origem: o Traefik manda `zynox.localhost/api/*` para a API no host e o resto para o Vite. Assim os cookies de sessão funcionam sem CORS.
 - Migrations geradas por `drizzle-kit generate` e aplicadas por um comando próprio (`pnpm db:migrate`). Ver ADR-0005.
 
 **Autenticação (4)**
@@ -75,7 +75,7 @@ Para cada tela (login, criação de Workspace, settings de Members e Teams, side
 
 ## Critérios de aceite
 
-- [ ] Depois do passo 1: `pnpm check` e `pnpm build` passam sem avisos, e `pnpm dev` com Traefik abre `vyzer.localhost` com HMR funcionando.
+- [ ] Depois do passo 1: `pnpm check` e `pnpm build` passam sem avisos, e `pnpm dev` com Traefik abre `zynox.localhost` com HMR funcionando.
 - [ ] TypeScript 7: oRPC, Drizzle e Better Auth compilam, e a inferência chega ao front. Se algo falhar, o erro e a alternativa vão para o responsável antes de mudar a versão.
 - [ ] Login por e-mail funcionando de ponta a ponta, com o e-mail capturado no Mailpit. Logout invalida a sessão na hora.
 - [ ] Google preparado: com as variáveis definidas, o botão aparece e o fluxo usa as credenciais; sem elas, o botão não aparece.

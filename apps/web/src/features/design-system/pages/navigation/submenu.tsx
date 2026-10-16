@@ -9,8 +9,8 @@ import {
   MenuTrigger,
   PopoverSurface,
   PropertyButton,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { ArrowLeftFromLine, ArrowRightFromLine, ChevronRight, Link2 } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -137,7 +137,7 @@ export function Page() {
         content: ['Itens que pedem um alvo terminam em reticências ("Blocked by…").'],
         dos: ["Use um nível só"],
         donts: ["Não esconda ações frequentes num submenu"],
-        usage: `import { Menu, MenuContent, MenuPanel, MenuSub, MenuSubContent, MenuSubTrigger, ComboboxPanel } from "@vyzer/design-system/components";
+        usage: `import { Menu, MenuContent, MenuPanel, MenuSub, MenuSubContent, MenuSubTrigger, ComboboxPanel } from "@zynox/design-system/components";
 
 <MenuContent variant="dropdown">
   <MenuSub>

@@ -8,7 +8,7 @@ import {
   LineChart,
   type LegendItem,
   type LineSeries,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Link } from "react-router";
 import { Code, DocPage, DocSection, DocTable, Prose } from "../../kit/doc";
 
@@ -81,7 +81,7 @@ export function Page() {
         description={
           <>
             <Code>node scripts/validate_palette.js "…" --mode light|dark</Code> nos 8 tokens, nos
-            dois temas, contra as superfícies reais do Vyzer (<Code>#faf9f5</Code> claro,{" "}
+            dois temas, contra as superfícies reais do Zynox (<Code>#faf9f5</Code> claro,{" "}
             <Code>#141413</Code> escuro). Todos os 5 testes computáveis passam, sem nenhum FAIL — os
             valores de contraste e das primitivas estão em{" "}
             <Link to="/design-system/foundations/colors" className="text-accent underline">

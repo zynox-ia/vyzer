@@ -2,8 +2,8 @@
  * Activity: a linha do tempo de uma issue ou projeto (Figma 25:4689, Project Details; 27:17223,
  * Inbox).
  */
-import { Avatar, Timeline, TimelineItem } from "@vyzer/design-system/components";
-import { Icon, PriorityIcon, StatusIcon } from "@vyzer/design-system/icons";
+import { Avatar, Timeline, TimelineItem } from "@zynox/design-system/components";
+import { Icon, PriorityIcon, StatusIcon } from "@zynox/design-system/icons";
 import { Link2, Plus, Tag } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -137,7 +137,7 @@ export function Page() {
           "Não use cor para distinguir autores",
           "Não mostre a data completa no lugar do tempo relativo",
         ],
-        usage: `import { Timeline, TimelineItem } from "@vyzer/design-system/components";
+        usage: `import { Timeline, TimelineItem } from "@zynox/design-system/components";
 
 <Timeline label="Activity">
   <TimelineItem icon={<StatusIcon type="started" />} author="André Júnio" time={event.at}>

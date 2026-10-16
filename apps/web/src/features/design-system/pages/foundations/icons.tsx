@@ -1,4 +1,4 @@
-import { Icon, ICON_STROKE, type IconSize } from "@vyzer/design-system/icons";
+import { Icon, ICON_STROKE, type IconSize } from "@zynox/design-system/icons";
 import {
   Bell,
   CalendarDays,

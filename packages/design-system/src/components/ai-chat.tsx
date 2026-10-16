@@ -115,7 +115,7 @@ export function AgentComposer({
   onValueChange,
   onSend,
   onCancel,
-  placeholder = "Ask Vyzer…",
+  placeholder = "Ask Zynox…",
   sending = false,
   skills,
   onAttach,

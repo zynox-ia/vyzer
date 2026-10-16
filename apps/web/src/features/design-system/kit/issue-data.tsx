@@ -9,8 +9,8 @@ import {
   ProjectIcon,
   type IssueAssignee,
   type IssueValue,
-} from "@vyzer/design-system/components";
-import { Icon, PriorityIcon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon, PriorityIcon } from "@zynox/design-system/icons";
 import { OctagonMinus } from "lucide-react";
 import {
   INITIAL_LABELS,

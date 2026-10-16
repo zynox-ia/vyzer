@@ -15,8 +15,8 @@ import {
   PopoverContent,
   PopoverTrigger,
   type ChatHistoryEntry,
-} from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
+} from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
 
 export function AgentFloatingActions({
   onOpenAgent,

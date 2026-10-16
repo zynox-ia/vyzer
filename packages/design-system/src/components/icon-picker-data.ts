@@ -1,5 +1,5 @@
 /**
- * Catálogo do Icon Picker: ícones lucide (a biblioteca de ícones do Vyzer, ADR-0013) em curadoria
+ * Catálogo do Icon Picker: ícones lucide (a biblioteca de ícones do Zynox, ADR-0013) em curadoria
  * por categoria (pedido do responsável: curadoria ampliada), seguidos dos demais ícones do lucide,
  * carregados sob demanda (loadMoreIcons). Os emojis vêm do Emoji Picker
  * (Frimousse + Emojibase), não daqui. Gerado a partir da lista de categorias; nomes e palavras-chave

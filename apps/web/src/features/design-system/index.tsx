@@ -1,5 +1,5 @@
 /**
- * Documentação oficial do Vyzer Design System, em /design-system (VYZ-12, ADR-0013).
+ * Documentação oficial do Zynox Design System, em /design-system (VYZ-12, ADR-0013).
  * Só em desenvolvimento por enquanto; em produção a rota não existe (depois: só Admins).
  * As rotas internas ficam aqui para que tudo carregue sob demanda, fora do bundle do produto.
  */

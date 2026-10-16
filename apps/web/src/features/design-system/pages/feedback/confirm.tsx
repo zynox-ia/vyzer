@@ -2,7 +2,7 @@
  * Confirm (Radix AlertDialog): a superfície do Dialog para confirmar uma ação. A janela aberta da
  * página é estática (DialogSurface com o mesmo rodapé); a real está no playground.
  */
-import { Button, Confirm, DialogFooter, DialogSurface } from "@vyzer/design-system/components";
+import { Button, Confirm, DialogFooter, DialogSurface } from "@zynox/design-system/components";
 import { Archive, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -133,7 +133,7 @@ export function Page() {
         ],
         dos: ["Diga as consequências", "Prefira Undo quando a ação puder ser desfeita"],
         donts: ["Não confirme ações triviais", "Não use danger em ação que não destrói nada"],
-        usage: `import { Confirm } from "@vyzer/design-system/components";
+        usage: `import { Confirm } from "@zynox/design-system/components";
 
 <Confirm
   title="Delete issue?"

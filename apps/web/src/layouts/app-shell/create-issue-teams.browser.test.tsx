@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { MemoryRouter } from "react-router";
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import type { Team } from "@/features/projects/project-data";
 import { AppShellProvider } from "./context";
@@ -17,8 +17,8 @@ const TEAMS: Team[] = [
     key: "ZYN",
   },
   {
-    slug: "vyzer",
-    name: "Vyzer",
+    slug: "atlas",
+    name: "Atlas",
     icon: { kind: "icon", name: "Layers", color: "purple" },
     key: "VYZ",
   },
@@ -63,11 +63,11 @@ describe("CreateIssueDialog: seletor de Team", () => {
 
     await button.click();
     await expect.element(page.getByRole("option", { name: /Zynox/ })).toBeVisible();
-    await expect.element(page.getByRole("option", { name: /Vyzer/ })).toBeVisible();
+    await expect.element(page.getByRole("option", { name: /Atlas/ })).toBeVisible();
     // O scrim do diálogo modal intercepta o ponteiro sobre o popover: escolhe pelo teclado.
-    await userEvent.keyboard("Vyzer{Enter}");
+    await userEvent.keyboard("Atlas{Enter}");
 
-    const changed = screen.getByRole("button", { name: "Team: Vyzer" });
+    const changed = screen.getByRole("button", { name: "Team: Atlas" });
     await expect.element(changed).toBeVisible();
     await expect.element(changed).toHaveTextContent("VYZ");
   });

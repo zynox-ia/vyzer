@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import axe from "axe-core";
-import { ToastProvider, type ProjectIconValue } from "@vyzer/design-system/components";
+import { ToastProvider, type ProjectIconValue } from "@zynox/design-system/components";
 import "@/index.css";
 import { TeamCreatePage } from "./team-create";
 

@@ -6,13 +6,13 @@ status: proposed
 
 Linear's Settings → Administration → Usage & limits shows the workspace's spend on Linear's own AI
 features (credits balance, automatic reload, spend limits, analytics by feature, usage history).
-Vyzer keeps the page in the same place in the navigation and borrows its layout, but gives it a
+Zynox keeps the page in the same place in the navigation and borrows its layout, but gives it a
 different purpose: following the token usage and limits of the AI agents the owner intends to run
 inside the product. Proposed on 2026-09-29 from `docs/specs/settings-security-api-usage.md`.
 
 ## Why
 
-Vyzer is an internal tool, not a SaaS with a plan (the owner already removed Billing from the
+Zynox is an internal tool, not a SaaS with a plan (the owner already removed Billing from the
 navigation for this reason). Credits you buy, automatic top-ups and plan tiers have no meaning
 here. What does have meaning is knowing how much the agents in the product consume and being able
 to cap it. The Linear page is already shaped like that (period, chart by day, history table, limits
@@ -25,7 +25,7 @@ with a reset schedule), so the layout carries over and only the subject changes.
   overrides.
 - Linear's purchase and plan concepts are **not** replicated: no "Add credits", no "Automatic
   reload", no balance.
-- The subject is the usage of Vyzer's own agents, grouped by agent where Linear groups by feature.
+- The subject is the usage of Zynox's own agents, grouped by agent where Linear groups by feature.
 
 ## Not decided here
 

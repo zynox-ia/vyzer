@@ -9,7 +9,7 @@ import {
   MenuContent,
   MenuTrigger,
   Menu,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { ChevronDown } from "lucide-react";
 import { Code, Decisions, DocPage, DocSection, Prose } from "../../kit/doc";
 import { ThemePair } from "../../kit/theme-frame";
@@ -54,14 +54,14 @@ export function Page() {
         title="Ao vivo"
         description="Digite e veja o enviar habilitar; Enter envia (mensagem vazia não faz nada), Shift+Enter quebra linha."
       >
-        <ThemePair>{() => <Demo placeholder="Ask Vyzer…" />}</ThemePair>
+        <ThemePair>{() => <Demo placeholder="Ask Zynox…" />}</ThemePair>
       </DocSection>
 
       <DocSection title="Placeholder por contexto">
         <div className="grid grid-cols-1 gap-4 tablet:grid-cols-2">
           <figure className="flex flex-col gap-2">
             <figcaption className="text-caption text-secondary">New chat</figcaption>
-            <Demo placeholder="Ask Vyzer…" />
+            <Demo placeholder="Ask Zynox…" />
           </figure>
           <figure className="flex flex-col gap-2">
             <figcaption className="text-caption text-secondary">Conversa em andamento</figcaption>
@@ -75,7 +75,7 @@ export function Page() {
           </figure>
           <figure className="flex flex-col gap-2">
             <figcaption className="text-caption text-secondary">Enviando (desabilitado)</figcaption>
-            <Demo placeholder="Ask Vyzer…" sending />
+            <Demo placeholder="Ask Zynox…" sending />
           </figure>
         </div>
       </DocSection>

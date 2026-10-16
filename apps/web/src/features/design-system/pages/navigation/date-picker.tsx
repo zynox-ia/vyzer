@@ -3,8 +3,8 @@ import {
   DatePickerPanel,
   PopoverSurface,
   PropertyButton,
-} from "@vyzer/design-system/components";
-import { formatDateValue, type DateGranularity, type DateValue } from "@vyzer/design-system/date";
+} from "@zynox/design-system/components";
+import { formatDateValue, type DateGranularity, type DateValue } from "@zynox/design-system/date";
 import { CalendarDays } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -121,8 +121,8 @@ export function Page() {
         ],
         dos: ["Aceite a precisão que a pessoa tem: um trimestre é uma resposta válida"],
         donts: ["Não force o dia exato quando o planejamento é por mês ou trimestre"],
-        usage: `import { DatePicker, PropertyButton } from "@vyzer/design-system/components";
-import { formatDateValue } from "@vyzer/design-system/date";
+        usage: `import { DatePicker, PropertyButton } from "@zynox/design-system/components";
+import { formatDateValue } from "@zynox/design-system/date";
 
 <DatePicker label="Start date" value={start} onValueChange={setStart}>
   <PropertyButton leading={<CalendarDays />} empty={!start}>

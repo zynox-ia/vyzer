@@ -1,6 +1,6 @@
 # Issue tracker: Linear
 
-As issues do Vyzer ficam no Linear, time `VYZ`. Agentes acessam pelo MCP do Linear.
+As issues do Zynox ficam no Linear, time `VYZ`. Agentes acessam pelo MCP do Linear.
 
 ## Convenções
 

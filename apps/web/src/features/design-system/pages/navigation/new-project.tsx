@@ -24,8 +24,8 @@ import {
   PropertyButton,
   type LabelColor,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
-import { formatDateValue, type DateValue } from "@vyzer/design-system/date";
+} from "@zynox/design-system/components";
+import { formatDateValue, type DateValue } from "@zynox/design-system/date";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,

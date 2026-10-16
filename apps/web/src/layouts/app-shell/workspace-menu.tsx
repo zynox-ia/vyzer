@@ -15,8 +15,8 @@ import {
   MenuSeparator,
   MenuTrigger,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { WorkspaceMark } from "./workspace-mark";
 
 /** Ícone de quem ainda não carregou o Workspace: o mesmo padrão salvo no banco (spec 1.1, D1). */

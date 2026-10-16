@@ -16,7 +16,7 @@ import { Ellipsis, LogOut, Settings, Trash2, UsersRound } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import type { TeamListItem } from "@vyzer/contract";
+import type { TeamListItem } from "@zynox/contract";
 import {
   Alert,
   Button,
@@ -44,8 +44,8 @@ import {
   TableHeader,
   TableRow,
   useToast,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { deleteTeamMutationOptions, teamsQueryOptions } from "@/services/teams";
 import { formatShortDate } from "./format";
 import { TEAM_DESTINATIONS } from "./team-settings/destinations";

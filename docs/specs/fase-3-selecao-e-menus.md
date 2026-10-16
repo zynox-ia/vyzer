@@ -4,7 +4,7 @@ Issue: [VYZ-31](https://linear.app/zynox-dev/issue/VYZ-31/fase-3-selecao-e-menus
 
 ## Link do Figma
 
-Arquivo [Vyzer](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Vyzer), página `0:1`. Mapa completo por fase no artifact "Mapa do Figma por fase".
+Arquivo [Zynox](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Zynox), página `0:1`. Mapa completo por fase no artifact "Mapa do Figma por fase".
 
 | Componente              | Nó                                                                                                                                                                                                                             | Situação                                                              |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |

@@ -19,7 +19,7 @@ import {
   updateCustomerSettings,
   updateCustomerStatus,
   updateCustomerTier,
-} from "@vyzer/db";
+} from "@zynox/db";
 import type { createWorkspaceMiddleware } from "./orpc";
 
 type Middleware = ReturnType<typeof createWorkspaceMiddleware>;

@@ -47,7 +47,7 @@ Cada item com página em `/design-system`, seção **AI** (hoje vazia, `plannedI
    - **Página cheia** (27:6907): sugestões em cartão (ícone, título, descrição de 1 linha), grade de 3 colunas.
    - **Painel compacto** (27:7230, 1:3581): sugestões em pílula (ícone + rótulo), empilhadas.
      Como o cartão de sugestão não existe no design system, é uma composição nova (como o Composer de comentário), não um componente de base: botão com `border-default`, `rounded-container`, hover em camada, ícone `text-tertiary`, título `type-heading-3`/descrição `text-secondary`.
-2. **Composer do agente.** Campo de texto que cresce (TextArea plain, sem editor rico — ver decisão abaixo), rodapé com botão "Skills" (Menu existente, com chevron), anexar (IconButton ghost) e enviar (IconButton primary, seta para cima, desabilitado sem texto). Placeholder muda por contexto ("Ask Vyzer…", "Reply…", "Tell <Agent> what to do next…"). Nós: 27:6954, 27:7181, 27:7324, 1:4622, 27:17872.
+2. **Composer do agente.** Campo de texto que cresce (TextArea plain, sem editor rico — ver decisão abaixo), rodapé com botão "Skills" (Menu existente, com chevron), anexar (IconButton ghost) e enviar (IconButton primary, seta para cima, desabilitado sem texto). Placeholder muda por contexto ("Ask Zynox…", "Reply…", "Tell <Agent> what to do next…"). Nós: 27:6954, 27:7181, 27:7324, 1:4622, 27:17872.
 3. **Mensagens.**
    - Usuário: pílula à direita (`bg-control-strong`, `rounded-full`), ícone + texto.
    - Agente: parágrafo à esquerda, sem moldura, ícone pequeno à frente.

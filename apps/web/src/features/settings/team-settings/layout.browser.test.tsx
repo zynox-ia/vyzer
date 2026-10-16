@@ -4,8 +4,8 @@ import { page } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { queryOptions, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
-import type { Team } from "@vyzer/contract";
-import { ToastProvider } from "@vyzer/design-system/components";
+import type { Team } from "@zynox/contract";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { TeamSettingsLayout, useTeam } from "./layout";
 
@@ -18,8 +18,8 @@ vi.mock("@/services/teams", () => ({
 
 const TEAM: Team = {
   id: "11111111-1111-4111-8111-111111111111",
-  name: "Vyzer",
-  slug: "vyzer",
+  name: "Atlas",
+  slug: "atlas",
   key: "VYZ",
   icon: { kind: "icon", name: "Layers", color: "purple" },
   description: null,
@@ -27,7 +27,7 @@ const TEAM: Team = {
   estimation: "none",
   detailedIssueHistory: false,
   issueEmailEnabled: false,
-  issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
+  issueEmailAddress: "atlas-4c7872ac31b0@intake.zynox.app.br",
   createdAt: "2026-08-15T12:00:00.000Z",
   updatedAt: "2026-08-15T12:00:00.000Z",
 };
@@ -41,7 +41,7 @@ function LocationOutput() {
   return <output aria-label="Current URL">{location.pathname}</output>;
 }
 
-function Harness({ slug = "vyzer" }: { slug?: string }) {
+function Harness({ slug = "atlas" }: { slug?: string }) {
   // retryDelay 0: o layout tenta erros de rede até 3 vezes, sem esperar o backoff padrão.
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, retryDelay: 0 } } });
   return (
@@ -81,8 +81,8 @@ describe("TeamSettingsLayout", () => {
     await expect.element(screen.getByText("Loading Team.")).toBeInTheDocument();
     resolve(TEAM);
 
-    await expect.element(screen.getByText("Team page: Vyzer")).toBeVisible();
-    expect(fetchTeam).toHaveBeenCalledWith("vyzer");
+    await expect.element(screen.getByText("Team page: Atlas")).toBeVisible();
+    expect(fetchTeam).toHaveBeenCalledWith("atlas");
     await expect.element(screen.getByText("Loading Team.")).not.toBeInTheDocument();
   });
 
@@ -107,7 +107,7 @@ describe("TeamSettingsLayout", () => {
     fetchTeam.mockResolvedValue(TEAM);
     await screen.getByRole("button", { name: "Retry" }).click();
 
-    await expect.element(screen.getByText("Team page: Vyzer")).toBeVisible();
+    await expect.element(screen.getByText("Team page: Atlas")).toBeVisible();
     await expect.element(screen.getByText("Could not load Team")).not.toBeInTheDocument();
   });
 });

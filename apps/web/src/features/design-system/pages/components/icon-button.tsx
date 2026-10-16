@@ -3,7 +3,7 @@ import {
   type ButtonVariant,
   type IconButtonSize,
   type IconButtonTone,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Ellipsis, ListFilter, Plus, Search, SlidersHorizontal, SquarePen } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -159,7 +159,7 @@ export function Page() {
         content: ['O label descreve a ação, não o ícone: "Create new issue", não "Pencil".'],
         dos: ["Use o mesmo ícone para a mesma ação em todo o produto"],
         donts: ["Não use para ações destrutivas sem confirmação"],
-        usage: `import { IconButton } from "@vyzer/design-system/components";
+        usage: `import { IconButton } from "@zynox/design-system/components";
 import { SquarePen } from "lucide-react";
 
 <IconButton icon={SquarePen} label="Create new issue" variant="secondary" />`,

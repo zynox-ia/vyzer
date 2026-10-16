@@ -1,7 +1,7 @@
 /**
  * "Create a new team" dentro de Settings (Linear ao vivo, 29/09: a nav de Settings continua; "Back"
  * no topo do conteúdo, título com subtítulo, cartão com Icon & Name e Identifier e o botão abaixo,
- * à direita; sem o aviso de limite de plano, que o Vyzer não tem). Origem: Settings → Administration → Teams → Create team (spec `settings-administration.md`, sub-etapa
+ * à direita; sem o aviso de limite de plano, que o Zynox não tem). Origem: Settings → Administration → Teams → Create team (spec `settings-administration.md`, sub-etapa
  * 2.1; sem frame no Figma e o formulário real do Linear estava bloqueado pelo limite de times do
  * plano, então segue o pattern Settings Form do design system com os campos da spec): ícone e
  * Name na mesma linha, e Identifier (a key, "Used as a prefix for team issues"). O slug vem do
@@ -21,8 +21,8 @@ import {
   TextInput,
   useToast,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { createTeamMutationOptions, teamsQueryOptions } from "@/services/teams";
 import { SettingsGroup, SettingsRow } from "./settings-row";
 

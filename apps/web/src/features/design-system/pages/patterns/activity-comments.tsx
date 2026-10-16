@@ -12,8 +12,8 @@ import {
   TextArea,
   Timeline,
   TimelineItem,
-} from "@vyzer/design-system/components";
-import { Icon, PriorityIcon, StatusIcon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon, PriorityIcon, StatusIcon } from "@zynox/design-system/icons";
 import {
   Activity as ActivityIcon,
   Bell,

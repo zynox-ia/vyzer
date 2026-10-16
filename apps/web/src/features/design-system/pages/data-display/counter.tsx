@@ -9,8 +9,8 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { Inbox, UserRound } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -158,7 +158,7 @@ export function Page() {
         content: ['Números inteiros; acima do máximo, "99+".'],
         dos: ["Use accent só para não lidos"],
         donts: ["Não mostre zero em listas: esconda o Counter"],
-        usage: `import { Counter } from "@vyzer/design-system/components";
+        usage: `import { Counter } from "@zynox/design-system/components";
 
 <Counter count={3} />
 <Counter count={5} tone="accent" />`,

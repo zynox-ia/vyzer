@@ -1,4 +1,17 @@
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  notInArray,
+  or,
+  sql,
+} from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Db } from "./index";
 import * as schema from "./schema";
@@ -7,6 +20,9 @@ type DbSession = Pick<Db, "delete" | "execute" | "insert" | "select" | "update">
 
 export type NotificationListOptions = {
   unreadOnly?: boolean;
+  priorityOnly?: boolean;
+  otherOnly?: boolean;
+  priorityAssignmentsEnabled?: boolean;
   order?: "newest" | "oldest";
   cursor?: { id: string; createdAt: Date };
   limit: number;
@@ -31,7 +47,7 @@ export async function notifyIssueEvent(
   tx: DbSession,
   event: NotificationIssueEvent,
 ): Promise<void> {
-  if (event.type !== "assignee") return;
+  if (event.type !== "assignee" || !event.actorId) return;
 
   const [currentIssue] = await tx
     .select({ id: schema.issue.id })
@@ -108,6 +124,16 @@ export async function listWorkspaceNotifications(
   ];
 
   if (options.unreadOnly) conditions.push(isNull(schema.notification.readAt));
+  if (options.priorityOnly) {
+    if (options.priorityAssignmentsEnabled) {
+      conditions.push(inArray(schema.notification.type, ["assigned", "unassigned"]));
+    } else {
+      conditions.push(sql`false`);
+    }
+  }
+  if (options.otherOnly && options.priorityAssignmentsEnabled) {
+    conditions.push(notInArray(schema.notification.type, ["assigned", "unassigned"]));
+  }
   if (options.cursor) {
     const cursorAt = options.cursor.createdAt;
     const cursorIdCondition =
@@ -135,6 +161,7 @@ export async function listWorkspaceNotifications(
       type: schema.notification.type,
       actorId: actor.id,
       actorName: actor.name,
+      actorAvatarUrl: actor.avatarUrl,
       issueId: schema.issue.id,
       issueIdentifier: sql<string>`${schema.team.key} || '-' || ${schema.issue.number}::text`,
       issueTitle: schema.issue.title,
@@ -193,7 +220,12 @@ export async function listWorkspaceNotifications(
   const items = rows.slice(0, options.limit).map((row) => ({
     id: row.id,
     type: row.type,
-    actor: row.actorId ? { id: row.actorId, name: row.actorName ?? "" } : null,
+    isPriority:
+      options.priorityAssignmentsEnabled === true &&
+      (row.type === "assigned" || row.type === "unassigned"),
+    actor: row.actorId
+      ? { id: row.actorId, name: row.actorName ?? "", avatarUrl: row.actorAvatarUrl }
+      : null,
     issue: row.issueId
       ? {
           id: row.issueId,

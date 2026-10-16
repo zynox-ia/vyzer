@@ -7,7 +7,7 @@ import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Ellipsis, Pencil, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import type { ApiClient, ApiKeyPermission } from "@vyzer/contract";
+import type { ApiClient, ApiKeyPermission } from "@zynox/contract";
 import {
   Confirm,
   IconButton,
@@ -16,8 +16,8 @@ import {
   MenuItem,
   MenuTrigger,
   useToast,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { api } from "@/services/api";
 import { revokeApiKeyMutationOptions } from "@/services/api-keys";
 

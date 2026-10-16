@@ -1,4 +1,4 @@
-import { Button, TextInput, type ButtonVariant } from "@vyzer/design-system/components";
+import { Button, TextInput, type ButtonVariant } from "@zynox/design-system/components";
 import { ChevronDown, Plus } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -200,7 +200,7 @@ export function Page() {
         ],
         dos: ["Um primário por tela ou diálogo", "Danger só para ações destrutivas e confirmadas"],
         donts: ["Não use dois primários lado a lado", 'Não troque o rótulo por "OK" ou "Submit"'],
-        usage: `import { Button } from "@vyzer/design-system/components";
+        usage: `import { Button } from "@zynox/design-system/components";
 import { Plus } from "lucide-react";
 
 <Button variant="primary" icon={Plus}>Create issue</Button>

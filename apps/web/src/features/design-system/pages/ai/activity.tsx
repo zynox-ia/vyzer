@@ -9,7 +9,7 @@ import {
   Timeline,
   TimelineItem,
   ToolCallCollapsible,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Decisions, DocPage, DocSection } from "../../kit/doc";
 import { ThemePair } from "../../kit/theme-frame";
 

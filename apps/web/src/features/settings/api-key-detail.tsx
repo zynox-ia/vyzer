@@ -8,7 +8,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { KeyRound } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
-import { Alert, Button, EmptyState, Skeleton } from "@vyzer/design-system/components";
+import { Alert, Button, EmptyState, Skeleton } from "@zynox/design-system/components";
 import { apiKeysQueryOptions } from "@/services/api-keys";
 import {
   ApiKeyMenu,

@@ -14,8 +14,8 @@ import {
   MenuContent,
   MenuItem,
   MenuTrigger,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { TopBar } from "@/layouts/app-shell/top-bar";
 import { useAgentChatStore } from "./agent-chat-store";
 import { ChatSwitcherButton, AgentConversationView } from "./agent-conversation-view";

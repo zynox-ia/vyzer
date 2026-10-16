@@ -29,9 +29,9 @@ import {
   useToast,
   type LabelColor,
   type LabelItem,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
-import { cn } from "@vyzer/design-system/cn";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
+import { cn } from "@zynox/design-system/cn";
 import {
   ASSIGNEES,
   INITIAL_LABELS,
@@ -168,7 +168,8 @@ export function CreateIssueDialog({
   onSaveDraft,
 }: {
   teams?: Team[];
-  /** Fechar sem criar, com algo escrito, salva o que há como rascunho (item Drafts da sidebar). */
+  /** Fechar sem criar, com algo escrito, salva o que há como rascunho (sem tela própria para
+   * retomá-lo: a Missão 02 tirou /drafts da sidebar, fora do sitemap). */
   onSaveDraft?: (draft: { title: string; description: string }) => void;
 } = {}) {
   const teamOptions = teams ? teamOptionsFrom(teams) : TEAMS;

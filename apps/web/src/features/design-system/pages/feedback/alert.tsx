@@ -1,7 +1,7 @@
 /**
  * Alert inline: sem desenho no Figma; tons de status (st-*) com as medidas do Toast.
  */
-import { Alert, Button, type AlertTone } from "@vyzer/design-system/components";
+import { Alert, Button, type AlertTone } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -122,7 +122,7 @@ export function Page() {
         ],
         dos: ["Um alerta por assunto, perto do que ele afeta"],
         donts: ["Não use warning ou danger para informação neutra", "Não empilhe vários alertas"],
-        usage: `import { Alert } from "@vyzer/design-system/components";
+        usage: `import { Alert } from "@zynox/design-system/components";
 
 <Alert tone="warning" title="Your trial ends in 3 days">
   Add a payment method to keep your projects.

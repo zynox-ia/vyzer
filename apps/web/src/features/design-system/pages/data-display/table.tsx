@@ -15,13 +15,13 @@ import {
   type Health,
   type ProjectIconValue,
   type SortDirection,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import {
   Icon,
   PriorityIcon,
   ProjectStatusIcon,
   type ProjectStatusType,
-} from "@vyzer/design-system/icons";
+} from "@zynox/design-system/icons";
 import { UserRound } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -431,7 +431,7 @@ export function Page() {
           "Deixe ordenáveis só as colunas que fazem sentido comparar",
         ],
         donts: ["Não use a tabela para layout", "Não esconda a seleção só no hover"],
-        usage: `import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@vyzer/design-system/components";
+        usage: `import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@zynox/design-system/components";
 
 <Table label="Projects">
   <TableHeader>

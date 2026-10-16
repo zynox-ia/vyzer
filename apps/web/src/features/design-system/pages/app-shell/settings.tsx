@@ -5,7 +5,7 @@
  */
 import { SettingsLayout } from "@/layouts/app-shell/settings-layout";
 import { DEFAULT_PREFERENCE_VALUES, PreferencesView } from "@/features/settings/preferences";
-import { setThemePreference } from "@vyzer/design-system/theme";
+import { setThemePreference } from "@zynox/design-system/theme";
 import { useState } from "react";
 import { SETTINGS_GROUPS } from "@/features/settings/nav-data";
 import { Decisions, DocPage, DocSection } from "../../kit/doc";

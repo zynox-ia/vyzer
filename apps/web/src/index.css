@@ -1,5 +1,5 @@
 /* Estilos do app: só o design system. Telas usam apenas os tokens e componentes dele (AGENTS.md). */
-@import "@vyzer/design-system/styles.css";
+@import "@zynox/design-system/styles.css";
 
 /* Classes usadas pelas telas e pela documentação (/design-system). */
 @source "./";

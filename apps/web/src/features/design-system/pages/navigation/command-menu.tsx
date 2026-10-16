@@ -11,7 +11,7 @@ import {
   CommandMenu,
   CommandSeparator,
   KbdSequence,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { useCommandState } from "cmdk";
 import { Search } from "lucide-react";
 import { Fragment, useState } from "react";
@@ -287,7 +287,7 @@ export function Page() {
       doc={{
         title: "Command Menu",
         description:
-          'Busca global de ações e navegação (⌘K / Ctrl+K), numa janela modal. Da família do menu "/" (Figma 1:4653): as mesmas linhas, rótulos e separadores, com busca no topo, atalhos em Kbd e páginas para escolher um valor. O catálogo é o do Linear (Figma 38:2), com "Vyzer" no lugar do nome do produto.',
+          'Busca global de ações e navegação (⌘K / Ctrl+K), numa janela modal. Da família do menu "/" (Figma 1:4653): as mesmas linhas, rótulos e separadores, com busca no topo, atalhos em Kbd e páginas para escolher um valor. O catálogo é o do Linear (Figma 38:2), com "Zynox" no lugar do nome do produto.',
         whenToUse: [
           "Acesso rápido a qualquer ação ou lugar pelo teclado",
           "Ações sobre o item atual (status, prioridade) sem abrir menus",
@@ -355,7 +355,7 @@ export function Page() {
         content: [
           'Rótulos com verbo ("Create new issue…", "Go to inbox"); reticências quando pedem mais uma escolha (página ou janela).',
           "Grupos e ordem do Linear; com uma issue aberta, os comandos dela vêm primeiro, sem rótulo (o chip faz esse papel).",
-          '"Linear" vira "Vyzer" onde é o nome do produto ("Ask Vyzer", "Vyzer status").',
+          '"Linear" vira "Zynox" onde é o nome do produto ("Ask Zynox", "Zynox status").',
         ],
         dos: [
           "Mostre o atalho de cada ação quando existir",
@@ -367,7 +367,7 @@ export function Page() {
         ],
         usage: `import {
   CommandGroup, CommandItem, CommandMenu, CommandSeparator,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 
 <CommandMenu
   open={open}

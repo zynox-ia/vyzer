@@ -2,7 +2,7 @@
  * Filter Breakdown (Figma 18:1130, painel da vista Zynox › Active issues): contagem de issues por
  * responsável, label, prioridade e projeto; clicar numa linha filtra por aquele valor.
  */
-import { FilterBreakdown, type FilterValue } from "@vyzer/design-system/components";
+import { FilterBreakdown, type FilterValue } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { BREAKDOWN_GROUPS, describeFilters } from "../../kit/filter-data";
@@ -93,7 +93,7 @@ export function Page() {
         ],
         dos: ["Ordene as linhas por contagem ou pela ordem natural do valor"],
         donts: ["Não esconda a contagem zero de valores que existem na vista"],
-        usage: `import { FilterBreakdown, type FilterValue } from "@vyzer/design-system/components";
+        usage: `import { FilterBreakdown, type FilterValue } from "@zynox/design-system/components";
 
 const [filters, setFilters] = useState<FilterValue>({});
 

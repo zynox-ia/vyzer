@@ -34,7 +34,7 @@ import {
   TextInput,
   useToast,
   type ListOption,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { api } from "@/services/api";
 import { apiKeysQueryOptions, revokeApiKeyMutationOptions } from "@/services/api-keys";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";

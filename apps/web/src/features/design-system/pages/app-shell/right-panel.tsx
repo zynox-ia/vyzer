@@ -3,7 +3,7 @@
  * (Properties, Milestones, Progress, Activity) no cabeçalho do ListGroup (Fase 5). O conteúdo de
  * cada seção é Fase 10 (Patterns) — fora do escopo aqui.
  */
-import { Skeleton } from "@vyzer/design-system/components";
+import { Skeleton } from "@zynox/design-system/components";
 import { RightPanel, RightPanelSection } from "@/layouts/app-shell/right-panel";
 import { AppShellProvider } from "@/layouts/app-shell/context";
 import { Decisions, DocPage, DocSection, Prose } from "../../kit/doc";

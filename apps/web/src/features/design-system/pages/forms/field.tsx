@@ -6,7 +6,7 @@ import {
   FormMessage,
   HelperText,
   TextInput,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 import { StatesGrid } from "../../kit/states";
 
@@ -133,7 +133,7 @@ export function Page() {
         ],
         dos: ["Mostre a ajuda antes de a pessoa errar"],
         donts: ["Não use placeholder no lugar do rótulo"],
-        usage: `import { Field, TextInput } from "@vyzer/design-system/components";
+        usage: `import { Field, TextInput } from "@zynox/design-system/components";
 
 <Field label="Team key" description="Used in issue IDs (ENG-123)." error={error} required>
   <TextInput value={key} onChange={…} />

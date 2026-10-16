@@ -1,7 +1,7 @@
 /**
  * Group Header: cabeçalho recolhível de um grupo da lista de issues (Figma 1:6877 em 1:7477).
  */
-import { IssueList, IssueRow, ListGroup } from "@vyzer/design-system/components";
+import { IssueList, IssueRow, ListGroup } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -166,7 +166,7 @@ export function Page() {
         content: ["Nome do valor do agrupamento, sem verbo; a contagem é o total do grupo."],
         dos: ["Mantenha a mesma ordem de grupos em todas as vistas", "Dê nome ao botão +"],
         donts: ["Não esconda a contagem", "Não aninhe grupos dentro de grupos"],
-        usage: `import { IssueList, ListGroup } from "@vyzer/design-system/components";
+        usage: `import { IssueList, ListGroup } from "@zynox/design-system/components";
 
 <ListGroup
   title="In Progress"

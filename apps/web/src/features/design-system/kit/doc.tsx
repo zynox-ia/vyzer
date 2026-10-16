@@ -2,7 +2,7 @@
  * Peças de layout das páginas de /design-system: página, seção, tabela, código e decisões.
  * Só apresentação; os valores vêm dos tokens do design system.
  */
-import { cn } from "@vyzer/design-system/cn";
+import { cn } from "@zynox/design-system/cn";
 import type { ReactNode } from "react";
 
 export function DocPage({
@@ -142,7 +142,7 @@ export function Decisions({ items }: { items: Decision[] }) {
   return (
     <DocSection
       title="Decisões"
-      description="Cada valor com a regra que o justifica (skill vyzer-ui-design, ADR ou Figma)."
+      description="Cada valor com a regra que o justifica (skill zynox-ui-design, ADR ou Figma)."
     >
       <ul className="flex flex-col rounded-container border border-subtle">
         {items.map((d, i) => (

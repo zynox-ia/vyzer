@@ -5,7 +5,7 @@ status: accepted
 # Defer authentication; fixed workspace/member context for now
 
 The owner decided (2026-09-28) to start real backend and screen implementation before
-authentication: Vyzer is internal-only for now, and a login barrier adds no value yet. Better
+authentication: Zynox is internal-only for now, and a login barrier adds no value yet. Better
 Auth (ADR-0006) and the session-based Workspace middleware (ADR-0007) are still the target
 design — this ADR only sequences them after the domain, not away.
 

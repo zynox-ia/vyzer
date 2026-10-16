@@ -1,4 +1,4 @@
-# Vyzer
+# Zynox
 
 Internal project management tool for the owner's companies, replicating Linear's domain model and behavior as Linear works today. When a term or behavior is undefined here, Linear's is the answer; deliberate deviations are recorded in `docs/adr/`.
 
@@ -23,7 +23,7 @@ A Member who can only see the Teams they were invited to.
 _Avoid_: External user, client user
 
 **Team**:
-A group of people within a Workspace that owns Issues, a Workflow and, optionally, Cycles. In Vyzer usage there is typically one Team per client, but that is a convention, not part of the model.
+A group of people within a Workspace that owns Issues, a Workflow and, optionally, Cycles. In Zynox usage there is typically one Team per client, but that is a convention, not part of the model.
 _Avoid_: Squad, group, department, client
 
 **Team key**:

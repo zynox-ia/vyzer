@@ -9,7 +9,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router";
-import type { ApiKeyPolicy } from "@vyzer/contract";
+import type { ApiKeyPolicy } from "@zynox/contract";
 import {
   Alert,
   Button,
@@ -19,8 +19,8 @@ import {
   Skeleton,
   useToast,
   type ListOption,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { apiKeysQueryOptions } from "@/services/api-keys";
 import { currentWorkspaceQueryOptions, updateWorkspaceMutationOptions } from "@/services/workspace";
 import { ISSUED_KEYS_PATH, SECURITY_PATH } from "./api-key-shared";
@@ -149,7 +149,7 @@ export function ApiSettingsPage() {
     <div className="flex flex-col gap-1">
       <h1 className="type-heading-1 text-primary">API</h1>
       <p className="pb-6 text-body-md text-secondary">
-        Use API keys to connect integrations and tools to Vyzer
+        Use API keys to connect integrations and tools to Zynox
       </p>
       <section className="flex flex-col gap-1">
         <h2 className="type-heading-3 text-primary">API keys</h2>

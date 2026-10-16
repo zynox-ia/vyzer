@@ -10,8 +10,8 @@ import {
 } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import axe from "axe-core";
-import type { TeamListItem } from "@vyzer/contract";
-import { ToastProvider } from "@vyzer/design-system/components";
+import type { TeamListItem } from "@zynox/contract";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { TeamsPage } from "./teams";
 
@@ -25,7 +25,7 @@ vi.mock("@/services/teams", () => ({
 }));
 
 const ZYNOX_ID = "11111111-1111-4111-8111-111111111111";
-const VYZER_ID = "22222222-2222-4222-8222-222222222222";
+const ATLAS_ID = "22222222-2222-4222-8222-222222222222";
 const ALPHA_ID = "33333333-3333-4333-8333-333333333333";
 
 function makeTeams(): TeamListItem[] {
@@ -41,16 +41,16 @@ function makeTeams(): TeamListItem[] {
       estimation: "none",
       detailedIssueHistory: false,
       issueEmailEnabled: false,
-      issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
+      issueEmailAddress: "atlas-4c7872ac31b0@intake.zynox.app.br",
       createdAt: "2026-09-29T12:00:00.000Z",
       updatedAt: "2026-09-29T12:00:00.000Z",
       memberCount: 5,
       issueCount: 0,
     },
     {
-      id: VYZER_ID,
-      name: "Vyzer",
-      slug: "vyzer",
+      id: ATLAS_ID,
+      name: "Atlas",
+      slug: "atlas",
       key: "VYZ",
       icon: { kind: "icon", name: "Layers", color: "purple" },
       description: null,
@@ -58,7 +58,7 @@ function makeTeams(): TeamListItem[] {
       estimation: "none",
       detailedIssueHistory: false,
       issueEmailEnabled: false,
-      issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
+      issueEmailAddress: "atlas-4c7872ac31b0@intake.zynox.app.br",
       createdAt: "2026-08-15T12:00:00.000Z",
       updatedAt: "2026-08-15T12:00:00.000Z",
       memberCount: 12,
@@ -75,7 +75,7 @@ function makeTeams(): TeamListItem[] {
       estimation: "none",
       detailedIssueHistory: false,
       issueEmailEnabled: false,
-      issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
+      issueEmailAddress: "atlas-4c7872ac31b0@intake.zynox.app.br",
       createdAt: "2026-07-01T12:00:00.000Z",
       updatedAt: "2026-07-01T12:00:00.000Z",
       memberCount: 2,
@@ -154,7 +154,7 @@ describe("TeamsPage", () => {
     await expect.element(screen.getByText("Loading Teams.")).toBeInTheDocument();
     resolve(makeTeams());
 
-    await expect.element(screen.getByRole("link", { name: "Vyzer" })).toBeVisible();
+    await expect.element(screen.getByRole("link", { name: "Atlas" })).toBeVisible();
     const table = screen.getByRole("table", { name: "Teams" });
     for (const name of ["Name", "Members", "Issues", "Created"]) {
       await expect.element(table.getByRole("columnheader", { name })).toBeVisible();
@@ -163,9 +163,9 @@ describe("TeamsPage", () => {
     await expect.element(zynox).toHaveTextContent("ZYN");
     await expect.element(zynox).toHaveTextContent("5");
     await expect.element(zynox).toHaveTextContent("Sep 29");
-    const vyzer = screen.getByRole("row", { name: /Vyzer/ });
-    await expect.element(vyzer).toHaveTextContent("12");
-    await expect.element(vyzer).toHaveTextContent("Aug 15");
+    const atlas = screen.getByRole("row", { name: /Atlas/ });
+    await expect.element(atlas).toHaveTextContent("12");
+    await expect.element(atlas).toHaveTextContent("Aug 15");
     await expect.element(screen.getByText("Loading Teams.")).not.toBeInTheDocument();
   });
 
@@ -175,7 +175,7 @@ describe("TeamsPage", () => {
 
     const rows = bodyRows(screen);
     await expect.element(rows.nth(2)).toHaveTextContent("Alpha");
-    await expect.element(rows.nth(3)).toHaveTextContent("Vyzer");
+    await expect.element(rows.nth(3)).toHaveTextContent("Atlas");
     await expect.element(rows.nth(4)).toHaveTextContent("Zynox");
 
     await screen
@@ -198,7 +198,7 @@ describe("TeamsPage", () => {
     // Numérico: 2, 5, 12 (textual seria 12, 2, 5).
     await expect.element(rows.nth(2)).toHaveTextContent("Alpha");
     await expect.element(rows.nth(3)).toHaveTextContent("Zynox");
-    await expect.element(rows.nth(4)).toHaveTextContent("Vyzer");
+    await expect.element(rows.nth(4)).toHaveTextContent("Atlas");
   });
 
   it("mostra a barra (filtro, Active, Export CSV, Create team), a coluna Visibility e o grupo Active", async () => {
@@ -272,7 +272,7 @@ describe("TeamsPage", () => {
     await screen.getByRole("cell", { name: "Aug 15" }).click();
     await expect
       .element(screen.getByLabelText("Current URL"))
-      .toHaveTextContent(/^\/settings\/teams\/vyzer$/);
+      .toHaveTextContent(/^\/settings\/teams\/atlas$/);
   });
 
   it("o número de Members é um link para os Members do Team, sem disparar a linha", async () => {
@@ -282,7 +282,7 @@ describe("TeamsPage", () => {
     const table = screen.getByRole("table", { name: "Teams" });
     await expect
       .element(table.getByRole("link", { name: "12", exact: true }))
-      .toHaveAttribute("href", "/settings/teams/vyzer/members");
+      .toHaveAttribute("href", "/settings/teams/atlas/members");
     await expect
       .element(table.getByRole("link", { name: "5", exact: true }))
       .toHaveAttribute("href", "/settings/teams/zynox/members");
@@ -291,10 +291,10 @@ describe("TeamsPage", () => {
       .toHaveAttribute("href", "/settings/teams/alpha/members");
 
     await table.getByRole("link", { name: "12", exact: true }).click();
-    // Só a navegação do link: nunca passa por /settings/teams/vyzer (a da linha).
+    // Só a navegação do link: nunca passa por /settings/teams/atlas (a da linha).
     await expect
       .element(screen.getByLabelText("Current URL"))
-      .toHaveTextContent(/^\/settings\/teams\/vyzer\/members$/);
+      .toHaveTextContent(/^\/settings\/teams\/atlas\/members$/);
   });
 
   it("o link do nome navega para a configuração do Team", async () => {
@@ -311,9 +311,9 @@ describe("TeamsPage", () => {
     fetchTeams.mockResolvedValue(makeTeams());
     const screen = await render(<Harness />);
 
-    await expect.element(screen.getByRole("link", { name: "Vyzer" })).toBeVisible();
-    await screen.getByRole("row", { name: /Vyzer/ }).hover();
-    await screen.getByRole("button", { name: "Open menu for Vyzer" }).click();
+    await expect.element(screen.getByRole("link", { name: "Atlas" })).toBeVisible();
+    await screen.getByRole("row", { name: /Atlas/ }).hover();
+    await screen.getByRole("button", { name: "Open menu for Atlas" }).click();
     await expect.element(screen.getByRole("menuitem", { name: "Settings" })).toBeVisible();
     await expect.element(screen.getByRole("menuitem", { name: "Leave team…" })).toBeVisible();
     await expect.element(screen.getByRole("menuitem", { name: "Delete…" })).toBeVisible();
@@ -323,9 +323,9 @@ describe("TeamsPage", () => {
     fetchTeams.mockResolvedValue(makeTeams());
     const screen = await render(<Harness />);
 
-    await expect.element(screen.getByRole("link", { name: "Vyzer" })).toBeVisible();
-    await screen.getByRole("row", { name: /Vyzer/ }).hover();
-    await screen.getByRole("button", { name: "Open menu for Vyzer" }).click();
+    await expect.element(screen.getByRole("link", { name: "Atlas" })).toBeVisible();
+    await screen.getByRole("row", { name: /Atlas/ }).hover();
+    await screen.getByRole("button", { name: "Open menu for Atlas" }).click();
     await userEvent.keyboard("{ArrowDown}");
     await expect.element(screen.getByRole("menuitem", { name: "Settings" })).toHaveFocus();
     await userEvent.keyboard("{ArrowRight}");
@@ -351,7 +351,7 @@ describe("TeamsPage", () => {
 
     await expect
       .element(screen.getByLabelText("Current URL"))
-      .toHaveTextContent("/settings/teams/vyzer/triage");
+      .toHaveTextContent("/settings/teams/atlas/triage");
   });
 
   it("Delete team… abre o Confirm com foco em Cancel; Cancel não exclui", async () => {
@@ -447,7 +447,7 @@ describe("TeamsPage", () => {
     fetchTeams.mockResolvedValue(makeTeams());
     await screen.getByRole("button", { name: "Retry" }).click();
 
-    await expect.element(screen.getByRole("link", { name: "Vyzer" })).toBeVisible();
+    await expect.element(screen.getByRole("link", { name: "Atlas" })).toBeVisible();
     await expect.element(screen.getByText("Could not load Teams")).not.toBeInTheDocument();
   });
 
@@ -455,7 +455,7 @@ describe("TeamsPage", () => {
     document.documentElement.dataset.theme = theme;
     fetchTeams.mockResolvedValue(makeTeams());
     const screen = await render(<Harness />);
-    await expect.element(screen.getByRole("link", { name: "Vyzer" })).toBeVisible();
+    await expect.element(screen.getByRole("link", { name: "Atlas" })).toBeVisible();
 
     const root = document.querySelector("main");
     if (!root) throw new Error("main não encontrado");

@@ -52,7 +52,7 @@ describe("AgentConversationView: envio", () => {
     const screen = await render(
       <AgentConversationView density="full" suggestions={FULL_SUGGESTIONS} />,
     );
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill("What's blocking Fase 7?");
     await userEvent.keyboard("{Enter}");
 
@@ -83,7 +83,7 @@ describe("AgentConversationView: envio", () => {
     const screen = await render(
       <AgentConversationView density="full" suggestions={FULL_SUGGESTIONS} />,
     );
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill(ERROR_TRIGGER);
     await userEvent.keyboard("{Enter}");
 
@@ -104,7 +104,7 @@ describe("AgentConversationView: anuncio aria-live", () => {
       <AgentConversationView density="full" suggestions={FULL_SUGGESTIONS} />,
     );
     const { seen, stop } = observeLiveRegion();
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill("Status update please");
     await userEvent.keyboard("{Enter}");
 
@@ -121,7 +121,7 @@ describe("AgentConversationView: anuncio aria-live", () => {
     const screen = await render(
       <AgentConversationView density="full" suggestions={FULL_SUGGESTIONS} />,
     );
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill(ERROR_TRIGGER);
     await userEvent.keyboard("{Enter}");
 
@@ -143,7 +143,7 @@ describe("AgentConversationView: sugestoes preenchem sem enviar", () => {
     const suggestion = FULL_SUGGESTIONS[0]!;
     await screen.getByRole("button", { name: new RegExp(suggestion.title) }).click();
 
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await expect.element(field).toHaveValue(suggestion.title);
     await expect.element(screen.getByLabelText("Conversation")).not.toBeInTheDocument();
     await expect.element(screen.getByText("Get started with some examples")).toBeVisible();
@@ -156,7 +156,7 @@ describe("AgentConversationView: sugestoes preenchem sem enviar", () => {
     const suggestion = COMPACT_SUGGESTIONS[0]!;
     await screen.getByRole("button", { name: suggestion.title, exact: true }).click();
 
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await expect.element(field).toHaveValue(suggestion.title);
     await expect.element(screen.getByLabelText("Conversation")).not.toBeInTheDocument();
   });
@@ -170,7 +170,7 @@ describe.each(["dark", "light"] as const)(
       const screen = await render(
         <AgentConversationView density="full" suggestions={FULL_SUGGESTIONS} />,
       );
-      const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+      const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
       await field.fill("What's blocking Fase 7?");
       await userEvent.keyboard("{Enter}");
 

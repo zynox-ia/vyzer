@@ -1,13 +1,13 @@
 /**
- * Split de rotas de Projects (Fase 8, VYZ-35) e ordenação por URL, num Chromium real: o mesmo
- * padrão de `@/layouts/app-shell/app-shell.browser.test.tsx` — AppShell de verdade dentro de um
+ * Rotas de Projects (Fase 8, VYZ-35) e ordenação por URL, num Chromium real: o mesmo padrão de
+ * `@/layouts/app-shell/app-shell.browser.test.tsx` — AppShell de verdade dentro de um
  * MemoryRouter, com o ToastProvider que `main.tsx` monta (o CreateIssueDialog do AppShell usa
- * `useToast`).
+ * `useToast`). A lista escopada por Team (`/teams/:team/projects`) saiu da sidebar na Missão 02
+ * (fora do sitemap) e foi removida junto com a cobertura dela.
  *
  * Cobre:
- * - `/projects` (workspace, todos os times) vs. `/teams/:team/projects` (escopado): título e
- *   linhas renderizadas.
- * - `/projects/:projectId`: projeto certo, sem breadcrumb encadeado a time/workspace.
+ * - `/projects`: título e linhas renderizadas, sem breadcrumb nem estrela.
+ * - `/projects/:projectId`: projeto certo, sem breadcrumb encadeado a workspace.
  * - Ordenação por URL (`?order=coluna` / `?order=coluna:desc`) nas colunas ordenáveis, e Lead /
  *   Issues como colunas não ordenáveis.
  * - Navegação da lista para o projeto pelo `href` do link do nome.
@@ -18,60 +18,15 @@ import { render } from "vitest-browser-react";
 import { useState } from "react";
 import { queryOptions, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
-import type { Project as ApiProject, TeamListItem } from "@vyzer/contract";
-import { ToastProvider } from "@vyzer/design-system/components";
+import type { Project as ApiProject } from "@zynox/contract";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { AppShell } from "@/layouts/app-shell";
-import { ProjectDetailPage, ProjectsListPage, TeamProjectsListPage } from "./index";
+import { ProjectDetailPage, ProjectsListPage } from "./index";
 import { toProjectRow } from "./project-adapter";
 
-function apiTeam(
-  slug: string,
-  name: string,
-  key: string,
-  icon: TeamListItem["icon"],
-  id: string,
-): TeamListItem {
-  return {
-    id,
-    name,
-    slug,
-    key,
-    icon,
-    description: null,
-    timezone: "America/Sao_Paulo",
-    estimation: "none",
-    detailedIssueHistory: false,
-    issueEmailEnabled: false,
-    issueEmailAddress: "x@intake.vyzer.app.br",
-    createdAt: "2026-08-15T12:00:00.000Z",
-    updatedAt: "2026-08-15T12:00:00.000Z",
-    memberCount: 1,
-    issueCount: 0,
-  };
-}
-
-const API_TEAMS: TeamListItem[] = [
-  apiTeam(
-    "zynox",
-    "Zynox",
-    "ZYN",
-    { kind: "icon", name: "Navigation", color: "cyan" },
-    "11111111-1111-4111-8111-111111111111",
-  ),
-  apiTeam(
-    "vyzer",
-    "Vyzer",
-    "VYZ",
-    { kind: "icon", name: "Layers", color: "purple" },
-    "22222222-2222-4222-8222-222222222222",
-  ),
-];
-
-vi.mock("@/services/teams", () => ({
-  teamsQueryOptions: () => queryOptions({ queryKey: ["teams"], queryFn: async () => API_TEAMS }),
-}));
-
+// Só identificam o time de cada projeto nos fixtures abaixo (p.teamSlug nas asserções); a lista
+// escopada por Team (`/teams/:team/projects`) saiu da sidebar na Missão 02 e foi removida.
 const ZYNOX_TEAM = {
   id: "11111111-1111-4111-8111-111111111111",
   name: "Zynox",
@@ -79,10 +34,10 @@ const ZYNOX_TEAM = {
   key: "ZYN",
   icon: { kind: "icon", name: "Navigation", color: "cyan" },
 } as const;
-const VYZER_TEAM = {
+const ATLAS_TEAM = {
   id: "22222222-2222-4222-8222-222222222222",
-  name: "Vyzer",
-  slug: "vyzer",
+  name: "Atlas",
+  slug: "atlas",
   key: "VYZ",
   icon: { kind: "icon", name: "Layers", color: "purple" },
 } as const;
@@ -90,7 +45,7 @@ const VYZER_TEAM = {
 let nextId = 0;
 function apiProject(
   name: string,
-  team: typeof ZYNOX_TEAM | typeof VYZER_TEAM,
+  team: typeof ZYNOX_TEAM | typeof ATLAS_TEAM,
   overrides: Partial<ApiProject> = {},
 ): ApiProject {
   nextId += 1;
@@ -133,7 +88,7 @@ const API_PROJECTS: ApiProject[] = [
     issues: 9,
     progress: 33,
   }),
-  apiProject("Teste", VYZER_TEAM, { status: "backlog" }),
+  apiProject("Teste", ATLAS_TEAM, { status: "backlog" }),
 ];
 
 /** As linhas que a tela mostra (o mesmo adaptador de produção), para as asserções. */
@@ -200,7 +155,6 @@ function ProjectsHarness({ initialEntries }: { initialEntries: string[] }) {
             <Route path="/" element={<AppShell />}>
               <Route path="projects" element={<ProjectsListPage />} />
               <Route path="projects/:projectId" element={<ProjectDetailPage />} />
-              <Route path="teams/:team/projects" element={<TeamProjectsListPage />} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -218,7 +172,7 @@ afterEach(() => {
   delete document.documentElement.dataset.theme;
 });
 
-describe("Split de rotas: /projects vs. /teams/:team/projects", () => {
+describe("Lista de Projects: dados da API", () => {
   it("/projects lista todos os projetos do workspace, sem breadcrumb nem estrela", async () => {
     document.documentElement.dataset.theme = "dark";
     const screen = await render(<ProjectsHarness initialEntries={["/projects"]} />);
@@ -227,18 +181,20 @@ describe("Split de rotas: /projects vs. /teams/:team/projects", () => {
       .element(screen.getByRole("heading", { name: "Projects", level: 2 }))
       .toBeInTheDocument();
 
-    // Mais de um time representado: zynox e vyzer.
+    // Mais de um time representado: zynox e atlas.
     for (const project of PROJECTS) {
       await expect
         .element(screen.getByRole("link", { name: new RegExp(project.name) }))
         .toBeInTheDocument();
     }
     expect(PROJECTS.some((p) => p.teamSlug === "zynox")).toBe(true);
-    expect(PROJECTS.some((p) => p.teamSlug === "vyzer")).toBe(true);
+    expect(PROJECTS.some((p) => p.teamSlug === "atlas")).toBe(true);
 
-    // Sem breadcrumb (nada de "Zynox ›"/"Vyzer ›" no título) nem botão de favorito ("estrela").
+    // Sem breadcrumb nem botão de favorito ("estrela"): a Missão 02 tirou a versão escopada
+    // por Team, que usava os dois.
     expect(document.querySelector("h2")?.textContent).toBe("Projects");
     await expect.element(screen.getByRole("button", { name: /favorite/i })).not.toBeInTheDocument();
+    expect(document.querySelector('nav[aria-label="Breadcrumb"]')).toBeNull();
 
     // Sem terceira linha de cabeçalho / coluna "Board layout".
     await expect
@@ -246,55 +202,6 @@ describe("Split de rotas: /projects vs. /teams/:team/projects", () => {
       .not.toBeInTheDocument();
   });
 
-  it("/teams/zynox/projects lista só os projetos do time, com breadcrumb e estrela", async () => {
-    document.documentElement.dataset.theme = "dark";
-    const screen = await render(<ProjectsHarness initialEntries={["/teams/zynox/projects"]} />);
-
-    // Título acessível (sr-only, sem h2 visível: a linha 1 vira breadcrumb + estrela).
-    await expect
-      .element(screen.getByRole("heading", { name: "Zynox › Projects", level: 1, exact: true }))
-      .toBeInTheDocument();
-
-    // Breadcrumb: "Zynox" (link para o time) › "Projects", e a estrela de favorito. Escopado ao
-    // próprio `nav`: a lista também tem um projeto "Zynox OS", cujo link também bate em /Zynox/.
-    const breadcrumb = document.querySelector('nav[aria-label="Breadcrumb"]');
-    // Sem separador de texto entre os itens (o "›" é um ícone decorativo, aria-hidden).
-    expect(breadcrumb?.textContent?.trim()).toBe("ZynoxProjects");
-    expect(breadcrumb?.querySelector("a")?.getAttribute("href")).toBe("/teams/zynox");
-    await expect.element(screen.getByRole("button", { name: /favorite/i })).toBeInTheDocument();
-
-    const zynoxProjects = PROJECTS.filter((p) => p.teamSlug === "zynox");
-    const vyzerProjects = PROJECTS.filter((p) => p.teamSlug === "vyzer");
-    expect(zynoxProjects.length).toBeGreaterThan(0);
-    expect(vyzerProjects.length).toBeGreaterThan(0);
-
-    for (const project of zynoxProjects) {
-      await expect
-        .element(screen.getByRole("link", { name: new RegExp(project.name) }))
-        .toBeInTheDocument();
-    }
-    for (const project of vyzerProjects) {
-      await expect
-        .element(screen.getByRole("link", { name: new RegExp(project.name) }))
-        .not.toBeInTheDocument();
-    }
-  });
-});
-
-describe("Team fora da API", () => {
-  it("slug que a API não devolve mostra o próprio slug como nome, sem quebrar", async () => {
-    document.documentElement.dataset.theme = "dark";
-    const screen = await render(<ProjectsHarness initialEntries={["/teams/ghost/projects"]} />);
-
-    await expect
-      .element(screen.getByRole("heading", { name: "ghost › Projects", level: 1, exact: true }))
-      .toBeInTheDocument();
-    const breadcrumb = document.querySelector('nav[aria-label="Breadcrumb"]');
-    expect(breadcrumb?.textContent?.trim()).toBe("ghostProjects");
-  });
-});
-
-describe("Lista de Projects: dados da API", () => {
   it("mostra Loading Projects. enquanto carrega e depois a tabela", async () => {
     document.documentElement.dataset.theme = "dark";
     let resolve: (projects: ApiProject[]) => void = () => {};
@@ -326,15 +233,6 @@ describe("Lista de Projects: dados da API", () => {
     const screen = await render(<ProjectsHarness initialEntries={["/projects"]} />);
 
     await expect.element(screen.getByText("No projects yet.")).toBeVisible();
-  });
-
-  it("/teams/vyzer/projects chama a query com o teamSlug e mostra só os do time", async () => {
-    document.documentElement.dataset.theme = "dark";
-    const screen = await render(<ProjectsHarness initialEntries={["/teams/vyzer/projects"]} />);
-
-    await expect.element(screen.getByRole("link", { name: /Teste/ })).toBeVisible();
-    expect(fetchProjects).toHaveBeenCalledWith("vyzer");
-    await expect.element(screen.getByRole("link", { name: /Aname CRM/ })).not.toBeInTheDocument();
   });
 
   it("Target date mostra Dec 18 e a ordenação segue a ordem cronológica (ISO)", async () => {
@@ -598,28 +496,6 @@ describe("Filtros de Projects: aplicam de verdade e ficam na URL", () => {
     await expect
       .element(screen.getByRole("button", { name: "Add filter" }))
       .toHaveAttribute("aria-pressed", "false");
-  });
-
-  it("filtro na lista do time: só os projetos do time com aquela saúde", async () => {
-    document.documentElement.dataset.theme = "dark";
-    const screen = await render(
-      <ProjectsHarness initialEntries={["/teams/zynox/projects?filter.health=off-track"]} />,
-    );
-    const offTrackZynox = PROJECTS.filter(
-      (p) => p.teamSlug === "zynox" && p.health === "off-track",
-    );
-    expect(offTrackZynox.length).toBeGreaterThan(0);
-    for (const project of offTrackZynox) {
-      await expect
-        .element(screen.getByRole("link", { name: new RegExp(project.name) }))
-        .toBeInTheDocument();
-    }
-    const restOfZynox = PROJECTS.filter((p) => p.teamSlug === "zynox" && p.health !== "off-track");
-    for (const project of restOfZynox) {
-      await expect
-        .element(screen.getByRole("link", { name: new RegExp(project.name) }))
-        .not.toBeInTheDocument();
-    }
   });
 
   it("escolher 'On track' no menu Add filter grava a URL e filtra a lista", async () => {

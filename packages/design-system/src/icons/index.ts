@@ -7,3 +7,4 @@ export {
   type ProjectStatusType,
 } from "./ProjectStatusIcon";
 export { HealthTrendIcon, type HealthTrend, type HealthTrendIconProps } from "./HealthTrendIcon";
+export { GithubIcon, type GithubIconProps } from "./GithubIcon";

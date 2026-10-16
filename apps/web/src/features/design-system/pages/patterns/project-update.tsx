@@ -20,9 +20,9 @@ import {
   ProjectIcon,
   TextArea,
   type Health,
-} from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
+import { Icon } from "@zynox/design-system/icons";
 import {
   CircleAlert,
   CircleCheck,

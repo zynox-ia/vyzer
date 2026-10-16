@@ -10,10 +10,11 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
-import { ToastProvider } from "@vyzer/design-system/components";
-import type { Notification } from "@vyzer/contract";
+import { ToastProvider } from "@zynox/design-system/components";
+import type { Notification } from "@zynox/contract";
 import "@/index.css";
 import { InboxPage } from ".";
+import { InboxDetail } from "./inbox-detail";
 
 const fetchList = vi.fn<() => Promise<{ items: Notification[]; nextCursor: null }>>();
 const fetchCount = vi.fn<() => Promise<number>>();
@@ -37,6 +38,16 @@ vi.mock("@/services/notifications", () => ({
     mutationOptions({ mutationFn: (input: { onlyRead?: boolean }) => archiveAll(input) }),
   // Sem invalidar: o teste conduz o cache só pelas atualizações otimistas.
   invalidateNotificationQueries: () => Promise.resolve(),
+}));
+
+let priorityInbox = false;
+
+vi.mock("@/services/notification-preferences", () => ({
+  notificationPreferencesQueryOptions: () =>
+    queryOptions({
+      queryKey: ["notification-preferences"],
+      queryFn: async () => ({ priorityInboxEnabled: priorityInbox }),
+    }),
 }));
 
 vi.mock("@/services/issues", () => ({
@@ -128,6 +139,7 @@ beforeEach(async () => {
   }
   fetchList.mockImplementation(async () => ({ items: seed(), nextCursor: null }));
   fetchCount.mockResolvedValue(2);
+  priorityInbox = false;
   markRead.mockResolvedValue(undefined);
   markUnread.mockResolvedValue(undefined);
   archive.mockResolvedValue(undefined);
@@ -235,6 +247,66 @@ describe("InboxPage", () => {
     fetchList.mockImplementation(async () => ({ items: seed(), nextCursor: null }));
     await failed.getByRole("button", { name: "Retry" }).click();
     await expect.element(failed.getByRole("option").nth(0)).toBeVisible();
+  });
+
+  it("o painel mostra os Pull requests vinculados quando vierem, e nada sem eles", async () => {
+    const notification = makeNotification(ID_A, 1, null);
+    const pr = {
+      id: "pr-1",
+      title: "Add login form",
+      number: 12,
+      repoFullName: "zynox-ia/zynox",
+      authorLogin: "andre",
+      url: "https://github.com/zynox-ia/zynox/pull/12",
+      state: "open" as const,
+      checksStatus: "success" as const,
+      reviewDecision: null,
+    };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const screen = await render(
+      <QueryClientProvider client={client}>
+        <InboxDetail notification={notification} onDelete={() => {}} pullRequests={[pr]} />
+      </QueryClientProvider>,
+    );
+    await expect.element(screen.getByRole("link", { name: "Add login form" })).toBeVisible();
+    await screen.unmount();
+
+    const bare = await render(
+      <QueryClientProvider client={client}>
+        <InboxDetail notification={notification} onDelete={() => {}} />
+      </QueryClientProvider>,
+    );
+    await expect.element(bare.getByRole("heading", { name: "Title of ZYN-1" })).toBeVisible();
+    await expect
+      .element(bare.getByRole("region", { name: "Pull requests" }))
+      .not.toBeInTheDocument();
+  });
+
+  it("sem a Priority inbox não há abas", async () => {
+    const screen = await render(<Harness />);
+    await expect.element(screen.getByRole("option").nth(0)).toBeVisible();
+    await expect.element(screen.getByRole("tab", { name: "Priority" })).not.toBeInTheDocument();
+  });
+
+  it("com a Priority inbox, as abas separam as notificações e a aba fica na URL", async () => {
+    priorityInbox = true;
+    fetchList.mockImplementation(async () => ({
+      items: seed().map((item) => ({ ...item, isPriority: item.id === ID_A })),
+      nextCursor: null,
+    }));
+    const screen = await render(<Harness />);
+
+    await expect.element(screen.getByRole("tab", { name: "Priority" })).toBeVisible();
+    await expect.element(screen.getByRole("option")).toHaveLength(1);
+    await expect.element(screen.getByRole("option").nth(0)).toHaveTextContent("ZYN-1");
+
+    await screen.getByRole("tab", { name: "Other" }).click();
+    await expect.element(screen.getByLabelText("Current URL")).toHaveTextContent("?tab=other");
+    await expect.element(screen.getByRole("option")).toHaveLength(2);
+    await expect.element(screen.getByRole("option").nth(0)).toHaveTextContent("ZYN-2");
+
+    await screen.getByRole("tab", { name: "Priority" }).click();
+    await expect.element(screen.getByLabelText("Current URL")).not.toHaveTextContent("tab=");
   });
 
   it.each(["dark", "light"] as const)("não tem violações de acessibilidade (%s)", async (theme) => {

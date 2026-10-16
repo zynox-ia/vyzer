@@ -6,7 +6,7 @@ import {
   MenuLabel,
   MenuSeparator,
   MenuTrigger,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import {
   ChevronDown,
   ChevronsDownUp,
@@ -167,7 +167,7 @@ export function Page() {
         ],
         dos: ["Agrupe por afinidade com separadores", "Mostre o atalho quando existir"],
         donts: ["Não coloque formulários dentro do menu"],
-        usage: `import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@vyzer/design-system/components";
+        usage: `import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@zynox/design-system/components";
 
 <Menu>
   <MenuTrigger asChild><Button>Insert block</Button></MenuTrigger>

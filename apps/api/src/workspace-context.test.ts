@@ -10,7 +10,7 @@ import {
   resolveWorkspaceMember,
   WORKSPACE_ID,
   workspace,
-} from "@vyzer/db";
+} from "@zynox/db";
 import { createRouter, router } from "./router";
 
 function testDatabaseUrl(): string {
@@ -112,6 +112,9 @@ describe("Workspace/Member context middleware", () => {
         name: expect.any(String),
         email: "andrejunio.dev@gmail.com",
         role: "admin",
+        title: null,
+        username: null,
+        avatarUrl: null,
       },
     });
     expect(current.member.name).not.toBe("");

@@ -8,9 +8,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, UsersRound } from "lucide-react";
 import { Link, Outlet, useNavigate, useOutletContext, useParams } from "react-router";
-import type { Team } from "@vyzer/contract";
-import { Alert, Button, EmptyState, Skeleton } from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+import type { Team } from "@zynox/contract";
+import { Alert, Button, EmptyState, Skeleton } from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { teamQueryOptions } from "@/services/teams";
 
 export type TeamOutletContext = { team: Team };

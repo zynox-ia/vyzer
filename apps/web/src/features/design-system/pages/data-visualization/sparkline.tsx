@@ -2,7 +2,7 @@
  * Sparkline (Figma 25:5437/25:5438, coluna Status da lista de projetos): tendência decorativa ao
  * lado de um valor textual.
  */
-import { Sparkline, type SparklineVariant } from "@vyzer/design-system/components";
+import { Sparkline, type SparklineVariant } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -94,7 +94,7 @@ export function Page() {
         content: ['O valor textual ao lado usa algarismos tabulares (ex.: "33%").'],
         dos: ["Use tone para ecoar o sentido do valor (danger numa queda relevante)"],
         donts: ["Não use Sparkline sem o valor textual ao lado", "Não adicione eixo ou grade"],
-        usage: `import { Sparkline } from "@vyzer/design-system/components";
+        usage: `import { Sparkline } from "@zynox/design-system/components";
 
 <span className="inline-flex items-center gap-2">
   <Sparkline data={[4, 5, 4, 6, 7, 6, 8]} />

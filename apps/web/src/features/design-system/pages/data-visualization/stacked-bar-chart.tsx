@@ -7,7 +7,7 @@ import {
   Skeleton,
   StackedBarChart,
   type StackedBarGroup,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 
 const BY_STATUS: StackedBarGroup[] = [
@@ -220,7 +220,7 @@ export function Page() {
           "Não use a paleta categórica para estado de workflow (isso é --st-*)",
           "Não rotule cada segmento individualmente: prefira legenda + tooltip + tabela",
         ],
-        usage: `import { StackedBarChart } from "@vyzer/design-system/components";
+        usage: `import { StackedBarChart } from "@zynox/design-system/components";
 
 <StackedBarChart
   label="Issues by status per week"

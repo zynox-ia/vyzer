@@ -8,7 +8,7 @@ import { useSyncExternalStore } from "react";
 
 export type ThemePreference = "dark" | "light" | "system";
 
-const STORAGE_KEY = "vyzer-theme";
+const STORAGE_KEY = "zynox-theme";
 const LIGHT_QUERY = "(prefers-color-scheme: light)";
 
 const listeners = new Set<() => void>();

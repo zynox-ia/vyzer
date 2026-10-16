@@ -8,8 +8,8 @@ import {
   dropdownMenuStyles,
   menuStyles,
   type MenuVariant,
-} from "@vyzer/design-system/components";
-import { cn } from "@vyzer/design-system/cn";
+} from "@zynox/design-system/components";
+import { cn } from "@zynox/design-system/cn";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 

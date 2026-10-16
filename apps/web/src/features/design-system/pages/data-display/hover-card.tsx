@@ -11,8 +11,8 @@ import {
   PopoverSurface,
   ProjectIcon,
   PropertyButton,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { Clock, Diamond, Inbox, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -202,7 +202,7 @@ export function Page() {
         content: ["Resumo curto: nome, papel e dois ou três fatos; sem ações."],
         dos: ["Use um gatilho focável (botão, link, chip clicável)", "Mantenha o cartão estreito"],
         donts: ["Não ponha botões ou campos no cartão", "Não abra hover card sem atraso"],
-        usage: `import { HoverCard, HoverCardContent, HoverCardTrigger } from "@vyzer/design-system/components";
+        usage: `import { HoverCard, HoverCardContent, HoverCardTrigger } from "@zynox/design-system/components";
 
 <HoverCard>
   <HoverCardTrigger asChild>

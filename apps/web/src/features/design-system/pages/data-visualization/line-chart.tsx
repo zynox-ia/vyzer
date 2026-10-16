@@ -8,7 +8,7 @@ import {
   LineChart,
   Skeleton,
   type LineSeries,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 
 const CATEGORIES = ["Cycle 12", "Cycle 13", "Cycle 14", "Cycle 15", "Cycle 16"];
@@ -153,7 +153,7 @@ export function Page() {
           "Não use um segundo eixo Y",
           "Não gere uma 9ª cor: agrupe em 'Other' ou pequenos múltiplos",
         ],
-        usage: `import { LineChart, Legend } from "@vyzer/design-system/components";
+        usage: `import { LineChart, Legend } from "@zynox/design-system/components";
 
 <LineChart
   label="Throughput per cycle"

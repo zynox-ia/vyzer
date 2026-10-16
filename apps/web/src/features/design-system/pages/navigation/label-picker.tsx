@@ -6,7 +6,7 @@ import {
   PropertyButton,
   type LabelColor,
   type LabelItem,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Tag } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -119,7 +119,7 @@ export function Page() {
         ],
         dos: ["Deixe criar na hora, sem sair do fluxo"],
         donts: ["Não use cores sem nome: a cor sozinha não identifica o label"],
-        usage: `import { LabelPicker, PropertyButton } from "@vyzer/design-system/components";
+        usage: `import { LabelPicker, PropertyButton } from "@zynox/design-system/components";
 
 <LabelPicker
   labels={labels}

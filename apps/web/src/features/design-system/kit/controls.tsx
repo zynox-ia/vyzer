@@ -2,7 +2,7 @@
  * Controles da documentação (toolbar e playground). Usam o Segmented Control do design
  * system: a documentação é a primeira cliente dele.
  */
-import { SegmentedControl } from "@vyzer/design-system/components";
+import { SegmentedControl } from "@zynox/design-system/components";
 import type { ReactNode } from "react";
 
 export type Option<T extends string> = { value: T; label: string };

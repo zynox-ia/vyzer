@@ -67,15 +67,44 @@ export const workspaceLogoUrlSchema = z
 
 export const workspaceLogoUploadOutputSchema = z.object({ logoUrl: workspaceLogoUrlSchema });
 
+export const memberAvatarUrlSchema = z
+  .string()
+  .regex(
+    /^\/api\/member\/avatar\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:png|jpg|webp|svg)$/,
+  );
+
+export const memberAvatarUploadOutputSchema = z.object({ avatarUrl: memberAvatarUrlSchema });
+
+const memberUsernameSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(50)
+  .regex(/^\S+$/, "Username must be one word without spaces.")
+  .transform((username) => username.toLowerCase());
+const memberTitleSchema = z
+  .string()
+  .trim()
+  .max(100)
+  .transform((title) => (title === "" ? null : title))
+  .nullable();
+
 const memberSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   email: z.string().email(),
   role: z.string(),
+  title: z.string().nullable(),
+  username: z.string().nullable(),
+  avatarUrl: memberAvatarUrlSchema.nullable(),
   createdAt: z.iso.datetime(),
 });
 
 const memberListItemSchema = memberSchema.extend({ teamCount: z.number().int().nonnegative() });
+
+const profileSchema = memberSchema.omit({ createdAt: true }).extend({
+  canLeaveWorkspace: z.boolean(),
+});
 
 const teamNameSchema = z.string().trim().min(1).max(48);
 const teamKeySchema = z
@@ -318,7 +347,11 @@ const issueStatusSchema = z.object({
   color: workflowStatusColorSchema,
 });
 
-const issueMemberSchema = z.object({ id: z.string().uuid(), name: z.string() });
+const issueMemberSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  avatarUrl: memberAvatarUrlSchema.nullable().optional(),
+});
 const issueSubIssueProgressSchema = z.object({
   completed: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
@@ -342,9 +375,48 @@ const issueLinkSchema = z.object({
     .url()
     .refine((value) => /^https?:\/\//i.test(value), "Only http and https links are supported."),
   title: z.string().nullable(),
-  creatorId: z.string().uuid(),
+  creatorId: z.string().uuid().nullable(),
   createdAt: z.iso.datetime(),
 });
+
+const githubPullRequestStateSchema = z.enum(["draft", "open", "merged", "closed"]);
+const githubChecksStatusSchema = z.enum(["pending", "success", "failure"]);
+const githubReviewDecisionSchema = z.enum(["approved", "changes_requested", "review_required"]);
+const githubPullRequestSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  number: z.number().int().positive(),
+  repoFullName: z.string(),
+  authorLogin: z.string(),
+  url: z.url().refine((value) => /^https:\/\//i.test(value)),
+  state: githubPullRequestStateSchema,
+  checksStatus: githubChecksStatusSchema.nullable(),
+  reviewDecision: githubReviewDecisionSchema.nullable(),
+});
+const githubConnectionSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("disconnected") }),
+  z.object({
+    status: z.literal("connected"),
+    githubUserId: z.string(),
+    login: z.string(),
+    avatarUrl: z.url().nullable(),
+    connectedAt: z.iso.datetime(),
+  }),
+]);
+const githubMergeStrategySchema = z.enum(["merge", "squash", "rebase"]);
+const codeReviewSettingsSchema = z.object({
+  workspaceId: z.string().uuid(),
+  enabled: z.boolean(),
+  autoConvertDraftPullRequests: z.boolean(),
+  mergeStrategy: githubMergeStrategySchema,
+});
+const codeReviewSettingsUpdateSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    autoConvertDraftPullRequests: z.boolean().optional(),
+    mergeStrategy: githubMergeStrategySchema.optional(),
+  })
+  .refine((values) => Object.keys(values).length > 0);
 
 const issueSchema = z.object({
   id: z.string().uuid(),
@@ -359,8 +431,8 @@ const issueSchema = z.object({
   priority: issuePrioritySchema,
   assigneeId: z.string().uuid().nullable(),
   assignee: issueMemberSchema.nullable(),
-  creatorId: z.string().uuid(),
-  creator: issueMemberSchema,
+  creatorId: z.string().uuid().nullable(),
+  creator: issueMemberSchema.nullable(),
   parentId: z.string().uuid().nullable(),
   labels: z.array(issueLabelSchema),
   dueDate: z.iso.date().nullable(),
@@ -376,6 +448,7 @@ const issueDetailSchema = issueSchema.extend({
   subIssueProgress: issueSubIssueProgressSchema,
   relations: issueRelationGroupsSchema,
   links: z.array(issueLinkSchema),
+  pullRequests: z.array(githubPullRequestSchema),
 });
 
 const issueEventTypeSchema = z.enum([
@@ -396,8 +469,8 @@ const issueEventTypeSchema = z.enum([
 const issueEventSchema = z.object({
   id: z.string().uuid(),
   issueId: z.string().uuid(),
-  actorId: z.string().uuid(),
-  actor: issueMemberSchema,
+  actorId: z.string().uuid().nullable(),
+  actor: issueMemberSchema.nullable(),
   type: issueEventTypeSchema,
   payload: z.record(z.string(), z.unknown()),
   createdAt: z.iso.datetime(),
@@ -406,6 +479,81 @@ const issueEventSchema = z.object({
 export const notificationTypeSchema = z.enum(["assigned", "unassigned"]);
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 
+export const notificationPreferenceChannelSchema = z.enum([
+  "priority",
+  "desktop",
+  "mobile",
+  "email",
+  "slack",
+]);
+export type NotificationPreferenceChannel = z.infer<typeof notificationPreferenceChannelSchema>;
+
+export const notificationPreferenceTypeSchema = z.enum([
+  "assignments",
+  "status-changes",
+  "comments-and-replies",
+  "mentions",
+  "reactions",
+  "subscriptions",
+  "document-changes",
+  "updates",
+  "reminders-and-deadlines",
+  "loops",
+  "apps-and-integrations",
+  "billing",
+  "reviews",
+  "triage",
+]);
+export type NotificationPreferenceType = z.infer<typeof notificationPreferenceTypeSchema>;
+
+const notificationPreferencesValuesSchema = z.object({
+  priorityInboxEnabled: z.boolean(),
+  emailEnabled: z.boolean(),
+  emailFormat: z.enum(["digest", "immediate"]),
+  emailDigestDelayLowPriority: z.boolean(),
+  emailDigestUrgentImmediate: z.boolean(),
+  showChangelogInSidebar: z.boolean(),
+  changelogNewsletter: z.boolean(),
+  marketingAndOnboarding: z.boolean(),
+  inviteAccepted: z.boolean(),
+  privacyAndLegalUpdates: z.boolean(),
+  dataProcessingAgreement: z.boolean(),
+});
+const notificationPreferencesSchema = notificationPreferencesValuesSchema.extend({
+  workspaceId: z.string().uuid(),
+  memberId: z.string().uuid(),
+});
+const notificationPreferencesUpdateSchema = notificationPreferencesValuesSchema
+  .partial()
+  .refine((values) => Object.keys(values).length > 0, {
+    message: "Choose at least one notification preference to update.",
+  });
+
+const notificationTypePreferenceItemSchema = z.object({
+  type: notificationPreferenceTypeSchema,
+  enabled: z.boolean(),
+});
+const notificationTypePreferencesSchema = z.object({
+  workspaceId: z.string().uuid(),
+  memberId: z.string().uuid(),
+  channel: notificationPreferenceChannelSchema,
+  items: z
+    .array(notificationTypePreferenceItemSchema)
+    .length(notificationPreferenceTypeSchema.options.length)
+    .refine((items) => new Set(items.map(({ type }) => type)).size === items.length, {
+      message: "A notification type can only be returned once per channel.",
+    }),
+});
+const notificationTypePreferencesUpdateSchema = z.object({
+  channel: notificationPreferenceChannelSchema,
+  items: z
+    .array(notificationTypePreferenceItemSchema)
+    .min(1)
+    .refine((items) => new Set(items.map(({ type }) => type)).size === items.length, {
+      message: "A notification type can only be updated once per channel in one request.",
+    }),
+});
+
 /** The contract is the single source for notification type labels and summaries. */
 export const notificationTypeMetadata = {
   assigned: { category: "Assignments", summary: "assigned you" },
@@ -413,12 +561,18 @@ export const notificationTypeMetadata = {
 } as const satisfies Record<NotificationType, { category: string; summary: string }>;
 
 const notificationCursorSchema = z.object({ id: z.string().uuid(), createdAt: z.iso.datetime() });
-const notificationListInputSchema = z.object({
-  unreadOnly: z.boolean().optional(),
-  order: z.enum(["newest", "oldest"]).optional(),
-  cursor: notificationCursorSchema.optional(),
-  limit: z.number().int().min(1).max(100),
-});
+const notificationListInputSchema = z
+  .object({
+    unreadOnly: z.boolean().optional(),
+    priorityOnly: z.boolean().optional(),
+    otherOnly: z.boolean().optional(),
+    order: z.enum(["newest", "oldest"]).optional(),
+    cursor: notificationCursorSchema.optional(),
+    limit: z.number().int().min(1).max(100),
+  })
+  .refine(({ priorityOnly, otherOnly }) => !(priorityOnly && otherOnly), {
+    message: "A notification list cannot be both priority-only and other-only.",
+  });
 const notificationIdsInputSchema = z.object({
   ids: z
     .array(z.string().uuid())
@@ -432,18 +586,25 @@ const notificationIssueSummarySchema = z.object({
   priority: issuePrioritySchema,
   status: issueStatusSchema.nullable(),
 });
-const notificationItemSchema = z.object({
-  id: z.string().uuid(),
-  type: notificationTypeSchema,
-  actor: issueMemberSchema.nullable(),
-  issue: notificationIssueSummarySchema.nullable(),
-  projectId: z.string().uuid().nullable(),
-  payload: z.record(z.string(), z.unknown()),
-  readAt: z.iso.datetime().nullable(),
-  snoozedUntil: z.iso.datetime().nullable(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
+const notificationItemSchema = z
+  .object({
+    id: z.string().uuid(),
+    type: notificationTypeSchema,
+    // Type compatibility for existing clients; the output validator requires this value below.
+    isPriority: z.boolean().optional(),
+    actor: issueMemberSchema.nullable(),
+    issue: notificationIssueSummarySchema.nullable(),
+    projectId: z.string().uuid().nullable(),
+    payload: z.record(z.string(), z.unknown()),
+    readAt: z.iso.datetime().nullable(),
+    snoozedUntil: z.iso.datetime().nullable(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .refine(({ isPriority }) => isPriority !== undefined, {
+    message: "Notification priority must be provided.",
+    path: ["isPriority"],
+  });
 
 const projectStatusSchema = z.enum(["backlog", "planned", "started", "completed", "canceled"]);
 const projectHealthSchema = z.enum(["on-track", "at-risk", "off-track", "none"]);
@@ -496,11 +657,17 @@ export type IssueRelationType = z.infer<typeof issueRelationTypeSchema>;
 export type IssueRelationSummary = z.infer<typeof issueParentSummarySchema>;
 export type IssueRelationGroups = z.infer<typeof issueRelationGroupsSchema>;
 export type IssueLink = z.infer<typeof issueLinkSchema>;
+export type GithubConnection = z.infer<typeof githubConnectionSchema>;
+export type CodeReviewSettings = z.infer<typeof codeReviewSettingsSchema>;
+export type GithubPullRequest = z.infer<typeof githubPullRequestSchema>;
 export type IssueFilters = z.infer<typeof issueFiltersSchema>;
 export type IssueListInput = z.infer<typeof issueListInputSchema>;
 export type IssueFacetsInput = z.infer<typeof issueFacetsInputSchema>;
 export type Notification = z.infer<typeof notificationItemSchema>;
 export type NotificationListInput = z.input<typeof notificationListInputSchema>;
+export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>;
+export type NotificationTypePreferences = z.infer<typeof notificationTypePreferencesSchema>;
+export type NotificationTypePreferenceItem = z.infer<typeof notificationTypePreferenceItemSchema>;
 
 const apiKeySchema = z.object({
   id: z.string().uuid(),
@@ -753,6 +920,9 @@ export const contract = {
           name: z.string(),
           email: z.string().email(),
           role: z.string(),
+          title: z.string().nullable(),
+          username: z.string().nullable(),
+          avatarUrl: memberAvatarUrlSchema.nullable(),
         }),
       }),
     ),
@@ -784,6 +954,22 @@ export const contract = {
         }),
       )
       .output(memberSchema),
+  },
+  profile: {
+    /** Retorna os dados do próprio Member e informa se ele pode sair do Workspace. */
+    get: oc.output(profileSchema),
+    /** Atualiza somente o perfil do Member resolvido pelo contexto. */
+    update: oc
+      .input(
+        z.object({
+          name: z.string().trim().min(1).optional(),
+          title: memberTitleSchema.optional(),
+          username: memberUsernameSchema.nullable().optional(),
+        }),
+      )
+      .output(profileSchema),
+    /** Remove o Member atual do Workspace quando a regra de saída permite. */
+    leaveWorkspace: oc.output(z.void()),
   },
   team: {
     /** Lista somente os Teams do Workspace resolvido, com contagens para a tabela. */
@@ -840,6 +1026,34 @@ export const contract = {
     get: oc.output(memberPreferencesSchema),
     /** Updates selected preferences for the current Member. */
     update: oc.input(memberPreferencesUpdateSchema).output(memberPreferencesSchema),
+  },
+  notificationPreferences: {
+    /** Reads or initializes the notification preferences for the current Member. */
+    get: oc.output(notificationPreferencesSchema),
+    /** Updates selected notification preferences for the current Member. */
+    update: oc.input(notificationPreferencesUpdateSchema).output(notificationPreferencesSchema),
+  },
+  notificationTypePreferences: {
+    /** Reads every notification type preference for one channel. */
+    get: oc
+      .input(z.object({ channel: notificationPreferenceChannelSchema }))
+      .output(notificationTypePreferencesSchema),
+    /** Updates selected notification types for one channel. */
+    update: oc
+      .input(notificationTypePreferencesUpdateSchema)
+      .output(notificationTypePreferencesSchema),
+  },
+  githubConnection: {
+    /** Returns the GitHub identity connected to the current Member, without exposing tokens. */
+    get: oc.output(githubConnectionSchema),
+    /** Disconnects only the current Member's GitHub identity. */
+    disconnect: oc.output(z.void()),
+  },
+  codeReviews: {
+    /** Reads Workspace-wide code review preferences. */
+    get: oc.output(codeReviewSettingsSchema),
+    /** Updates Workspace-wide code review preferences; administrators only. */
+    update: oc.input(codeReviewSettingsUpdateSchema).output(codeReviewSettingsSchema),
   },
   customerDomainRule: {
     /** Lists custom excluded or generic domains and email addresses. */

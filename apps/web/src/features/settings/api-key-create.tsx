@@ -26,7 +26,7 @@ import {
   Skeleton,
   TextInput,
   useToast,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { api } from "@/services/api";
 import { createApiKeyMutationOptions } from "@/services/api-keys";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";

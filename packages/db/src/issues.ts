@@ -120,8 +120,12 @@ function issueRows(executor: DbSession) {
         category: schema.workflowStatus.category,
         color: schema.workflowStatus.color,
       },
-      assignee: { id: issueAssignee.id, name: issueAssignee.name },
-      creator: { id: issueCreator.id, name: issueCreator.name },
+      assignee: {
+        id: issueAssignee.id,
+        name: issueAssignee.name,
+        avatarUrl: issueAssignee.avatarUrl,
+      },
+      creator: { id: issueCreator.id, name: issueCreator.name, avatarUrl: issueCreator.avatarUrl },
     })
     .from(schema.issue)
     .innerJoin(
@@ -145,7 +149,7 @@ function issueRows(executor: DbSession) {
         eq(issueAssignee.workspaceId, schema.issue.workspaceId),
       ),
     )
-    .innerJoin(
+    .leftJoin(
       issueCreator,
       and(
         eq(issueCreator.id, schema.issue.creatorId),
@@ -1435,13 +1439,13 @@ export async function listWorkspaceIssueEvents(db: Db, workspaceId: string, id: 
       id: schema.issueEvent.id,
       issueId: schema.issueEvent.issueId,
       actorId: schema.issueEvent.actorId,
-      actor: { id: actor.id, name: actor.name },
+      actor: { id: actor.id, name: actor.name, avatarUrl: actor.avatarUrl },
       type: schema.issueEvent.type,
       payload: schema.issueEvent.payload,
       createdAt: schema.issueEvent.createdAt,
     })
     .from(schema.issueEvent)
-    .innerJoin(
+    .leftJoin(
       actor,
       and(
         eq(actor.id, schema.issueEvent.actorId),

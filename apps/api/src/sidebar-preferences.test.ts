@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { createRouterClient } from "@orpc/server";
-import { createDb, member, resolveWorkspaceMember, workspace } from "@vyzer/db";
+import { createDb, member, resolveWorkspaceMember, workspace } from "@zynox/db";
 import { createRouter } from "./router";
 
 function testDatabaseUrl(): string {

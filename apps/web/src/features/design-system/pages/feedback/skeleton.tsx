@@ -1,7 +1,7 @@
 /**
  * Skeleton: sem desenho no Figma; a forma do conteúdo que carrega, pulsando na camada neutra.
  */
-import { Avatar, Skeleton } from "@vyzer/design-system/components";
+import { Avatar, Skeleton } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -116,7 +116,7 @@ export function Page() {
         content: ["Imite o layout real: mesmo número de linhas e larguras variadas."],
         dos: ["Use as mesmas medidas do conteúdo final"],
         donts: ["Não misture skeleton e spinner na mesma área"],
-        usage: `import { Skeleton } from "@vyzer/design-system/components";
+        usage: `import { Skeleton } from "@zynox/design-system/components";
 
 <div aria-busy="true">
   <span className="sr-only">Loading members…</span>

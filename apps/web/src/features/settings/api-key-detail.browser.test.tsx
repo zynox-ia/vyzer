@@ -9,7 +9,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import type { ApiKey } from "./api-key-shared";
 import { ApiKeyDetailPage } from "./api-key-detail";

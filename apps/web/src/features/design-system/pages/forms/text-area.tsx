@@ -1,4 +1,4 @@
-import { Field as FormField, TextArea } from "@vyzer/design-system/components";
+import { Field as FormField, TextArea } from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -141,7 +141,7 @@ export function Page() {
         content: ['Placeholder convida a escrever: "Add a description…".'],
         dos: ["Comece com 3 linhas em formulários"],
         donts: ["Não trave o resize em textos longos"],
-        usage: `import { Field, TextArea } from "@vyzer/design-system/components";
+        usage: `import { Field, TextArea } from "@zynox/design-system/components";
 
 <Field label="Description">
   <TextArea rows={3} placeholder="Add a description…" />

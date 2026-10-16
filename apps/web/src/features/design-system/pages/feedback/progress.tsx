@@ -7,7 +7,7 @@ import {
   ProgressRing,
   type ProgressRingSize,
   type ProgressTone,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -121,7 +121,7 @@ export function Page() {
           "Não use o acento terracota (só sidebar e contadores)",
           "Não finja progresso sem medida",
         ],
-        usage: `import { ProgressBar, ProgressRing } from "@vyzer/design-system/components";
+        usage: `import { ProgressBar, ProgressRing } from "@zynox/design-system/components";
 
 <ProgressBar value={45} label="Upload progress" />
 <ProgressRing value={100} tone="success" label="Project progress" />`,

@@ -2,8 +2,8 @@
 
 ## Link do Figma
 
-- [Projects list, nó 25:4964](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Vyzer?node-id=25-4964)
-- [Project Details, nó 25:4689](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Vyzer?node-id=25-4689)
+- [Projects list, nó 25:4964](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Zynox?node-id=25-4964)
+- [Project Details, nó 25:4689](https://www.figma.com/design/CNJik9Re3oAtqNma67yjou/Zynox?node-id=25-4689)
 
 As telas do produto já existem e serão mantidas visualmente. O Figma e os componentes atuais são referência para preservar a apresentação; esta fatia substitui a origem dos dados.
 
@@ -11,7 +11,7 @@ As telas do produto já existem e serão mantidas visualmente. O Figma e os comp
 
 Persistir e expor Workspace, Member, Team e Project; aplicar em todas as procedures o middleware de resolução de Workspace/Member definido pelas ADRs 0007 e 0015; e consumir a API real nas telas de Projects e nos nomes de Team usados pela sidebar.
 
-O Workspace inicial chama-se `Zynox`. Os Teams iniciais mantêm os nomes `Zynox` e `Vyzer`, alinhados aos exemplos atuais. A seed cria exatamente um Workspace e um Member `admin`, com ids fixos definidos em `packages/db/src/seed.ts`. Os dados de Team e Project iniciais serão necessários para substituir a lista de exemplo por registros persistidos.
+O Workspace inicial chama-se `Zynox`. Os Teams iniciais mantêm os nomes `Zynox` e `Zynox`, alinhados aos exemplos atuais. A seed cria exatamente um Workspace e um Member `admin`, com ids fixos definidos em `packages/db/src/seed.ts`. Os dados de Team e Project iniciais serão necessários para substituir a lista de exemplo por registros persistidos.
 
 A seed também cria os seis Projects do exemplo atual e seus vínculos com Team. O Member `admin` é André Júnio (`andrejunio.dev@gmail.com`).
 
@@ -44,7 +44,7 @@ Critérios de aceite da etapa 1:
 
 | Camada   | O que entra                                                                                                                                                                                                                                                                                                         |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Banco    | Tabela `team` (workspaceId, name, slug, key, ícone/cor, timestamps), únicos por Workspace. Seed dos Teams `Zynox` e `Vyzer`.                                                                                                                                                                                        |
+| Banco    | Tabela `team` (workspaceId, name, slug, key, ícone/cor, timestamps), únicos por Workspace. Seed dos Teams `Zynox` e `Zynox`.                                                                                                                                                                                        |
 | API      | Contrato + router de Team: list/create/update/delete, escopados pelo contexto da etapa 1. Bloqueio de delete com Project associado fica documentado aqui mas só é testável de verdade na etapa 3 (quando Project existir) — anote como pendência, não implemente a checagem contra uma tabela que ainda não existe. |
 | Services | `apps/web/src/services/teams.ts`.                                                                                                                                                                                                                                                                                   |
 | Tela     | Seção "Your teams" da sidebar e o Team do breadcrumb passam a vir da API. `projects-list.tsx`/`project-detail.tsx` continuam com `project-data.tsx` por enquanto — não mexer ainda.                                                                                                                                 |

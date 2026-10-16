@@ -4,7 +4,7 @@ import {
   type IconSize,
   type ProjectStatusType,
   type StatusType,
-} from "@vyzer/design-system/icons";
+} from "@zynox/design-system/icons";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
 import { Field, Segmented } from "../../kit/controls";
@@ -151,7 +151,7 @@ export function Page() {
         donts: [
           "Não use o hexágono de projeto para status de issue, nem o círculo de issue para projeto",
         ],
-        usage: `import { ProjectStatusIcon } from "@vyzer/design-system/icons";
+        usage: `import { ProjectStatusIcon } from "@zynox/design-system/icons";
 
 <ProjectStatusIcon type="started" />
 <ProjectStatusIcon type="completed" label="Completed" />`,
@@ -191,7 +191,7 @@ export function Page() {
             rule: "Figma 22:1218 (projeto) × 22:1933 (issue)",
           },
           {
-            decision: "Cores na paleta do Vyzer: laranja, primário, warning, índigo e secundário",
+            decision: "Cores na paleta do Zynox: laranja, primário, warning, índigo e secundário",
             rule: "ADR-0013 (sem os hex do Linear), seguindo as matizes do Figma (#f2994a, #d7d8db, #f0bf00, #5e6ad2, #8a8f98)",
           },
           {

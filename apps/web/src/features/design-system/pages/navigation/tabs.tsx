@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@vyzer/design-system/components";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 
 /** Variante pills (Figma 18:1132, painel Filter Breakdown). */
@@ -102,7 +102,7 @@ export function Page() {
         content: ["Rótulos de uma ou duas palavras, substantivos"],
         dos: ["Mantenha a ordem das abas estável"],
         donts: ["Não use mais de ~6 abas", "Não use abas para passos de um fluxo"],
-        usage: `import { Tabs, TabsContent, TabsList, TabsTrigger } from "@vyzer/design-system/components";
+        usage: `import { Tabs, TabsContent, TabsList, TabsTrigger } from "@zynox/design-system/components";
 
 <Tabs defaultValue="icons">
   <TabsList aria-label="Project icon">

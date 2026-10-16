@@ -5,9 +5,9 @@
  * (`features/design-system/pages/forms/creation-composer.tsx`), sem importar dessa página de
  * documentação.
  */
-import type { LabelItem } from "@vyzer/design-system/components";
-import { ProjectIcon } from "@vyzer/design-system/components";
-import { PriorityIcon, StatusIcon, type Priority } from "@vyzer/design-system/icons";
+import type { LabelItem } from "@zynox/design-system/components";
+import { ProjectIcon } from "@zynox/design-system/components";
+import { PriorityIcon, StatusIcon, type Priority } from "@zynox/design-system/icons";
 import type { ReactNode } from "react";
 import type { Team } from "@/features/projects/project-data";
 

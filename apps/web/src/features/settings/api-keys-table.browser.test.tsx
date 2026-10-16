@@ -18,7 +18,7 @@ import {
 } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router";
 import axe from "axe-core";
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import type { ApiKey } from "./api-key-shared";
 import { ApiKeysTablePage } from "./api-keys-table";

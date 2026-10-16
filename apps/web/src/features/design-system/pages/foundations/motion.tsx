@@ -1,4 +1,4 @@
-import { Button } from "@vyzer/design-system/components";
+import { Button } from "@zynox/design-system/components";
 import { useState } from "react";
 import { Code, Decisions, DocPage, DocSection, DocTable } from "../../kit/doc";
 

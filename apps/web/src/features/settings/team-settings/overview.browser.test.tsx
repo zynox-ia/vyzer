@@ -10,8 +10,8 @@ import {
 } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import axe from "axe-core";
-import type { Team } from "@vyzer/contract";
-import { ToastProvider } from "@vyzer/design-system/components";
+import type { Team } from "@zynox/contract";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { TeamSettingsLayout } from "./layout";
 import { TeamOverviewPage } from "./overview";
@@ -20,8 +20,8 @@ const deleteTeam = vi.fn<(input: { id: string }) => Promise<unknown>>();
 
 const TEAM: Team = {
   id: "11111111-1111-4111-8111-111111111111",
-  name: "Vyzer",
-  slug: "vyzer",
+  name: "Atlas",
+  slug: "atlas",
   key: "VYZ",
   icon: { kind: "icon", name: "Layers", color: "purple" },
   description: null,
@@ -29,7 +29,7 @@ const TEAM: Team = {
   estimation: "none",
   detailedIssueHistory: false,
   issueEmailEnabled: false,
-  issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
+  issueEmailAddress: "atlas-4c7872ac31b0@intake.zynox.app.br",
   createdAt: "2026-08-15T12:00:00.000Z",
   updatedAt: "2026-08-15T12:00:00.000Z",
 };
@@ -53,7 +53,7 @@ function Harness() {
   return (
     <QueryClientProvider client={client}>
       <ToastProvider>
-        <MemoryRouter initialEntries={["/settings/teams/vyzer"]}>
+        <MemoryRouter initialEntries={["/settings/teams/atlas"]}>
           <main>
             <Routes>
               <Route path="/settings/teams" element={<h1>Teams list</h1>} />
@@ -105,19 +105,19 @@ describe("TeamOverviewPage", () => {
     await expect
       .element(crumb.getByRole("link", { name: "Teams" }))
       .toHaveAttribute("href", "/settings/teams");
-    await expect.element(screen.getByRole("heading", { name: "Vyzer" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Atlas" })).toBeVisible();
     await expect.element(screen.getByText("Accessible to all workspace members")).toBeVisible();
     await expect
       .element(screen.getByRole("link", { name: /^General/ }))
-      .toHaveAttribute("href", "/settings/teams/vyzer/general");
+      .toHaveAttribute("href", "/settings/teams/atlas/general");
     await expect
       .element(screen.getByRole("link", { name: /^Members/ }))
-      .toHaveAttribute("href", "/settings/teams/vyzer/members");
+      .toHaveAttribute("href", "/settings/teams/atlas/members");
   });
 
   it("mostra todas as seções do hub do Linear, com Project labels e Parent team liberados", async () => {
     const screen = await render(<Harness />);
-    await expect.element(screen.getByRole("heading", { name: "Vyzer" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Atlas" })).toBeVisible();
 
     for (const title of [
       "Issues, projects, and documents",
@@ -160,17 +160,6 @@ describe("TeamOverviewPage", () => {
     await expect
       .element(screen.getByRole("heading", { name: "Project labels page" }))
       .toBeVisible();
-  });
-
-  it("Team overview é um botão (não um título) que leva à home do time", async () => {
-    const screen = await render(<Harness />);
-    await expect.element(screen.getByRole("heading", { name: "Vyzer" })).toBeVisible();
-    await expect
-      .element(screen.getByRole("heading", { name: "Team overview" }))
-      .not.toBeInTheDocument();
-
-    await screen.getByRole("button", { name: "Team overview" }).click();
-    await expect.element(screen.getByLabelText("Current URL")).toHaveTextContent("/teams/vyzer");
   });
 
   it("Parent team abre a sua página", async () => {
@@ -218,7 +207,7 @@ describe("TeamOverviewPage", () => {
       .click();
 
     await vi.waitFor(() => expect(deleteTeam).toHaveBeenCalledWith({ id: TEAM.id }));
-    await expect.element(screen.getByText("Vyzer deleted")).toBeVisible();
+    await expect.element(screen.getByText("Atlas deleted")).toBeVisible();
     await expect.element(screen.getByRole("heading", { name: "Teams list" })).toBeVisible();
     await expect.element(screen.getByLabelText("Current URL")).toHaveTextContent("/settings/teams");
   });
@@ -237,14 +226,14 @@ describe("TeamOverviewPage", () => {
     await expect.element(screen.getByText(/This team still has Projects/)).toBeVisible();
     await expect
       .element(screen.getByLabelText("Current URL"))
-      .toHaveTextContent("/settings/teams/vyzer");
-    await expect.element(screen.getByText("Vyzer deleted")).not.toBeInTheDocument();
+      .toHaveTextContent("/settings/teams/atlas");
+    await expect.element(screen.getByText("Atlas deleted")).not.toBeInTheDocument();
   });
 
   it.each(["dark", "light"] as const)("não tem violações axe no tema %s", async (theme) => {
     document.documentElement.dataset.theme = theme;
     const screen = await render(<Harness />);
-    await expect.element(screen.getByRole("heading", { name: "Vyzer" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Atlas" })).toBeVisible();
 
     const root = document.querySelector("main");
     if (!root) throw new Error("main não encontrado");

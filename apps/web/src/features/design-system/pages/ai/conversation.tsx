@@ -14,7 +14,7 @@ import {
   MenuItem,
   MenuTrigger,
   type ChatHistoryEntry,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Decisions, DocPage, DocSection, Prose } from "../../kit/doc";
 import { ShellFrame } from "../../kit/shell-frame";
 import { RightPanel } from "@/layouts/app-shell/right-panel";

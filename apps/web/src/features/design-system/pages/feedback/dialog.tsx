@@ -14,7 +14,7 @@ import {
   Field as FormField,
   TextInput,
   type DialogSize,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 import { Check, Pencil } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -55,7 +55,7 @@ const DESCRIPTION = "The new name shows up everywhere the project is listed.";
 
 function LiveDialog({ size }: { size: DialogSize }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("Vyzer Design System");
+  const [name, setName] = useState("Zynox Design System");
   return (
     <div className="flex flex-col items-center gap-3">
       <Dialog open={open} onOpenChange={setOpen}>
@@ -82,7 +82,7 @@ function LiveDialog({ size }: { size: DialogSize }) {
 function Static({ size = "md" }: { size?: DialogSize }) {
   return (
     <DialogSurface title={TITLE} description={DESCRIPTION} size={size}>
-      <RenameForm name="Vyzer Design System" />
+      <RenameForm name="Zynox Design System" />
     </DialogSurface>
   );
 }
@@ -170,7 +170,7 @@ export function Page() {
         donts: ["Não abra uma janela sobre outra", "Não use para avisos sem ação (use Toast)"],
         usage: `import {
   Dialog, DialogBody, DialogClose, DialogContent, DialogFooter, DialogTrigger,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 
 <Dialog open={open} onOpenChange={setOpen}>
   <DialogTrigger asChild><Button icon={Pencil}>Rename project</Button></DialogTrigger>

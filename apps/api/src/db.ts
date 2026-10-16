@@ -1,4 +1,4 @@
-import { createDb } from "@vyzer/db";
+import { createDb } from "@zynox/db";
 import { env } from "./env";
 
 /** Conexão única da API com o banco. */

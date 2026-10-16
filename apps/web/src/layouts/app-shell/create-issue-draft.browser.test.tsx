@@ -1,12 +1,12 @@
 /**
- * "Create new issue" e rascunhos: fechar com texto escrito salva um rascunho (item Drafts da
- * sidebar); criar a issue ou fechar vazio não salva nada.
+ * "Create new issue" e rascunhos: fechar com texto escrito salva um rascunho (sem tela própria
+ * para retomá-lo, Missão 02); criar a issue ou fechar vazio não salva nada.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { AppShell } from "./index";
 
@@ -28,7 +28,7 @@ function Harness() {
 
 async function openComposer() {
   await render(<Harness />);
-  await page.getByRole("button", { name: "Create new issue" }).click();
+  await userEvent.keyboard("c");
   await expect.element(page.getByRole("dialog", { name: "Create new issue" })).toBeVisible();
 }
 

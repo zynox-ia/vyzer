@@ -14,7 +14,7 @@ The design system's charts (BurnUpChart, Sparkline, StackedBarChart, LineChart, 
 
 ## Rules
 
-- **Recharts stays behind the design system's own components.** Screens import `BurnUpChart`, `LineChart` and the rest from `@vyzer/design-system`, never from `recharts`. The component APIs don't expose Recharts types.
+- **Recharts stays behind the design system's own components.** Screens import `BurnUpChart`, `LineChart` and the rest from `@zynox/design-system`, never from `recharts`. The component APIs don't expose Recharts types.
 - **Every color, stroke, font and radius comes from a semantic token,** passed as a CSS variable. Recharts' default palette, fonts and shadows are never used.
 - **The categorical palette is the 8 `--chart-*` tokens** approved in Phase 9. Workflow state keeps the status tokens.
 - **Accessibility does not depend on the library alone.** Every chart keeps its alternative text table, the tooltip opens by keyboard and Esc closes it, and color is never the only channel.

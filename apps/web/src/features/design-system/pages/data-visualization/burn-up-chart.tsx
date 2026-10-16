@@ -2,7 +2,7 @@
  * BurnUpChart (Figma 25:3040, card "Zynox OS › Overview"): progresso de projeto ou ciclo, três
  * séries de papel fixo.
  */
-import { Alert, BurnUpChart, Skeleton, type BurnUpPoint } from "@vyzer/design-system/components";
+import { Alert, BurnUpChart, Skeleton, type BurnUpPoint } from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 
 const DATA: BurnUpPoint[] = [
@@ -118,7 +118,7 @@ export function Page() {
           "Não troque as cores fixas de Started/Completed pela paleta categórica",
           "Não use para séries genéricas (por assignee, por label) — para isso, LineChart",
         ],
-        usage: `import { BurnUpChart } from "@vyzer/design-system/components";
+        usage: `import { BurnUpChart } from "@zynox/design-system/components";
 
 <BurnUpChart
   label="Zynox OS progress"

@@ -4,8 +4,8 @@ import {
   PopoverSurface,
   PropertyButton,
   type ListOption,
-} from "@vyzer/design-system/components";
-import { PriorityIcon, StatusIcon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { PriorityIcon, StatusIcon } from "@zynox/design-system/icons";
 import { UserRound } from "lucide-react";
 import { useState } from "react";
 import { ComponentPage } from "../../kit/component-page";
@@ -198,7 +198,7 @@ export function Page() {
         ],
         dos: ["Mantenha a ordem das opções estável (os números dependem dela)"],
         donts: ["Não reordene opções pelo uso recente: quebra os atalhos numéricos"],
-        usage: `import { Combobox, PropertyButton } from "@vyzer/design-system/components";
+        usage: `import { Combobox, PropertyButton } from "@zynox/design-system/components";
 
 <Combobox
   label="Priority"

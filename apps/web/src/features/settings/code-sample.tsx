@@ -8,7 +8,7 @@
  * semânticos do design system.
  */
 import { useState } from "react";
-import { Select } from "@vyzer/design-system/components";
+import { Select } from "@zynox/design-system/components";
 import { CODE_THEMES, DEFAULT_CODE_THEME, paletteStyle } from "./code-themes";
 
 type Kind = "same" | "add" | "del";

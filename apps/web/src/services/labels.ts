@@ -1,4 +1,4 @@
-import type { Label, LabelListItem } from "@vyzer/contract";
+import type { Label, LabelListItem } from "@zynox/contract";
 import { api } from "./api";
 
 /** Lista Labels do Workspace e, quando informado, do Team selecionado. */

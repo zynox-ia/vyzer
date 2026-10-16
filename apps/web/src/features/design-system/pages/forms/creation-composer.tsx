@@ -29,8 +29,8 @@ import {
   type LabelColor,
   type ListOption,
   type ProjectIconValue,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import {
   Box,
   CalendarDays,
@@ -868,7 +868,7 @@ export function Page() {
         ],
         usage: `import {
   Button, IconPicker, TextArea, TextInput,
-} from "@vyzer/design-system/components";
+} from "@zynox/design-system/components";
 
 <form
   aria-label="New view"
@@ -978,7 +978,7 @@ export function Page() {
             rule: "ADR-0013: Button de tamanho único (28 px, 12 px de padding)",
           },
           {
-            decision: "Primário no Button primary do Vyzer, não no accent do Linear #5e6ad2",
+            decision: "Primário no Button primary do Zynox, não no accent do Linear #5e6ad2",
             rule: "ADR-0013 (sem o acento do Linear)",
           },
           {

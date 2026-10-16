@@ -3,7 +3,7 @@
  * "Back to app" voltar para onde a pessoa estava, como no Linear (review de código, item 3) —
  * não sempre para `/projects`, que é só o fallback quando não há nada guardado ainda.
  */
-const KEY = "vyzer:shell:last-path";
+const KEY = "zynox:shell:last-path";
 
 export function writeLastShellPath(path: string) {
   try {

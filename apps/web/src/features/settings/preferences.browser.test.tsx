@@ -12,7 +12,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import type { MemberPreferences } from "@/services/member-preferences";
 import { PreferencesPage } from "./preferences";

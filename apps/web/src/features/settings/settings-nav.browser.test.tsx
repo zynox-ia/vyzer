@@ -9,8 +9,8 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
-import type { TeamListItem } from "@vyzer/contract";
-import { ToastProvider } from "@vyzer/design-system/components";
+import type { TeamListItem } from "@zynox/contract";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { SettingsRoute } from "./index";
 
@@ -41,7 +41,7 @@ function team(name: string, slug: string, color: "cyan" | "purple"): TeamListIte
     estimation: "none",
     detailedIssueHistory: false,
     issueEmailEnabled: false,
-    issueEmailAddress: "vyzer-4c7872ac31b0@intake.vyzer.app.br",
+    issueEmailAddress: "atlas-4c7872ac31b0@intake.zynox.app.br",
     createdAt: "2026-09-29T12:00:00.000Z",
     updatedAt: "2026-09-29T12:00:00.000Z",
     memberCount: 1,
@@ -79,21 +79,21 @@ describe("Settings nav: Your teams", () => {
   it("lista um link por Team, com ícone, e Create a team no fim", async () => {
     fetchTeams.mockResolvedValue([
       team("Zynox", "zynox", "cyan"),
-      team("Vyzer", "vyzer", "purple"),
+      team("Atlas", "atlas", "purple"),
     ]);
     const screen = await render(<Harness />);
     const nav = screen.getByRole("navigation", { name: "Settings" });
 
     await expect.element(nav.getByText("Your teams")).toBeVisible();
     const zynox = nav.getByRole("link", { name: "Zynox" });
-    const vyzer = nav.getByRole("link", { name: "Vyzer" });
+    const atlas = nav.getByRole("link", { name: "Atlas" });
     const create = nav.getByRole("link", { name: "Create a team" });
     await expect.element(zynox).toHaveAttribute("href", "/settings/teams/zynox");
-    await expect.element(vyzer).toHaveAttribute("href", "/settings/teams/vyzer");
+    await expect.element(atlas).toHaveAttribute("href", "/settings/teams/atlas");
     await expect.element(create).toHaveAttribute("href", "/settings/teams/new");
 
     // Cada Team leva o próprio ícone (svg) e o "Create a team" o seu "+".
-    for (const link of [zynox, vyzer, create]) {
+    for (const link of [zynox, atlas, create]) {
       expect(link.element().querySelector("svg")).not.toBeNull();
     }
 
@@ -103,7 +103,7 @@ describe("Settings nav: Your teams", () => {
     ).map((a) => a.getAttribute("href"));
     expect(links).toEqual([
       "/settings/teams/zynox",
-      "/settings/teams/vyzer",
+      "/settings/teams/atlas",
       "/settings/teams/new",
     ]);
   });

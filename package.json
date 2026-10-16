@@ -1,13 +1,13 @@
 {
-  "name": "vyzer",
+  "name": "zynox",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "pnpm -r --parallel --if-present dev",
-    "db:generate": "pnpm --filter @vyzer/db generate",
-    "db:migrate": "pnpm --filter @vyzer/db migrate",
-    "db:seed-dev": "pnpm --filter @vyzer/db seed-dev",
+    "db:generate": "pnpm --filter @zynox/db generate",
+    "db:migrate": "pnpm --filter @zynox/db migrate",
+    "db:seed-dev": "pnpm --filter @zynox/db seed-dev",
     "build": "pnpm -r --if-present build",
     "check": "pnpm check:format && pnpm check:lint && pnpm check:types",
     "check:format": "oxfmt --check .",

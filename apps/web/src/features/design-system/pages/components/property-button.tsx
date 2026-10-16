@@ -1,5 +1,5 @@
-import { PropertyButton } from "@vyzer/design-system/components";
-import { PriorityIcon, StatusIcon } from "@vyzer/design-system/icons";
+import { PropertyButton } from "@zynox/design-system/components";
+import { PriorityIcon, StatusIcon } from "@zynox/design-system/icons";
 import { CalendarDays, UserRound } from "lucide-react";
 import { ComponentPage } from "../../kit/component-page";
 import { StatesGrid } from "../../kit/states";
@@ -103,7 +103,7 @@ export function Page() {
         content: ["Mostra o valor; sem valor, o nome da propriedade (Priority, Lead)."],
         dos: ["Mantenha a ordem das propriedades igual em toda tela"],
         donts: ["Não use para ações que não abrem um seletor"],
-        usage: `import { PropertyButton } from "@vyzer/design-system/components";
+        usage: `import { PropertyButton } from "@zynox/design-system/components";
 
 <PropertyButton leading={<StatusIcon type="backlog" />}>Backlog</PropertyButton>
 <PropertyButton leading={<UserRound />} empty>Lead</PropertyButton>`,

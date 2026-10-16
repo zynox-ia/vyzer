@@ -14,7 +14,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import axe from "axe-core";
-import { ToastProvider } from "@vyzer/design-system/components";
+import { ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { CustomerRequestsPage } from "./customer-requests";
 
@@ -53,7 +53,7 @@ vi.mock("@/services/teams", () => ({
       queryFn: async () => [
         {
           id: "11111111-1111-4111-8111-111111111111",
-          name: "Vyzer",
+          name: "Atlas",
           icon: { kind: "icon", name: "briefcase", color: "orange" },
         },
       ],

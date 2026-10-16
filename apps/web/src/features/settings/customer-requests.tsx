@@ -34,8 +34,8 @@ import {
   Switch,
   useToast,
   type ListOption,
-} from "@vyzer/design-system/components";
-import type { ApiClient } from "@vyzer/contract";
+} from "@zynox/design-system/components";
+import type { ApiClient } from "@zynox/contract";
 import { teamsQueryOptions } from "@/services/teams";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";
 import {
@@ -444,7 +444,7 @@ export function CustomerRequestsPage() {
         </SettingsRow>
         <SettingsRow
           label="Enable manual edits"
-          description="Attributes can be edited in the Vyzer UI"
+          description="Attributes can be edited in the Zynox UI"
         >
           {(id) => (
             <Switch

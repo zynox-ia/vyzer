@@ -1,9 +1,9 @@
 /** Mapeamento entre o contrato de notificações e as peças do design system (só apresentação). */
 import { Bell } from "lucide-react";
-import type { Notification } from "@vyzer/contract";
-import { notificationTypeMetadata } from "@vyzer/contract";
-import type { NotificationRowProps } from "@vyzer/design-system/components";
-import { PriorityIcon, StatusIcon, type Priority } from "@vyzer/design-system/icons";
+import type { Notification } from "@zynox/contract";
+import { notificationTypeMetadata } from "@zynox/contract";
+import type { NotificationRowProps } from "@zynox/design-system/components";
+import { PriorityIcon, StatusIcon, type Priority } from "@zynox/design-system/icons";
 
 /** Prioridade do contrato (0 a 4) para o ícone e o rótulo do design system. */
 export const PRIORITY_BY_VALUE: Record<number, { priority: Priority; label: string }> = {
@@ -49,7 +49,7 @@ export function notificationRowProps(
 ): Omit<NotificationRowProps, "value" | "unread"> {
   const { issue, actor, type } = notification;
   return {
-    actor: actor ? { name: actor.name } : { name: "Vyzer", icon: Bell },
+    actor: actor ? { name: actor.name } : { name: "Zynox", icon: Bell },
     identifier: issue?.identifier ?? "",
     title: issue?.title ?? "Notification",
     priority: issue && issue.priority === 1 ? priorityValue(issue.priority) : undefined,

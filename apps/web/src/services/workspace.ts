@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { workspaceLogoUploadOutputSchema } from "@vyzer/contract";
+import { workspaceLogoUploadOutputSchema } from "@zynox/contract";
 
 /** Workspace and Member resolved by the API's fixed seed context (ADR-0015). */
 export const currentWorkspaceQueryOptions = () => api.workspace.current.queryOptions();

@@ -102,7 +102,6 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
   {
     title: "Your teams",
     links: [
-      { to: "/settings/teams/vyzer", label: "Vyzer", icon: Zap },
       { to: "/settings/teams/zynox", label: "Zynox", icon: Orbit },
       { to: "/settings/teams/new", label: "Create a team", icon: Plus },
     ],

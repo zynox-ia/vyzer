@@ -1,7 +1,7 @@
 /**
- * Sidebar do workspace (Fase 8, Figma 27:6905 → 1:6569): seletor de workspace, busca/criar issue,
- * navegação principal, seções recolhíveis e o rodapé de ajuda. Documentação da camada de app
- * (`apps/web/src/layouts/app-shell`), não peça de design system (AGENTS.md).
+ * Sidebar do workspace (Unifie Refinement):
+ * Barra lateral única (276 px) com wordmark, sitemap V3, card promocional e atalhos rápidos.
+ * Documentação da camada de app (`apps/web/src/layouts/app-shell`), não peça de design system (AGENTS.md).
  */
 import { Sidebar, SidebarContent } from "@/layouts/app-shell/sidebar";
 import { AppShellProvider } from "@/layouts/app-shell/context";
@@ -13,11 +13,11 @@ export function Page() {
   return (
     <DocPage
       title="Sidebar"
-      description="Seletor de workspace, busca (⌘K) e criar issue (C), navegação principal, seções recolhíveis (Workspace, Favorites, Your teams, Try) e ajuda no rodapé."
+      description="Sidebar única (276 px) refinada no padrão Unifie, com logotipo Zynox, ações rápidas no cabeçalho (+, 🔍, ⋮), sitemap V3 com árvore minimalista e destaque âmbar, card promocional e rodapé de suporte/configurações."
     >
       <DocSection
         title="Demonstração"
-        description="Escuro e claro lado a lado. Os links não navegam (cliques interceptados na moldura)."
+        description="Escuro e claro lado a lado. A sidebar permanece escura com variáveis locais escopadas (.vz-sidebar)."
       >
         <div className="grid grid-cols-1 gap-4 desktop:grid-cols-2">
           {THEMES.map((theme) => (
@@ -35,15 +35,8 @@ export function Page() {
       <DocSection title="Estados">
         <div className="grid grid-cols-1 gap-6 tablet:grid-cols-3">
           <figure className="flex flex-col gap-2">
-            <figcaption className="text-caption text-secondary">Expandida (padrão)</figcaption>
-            <ShellFrame theme="dark" height="h-100" defaultCollapsed={false}>
-              <Sidebar label="Sidebar do workspace (expandida)" />
-              <div className="flex-1 bg-app" />
-            </ShellFrame>
-          </figure>
-          <figure className="flex flex-col gap-2">
             <figcaption className="text-caption text-secondary">
-              Recolhida ("[") — some por completo, com um controle discreto para reabrir
+              Recolhida — controle discreto para reabrir
             </figcaption>
             <ShellFrame theme="dark" height="h-100" defaultCollapsed={true}>
               <Sidebar label="Sidebar do workspace (recolhida)" />
@@ -52,18 +45,24 @@ export function Page() {
           </figure>
           <figure className="flex flex-col gap-2">
             <figcaption className="text-caption text-secondary">
-              Gaveta (abaixo de tablet:, 768 px) — aberta, ilustração estática (a real é um Radix
-              Dialog com foco preso; veja o playground em <code>/projects</code>)
+              Expandida ("[" ou toggle) — 276 px completa (+15%)
             </figcaption>
-            {/* Estático, sem Dialog nem portal (o mesmo padrão de Dialog → DialogSurface): um
-                Dialog modal de verdade marcaria o resto da página como aria-hidden. */}
+            <ShellFrame theme="dark" height="h-100" defaultCollapsed={false}>
+              <Sidebar label="Sidebar do workspace (expandida)" />
+              <div className="flex-1 bg-app" />
+            </ShellFrame>
+          </figure>
+          <figure className="flex flex-col gap-2">
+            <figcaption className="text-caption text-secondary">
+              Gaveta (abaixo de tablet:, 768 px) — aberta, ilustração estática (Radix Dialog)
+            </figcaption>
             <div
               data-theme="dark"
               onClickCapture={suppressLinkNavigation}
               className="flex h-100 overflow-hidden rounded-container border border-subtle bg-app text-primary"
             >
               <AppShellProvider shortcuts={false}>
-                <div className="h-full w-70 border-r border-default bg-sidebar shadow-lg">
+                <div className="vz-sidebar h-full w-[280px] border-r border-[var(--vz-sb-divider)] bg-[var(--vz-sb-bg)] shadow-lg">
                   <SidebarContent />
                 </div>
               </AppShellProvider>
@@ -72,27 +71,30 @@ export function Page() {
           </figure>
         </div>
         <Prose>
-          Item ativo (aqui, "Projects") em <code className="font-mono text-code">text-accent</code>{" "}
-          sobre <code className="font-mono text-code">bg-selected</code> — terracota só no item
-          corrente da sidebar (ADR-0013). Hover só muda o fundo (camada{" "}
-          <code className="font-mono text-code">bg-hover</code>); foco é a linha de campo (
-          <code className="font-mono text-code">focus-ring</code>), sem acento nem halo. A seção
-          "Favorites" fica oculta enquanto vazia (sem exemplo populado no Figma atual).
+          Sidebar escura em qualquer tema (.vz-sidebar). Item ativo em container elevado (#151516),
+          texto branco e borda sutil com 70% de opacidade (rgba(44, 44, 48, 0.7)), com chevron "&gt;" à direita.
+          Subitens possuem conector de árvore contínuo com ticks horizontais e espaçamento discreto,
+          destacando o item ativo em tom âmbar (#f5d18d) e alinhado perfeitamente com o texto superior.
         </Prose>
       </DocSection>
 
       <DocSection title="Anatomia">
         <ul className="flex max-w-prose list-disc flex-col gap-1 pl-5 text-body-md text-secondary">
-          <li>Cabeçalho: WorkspaceMenu (avatar 20 px + nome + chevron), busca e criar issue.</li>
-          <li>Navegação principal: Inbox, Reviews (contador), My issues, Agent.</li>
-          <li>Seção "Workspace": Projects, Views, More.</li>
-          <li>Seção "Favorites": oculta sem itens.</li>
-          <li>Seção "Your teams": por time, Home / Issues / Projects / Views indentados.</li>
+          <li>Cabeçalho (64 px): Monograma em tile ("V"), logotipo Zynox e ações rápidas (+, 🔍, ⋮).</li>
+          <li>Seções Home, Business e Platform com legendas pequenas muted.</li>
           <li>
-            Seção "Try": Invite people, Initiatives, Cycles ("Connect Cursor"/"Connect Codex" do
-            Linear tirados a pedido do responsável, 28/09).
+            Itens raiz ativos: container rounded-[10px], fundo #151516, borda sutil (rgba(44, 44, 48, 0.7)), chevron
+            "&gt;" à direita.
           </li>
-          <li>Rodapé: botão de ajuda.</li>
+          <li>
+            Árvore de subitens: linha vertical contínua a x=20px com ticks horizontais flutuantes (espaçamento de 3px),
+            alinhado horizontalmente com o texto do item superior.
+          </li>
+          <li>
+            Card promocional: container com borda âmbar, título com dot brilhante, descrição e link
+            com botão de seta externa.
+          </li>
+          <li>Rodapé: item "Support" com indicador "• Online" e item "Settings" abaixo.</li>
         </ul>
       </DocSection>
 
@@ -101,25 +103,22 @@ export function Page() {
           <div className="flex flex-col gap-3">
             <h3 className="type-heading-3 text-primary">Teclado</h3>
             <ul className="flex flex-col gap-1 pl-5 text-body-md text-secondary">
-              <li className="list-disc">"[" recolhe/expande a sidebar, de qualquer tela.</li>
+              <li className="list-disc">"[" recolhe/expande a barra lateral, de qualquer tela.</li>
               <li className="list-disc">
                 Roving tabindex por lista: um alvo de Tab, ↑ ↓ navegam, Home/End vão às pontas.
               </li>
-              <li className="list-disc">Enter ativa o item focado (link nativo).</li>
             </ul>
           </div>
           <div className="flex flex-col gap-3">
             <h3 className="type-heading-3 text-primary">Acessibilidade</h3>
             <ul className="flex flex-col gap-1 pl-5 text-body-md text-secondary">
               <li className="list-disc">
-                <code className="font-mono text-code">nav</code> com{" "}
-                <code className="font-mono text-code">aria-label</code>; item ativo com{" "}
-                <code className="font-mono text-code">aria-current="page"</code>.
+                Elemento raiz &lt;nav aria-label="Sidebar do workspace"&gt;.
               </li>
               <li className="list-disc">
-                Redimensionar por arraste é só de mouse; colapsar continua 100% por teclado.
+                Contraste elevado mantido em todos os estados, obedecendo às preferências de
+                acessibilidade.
               </li>
-              <li className="list-disc">Gaveta do mobile: Radix Dialog (foco preso, Esc fecha).</li>
             </ul>
           </div>
         </div>
@@ -128,24 +127,12 @@ export function Page() {
       <Decisions
         items={[
           {
-            decision: "Recolher some por completo (não vira trilho de ícones)",
-            rule: "Confirmado ao vivo no Linear, 28/09",
+            decision: "Barra lateral única com padrão Unifie",
+            rule: "Remoção do trilho secundário de fundo escuro a pedido, unificando a navegação em uma única barra lateral elegante de 276 px de largura (+15%), com alta fidelidade visual às referências.",
           },
           {
-            decision: "Redimensionar por arraste, 200–360 px, padrão 244 px, em localStorage",
-            rule: "Spec fase-8-app-shell.md, decisão 2 (recomendação aprovada)",
-          },
-          {
-            decision: "Ícones de 16 px (size-icon-sm)",
-            rule: "Spec, decisão 3 — pendência dos 14 px registrada em .figma/01-design-tokens.md",
-          },
-          {
-            decision: "Item ativo em accent (terracota); hover e foco sem acento",
-            rule: "ADR-0013 — terracota só no item ativo da sidebar e em contadores em destaque",
-          },
-          {
-            decision: "Ícone de workspace via ProjectIcon, não iniciais",
-            rule: "Avatar não tem iniciais (decisão já registrada); sem prop nova só para o pixel — divergência em .figma/01-design-tokens.md",
+            decision: "Árvore de subitens contínua com ticks horizontais e recuo refinado",
+            rule: "Navegação hierárquica clara com conector vertical contínuo, ticks horizontais discretos separados por espaçamento de 3px e alinhamento do texto interno com o texto superior.",
           },
         ]}
       />

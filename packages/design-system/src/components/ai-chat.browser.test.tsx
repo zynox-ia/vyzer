@@ -50,7 +50,7 @@ describe("AgentComposer: teclado", () => {
   it("Enter envia e limpa o campo; Enter vazio ou so com espacos nao faz nada", async () => {
     const onSend = vi.fn();
     const screen = await render(<ComposerHarness onSend={onSend} />);
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
 
     await userEvent.keyboard("{Enter}");
     expect(onSend).not.toHaveBeenCalled();
@@ -70,7 +70,7 @@ describe("AgentComposer: teclado", () => {
   it("Shift+Enter quebra linha em vez de enviar", async () => {
     const onSend = vi.fn();
     const screen = await render(<ComposerHarness onSend={onSend} />);
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
 
     await field.fill("Line one");
     await field.click();
@@ -104,7 +104,7 @@ describe("AgentComposer: Stop generating e foco", () => {
   it('sending troca o enviar por "Stop generating"; cancelar volta ao enviar', async () => {
     const onCancel = vi.fn();
     const screen = await render(<SendingHarness onCancel={onCancel} />);
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill("Status update please");
     await userEvent.keyboard("{Enter}");
 
@@ -121,7 +121,7 @@ describe("AgentComposer: Stop generating e foco", () => {
 
   it("o foco volta ao campo quando sending termina (revisao de codigo, item 5, Foco)", async () => {
     const screen = await render(<SendingHarness />);
-    const field = screen.getByRole("textbox", { name: "Ask Vyzer…" });
+    const field = screen.getByRole("textbox", { name: "Ask Zynox…" });
     await field.fill("Status update please");
     await field.click();
     await userEvent.keyboard("{Enter}");

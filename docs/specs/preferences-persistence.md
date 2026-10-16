@@ -69,10 +69,10 @@ Customize sidebar (`sidebarPreferences.get/update`).
   atributo/classe no elemento raiz do app que os estilos globais já possam responder, ou o que já
   existir de mecanismo parecido no design system.
 - **Disable animated images & emoji**: aplicar onde o app já renderiza emoji/GIF, se for simples de
-  achar; se não houver esse ponto de renderização ainda no Vyzer, persistir o valor e marcar o
+  achar; se não houver esse ponto de renderização ainda no Zynox, persistir o valor e marcar o
   efeito como fora do escopo por falta de o que desligar (não inventar um sistema de emoji/GIF só
   pra isso).
-- **Open in desktop app**: **não há aplicativo desktop no Vyzer hoje.** Persistir o valor normalmente,
+- **Open in desktop app**: **não há aplicativo desktop no Zynox hoje.** Persistir o valor normalmente,
   mas não implementar nenhum comportamento de "abrir no app" — não existe app pra abrir. Deixar
   registrado, não inventar.
 - **Auto-assign to self**: ao criar uma issue sem assignee explícito, se ligado, atribuir ao Member

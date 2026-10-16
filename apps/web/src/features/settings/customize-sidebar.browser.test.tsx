@@ -12,7 +12,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { Button, ToastProvider } from "@vyzer/design-system/components";
+import { Button, ToastProvider } from "@zynox/design-system/components";
 import "@/index.css";
 import { CustomizeSidebarDialog } from "./customize-sidebar";
 

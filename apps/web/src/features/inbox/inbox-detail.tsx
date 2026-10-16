@@ -1,15 +1,26 @@
 /**
  * Painel de detalhe da Inbox: a issue da notificação selecionada. Composição local de leitura,
  * a partir de `issue.get`; a página real da issue (Time B) pode substituí-la sem mudar a lista.
+ *
+ * A seção "Pull requests" (spec github-integration) mora aqui só por enquanto, porque este painel é
+ * a única issue renderizada hoje: quando a página real da issue existir, ela precisa se mudar para
+ * lá. Sem `pullRequests` (ainda não há API), a seção não aparece.
  */
 import { useQuery } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
-import type { Notification } from "@vyzer/contract";
-import { Alert, Button, IconButton, Skeleton } from "@vyzer/design-system/components";
+import type { Notification } from "@zynox/contract";
+import { Alert, Button, IconButton, Skeleton } from "@zynox/design-system/components";
 import { issueQueryOptions } from "@/services/issues";
+import { PullRequestsSection, type PullRequestItem } from "../settings/pull-requests";
 import { priorityValue, statusValue } from "./inbox-model";
 
-function IssueBody({ identifier }: { identifier: string }) {
+function IssueBody({
+  identifier,
+  pullRequests,
+}: {
+  identifier: string;
+  pullRequests: PullRequestItem[];
+}) {
   const issue = useQuery(issueQueryOptions(identifier));
 
   if (issue.isPending) {
@@ -59,6 +70,7 @@ function IssueBody({ identifier }: { identifier: string }) {
         <dt className="text-secondary">Assignee</dt>
         <dd className="text-primary">{assignee?.name ?? "No assignee"}</dd>
       </dl>
+      <PullRequestsSection pullRequests={pullRequests} />
     </div>
   );
 }
@@ -66,9 +78,12 @@ function IssueBody({ identifier }: { identifier: string }) {
 export function InboxDetail({
   notification,
   onDelete,
+  pullRequests = [],
 }: {
   notification: Notification;
   onDelete: () => void;
+  /** PRs vinculados à issue; provisório até a API de PRs e a página de issue existirem. */
+  pullRequests?: PullRequestItem[];
 }) {
   const { issue } = notification;
   return (
@@ -79,7 +94,7 @@ export function InboxDetail({
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {issue ? (
-          <IssueBody identifier={issue.identifier} />
+          <IssueBody identifier={issue.identifier} pullRequests={pullRequests} />
         ) : (
           <p className="text-body-md text-secondary">This notification has no issue.</p>
         )}

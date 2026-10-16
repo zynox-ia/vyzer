@@ -1,4 +1,4 @@
-import { Field as FormField, Radio, RadioGroup } from "@vyzer/design-system/components";
+import { Field as FormField, Radio, RadioGroup } from "@zynox/design-system/components";
 import { ComponentPage } from "../../kit/component-page";
 import { StatesGrid } from "../../kit/states";
 
@@ -81,7 +81,7 @@ export function Page() {
         content: ["Rótulos curtos e paralelos; a opção padrão primeiro ou marcada."],
         dos: ["Sempre com uma opção marcada por padrão"],
         donts: ["Não use um único radio sozinho"],
-        usage: `import { Field, Radio, RadioGroup } from "@vyzer/design-system/components";
+        usage: `import { Field, Radio, RadioGroup } from "@zynox/design-system/components";
 
 <Field label="Issue visibility">
   <RadioGroup value={value} onValueChange={setValue}>

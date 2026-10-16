@@ -25,8 +25,6 @@ export const DEFAULT_WORKFLOW_STATUSES: readonly WorkflowStatusSeed[] = [
   { name: "Duplicate", category: "duplicate", color: "slate" },
 ];
 
-export const VYZER_WORKFLOW_STATUSES = DEFAULT_WORKFLOW_STATUSES;
-
 export const ZYNOX_WORKFLOW_STATUSES: readonly WorkflowStatusSeed[] = [
   { name: "Backlog", category: "backlog", color: "grey" },
   { name: "Ready", category: "unstarted", color: "purple" },

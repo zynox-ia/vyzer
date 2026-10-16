@@ -10,7 +10,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
-import { Alert, Button, EmptyState, Skeleton, useToast } from "@vyzer/design-system/components";
+import { Alert, Button, EmptyState, Skeleton, useToast } from "@zynox/design-system/components";
 import { api } from "@/services/api";
 import { apiKeysQueryOptions, updateApiKeyMutationOptions } from "@/services/api-keys";
 import { currentWorkspaceQueryOptions } from "@/services/workspace";

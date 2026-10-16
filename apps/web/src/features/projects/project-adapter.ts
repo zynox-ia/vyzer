@@ -1,10 +1,10 @@
 /**
- * Do Project da API (`@vyzer/contract`) para a linha da lista de Projects (`project-data.tsx`,
+ * Do Project da API (`@zynox/contract`) para a linha da lista de Projects (`project-data.tsx`,
  * `Project`): a tabela continua a mesma, só a origem do dado mudou (antes os projetos de exemplo).
  * Campos que a API ainda não tem, como o marco atual (`milestone`), ficam vazios; a data alvo
  * fica em ISO (`YYYY-MM-DD`) para a ordenação e é formatada só na hora de mostrar.
  */
-import type { Project as ApiProject } from "@vyzer/contract";
+import type { Project as ApiProject } from "@zynox/contract";
 import type { Project } from "./project-data";
 
 export function toProjectRow(project: ApiProject): Project {

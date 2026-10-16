@@ -10,8 +10,8 @@ import {
   ThinkingMessage,
   ToolCallCollapsible,
   UserMessage,
-} from "@vyzer/design-system/components";
-import { Icon } from "@vyzer/design-system/icons";
+} from "@zynox/design-system/components";
+import { Icon } from "@zynox/design-system/icons";
 import { Code, Decisions, DocPage, DocSection, Prose } from "../../kit/doc";
 import { ThemePair } from "../../kit/theme-frame";
 
